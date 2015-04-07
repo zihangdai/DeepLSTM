@@ -30,7 +30,7 @@ void trans_dot (float *result, float *A, int dim1_A, int dim2_A, float *B, int d
 		for (int j=0; j<dim2_B; ++j) {
 			for (int k=0; k<dim_inner; ++k) {
 				// R_ij += A_ki * B_ki
-				result[i*dim2_B+j] += A[k*dim_inner+i] * B[k*dim2_B+j];
+				result[i*dim2_B+j] += A[k*dim2_A+i] * B[k*dim2_B+j];
 			}
 		}
 	}

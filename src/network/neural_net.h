@@ -1,6 +1,8 @@
 #ifndef __NEURAL_NET_H__
 #define __NEURAL_NET_H__
 
+#include <stdlib.h>
+#include <string.h>
 #include "confreader.h"
 #include "lstm_layer.h"
 #include "softmax_layer.h"

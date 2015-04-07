@@ -3,9 +3,11 @@
 
 using namespace std;
 
+// #define DEBUG_LAYER
+
 RecurrentLayer::RecurrentLayer (int numNeuron, int maxSeqLen, int inputSize) {
 	#ifdef DEBUG_LAYER
-	printf("RecurrentLayer constructor.\n");
+	printf("RecurrentLayer constructor (%d, %d, %d).\n", numNeuron, maxSeqLen, inputSize);
 	#endif
 	m_numNeuron = numNeuron;
 	m_maxSeqLen = maxSeqLen;

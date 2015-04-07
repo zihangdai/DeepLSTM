@@ -1,6 +1,7 @@
 #ifndef __CHAMELEON_H__
 #define __CHAMELEON_H__
 
+#include <stdlib.h>
 #include <string>
 
 class Chameleon {

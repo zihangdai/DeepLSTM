@@ -1,2 +1,2 @@
 default:
-	g++ main.cpp lstm_rnn.cpp ../layer/layer.cpp ../layer/lstm_layer.cpp ../layer/softmax_layer.cpp ../config/chameleon.cpp ../config/configfile.cpp ../config/confreader.cpp ../helper/*.cpp ../connection/connection.cpp -I../config -I../layer -I../helper -I../connection -I../config
+	g++-mp-4.7 -fopenmp main.cpp lstm_rnn.cpp ../layer/layer.cpp ../layer/lstm_layer.cpp ../layer/softmax_layer.cpp ../config/chameleon.cpp ../config/configfile.cpp ../config/confreader.cpp ../helper/*.cpp ../connection/connection.cpp -I../config -I../layer -I../helper -I../connection -I../config

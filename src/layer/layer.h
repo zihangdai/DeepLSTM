@@ -1,7 +1,13 @@
 #ifndef __LAYER_H__
 #define __LAYER_H__
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <omp.h>
+
 #include <vector>
+
 #include "matrix.h"
 #include "nonlinearity.h"
 
@@ -33,7 +39,6 @@ public:
 	
 	/* method */
 	void virtual initParams(float *params) {};
-
 
 	void virtual feedForward(int inputSeqLen) {};
 	void virtual feedBackward(int inputSeqLen) {};

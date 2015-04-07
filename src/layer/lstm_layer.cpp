@@ -155,6 +155,12 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 		memset(m_cellStateErrs[seqIdx], 0x00, sizeof(float) * m_numNeuron);	
 	}
 
+	// four deltas at Time t=T+1
+	memset(m_outGateDelta, 0x00, sizeof(float) * m_numNeuron);
+	memset(m_preGateStateDelta, 0x00, sizeof(float) * m_numNeuron);
+	memset(m_forgetGateDelta, 0x00, sizeof(float) * m_numNeuron);
+	memset(m_inGateDelta, 0x00, sizeof(float) * m_numNeuron);
+
 	// call parent class resetStates
 	RecurrentLayer::resetStates(inputSeqLen);
 }
@@ -204,17 +210,20 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	float *derivBuf = new float[m_numNeuron];
 
 	// for each time step from T to 1
-	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
-		// reset four deltas
-		memset(m_preGateStateDelta, 0x00, sizeof(float) * m_numNeuron);
-		memset(m_outGateDelta, 0x00, sizeof(float) * m_numNeuron);
-		memset(m_inGateDelta, 0x00, sizeof(float) * m_numNeuron);
-		memset(m_forgetGateDelta, 0x00, sizeof(float) * m_numNeuron);
+	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {		
 		
-		// output gate delta	
-		sigm_deriv(derivBuf, m_outGateActs[seqIdx], m_numNeuron);
-		elem_mul_triple(m_outGateDelta, m_outputErrs[seqIdx], derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
+		// #pragma omp parallel
+		// output error: m_outputErrs[seqIdx]. all deltas are from Time t=seqIdx+1
+		trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta, m_numNeuron, 1);
+		trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta, m_numNeuron, 1);
+		trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta, m_numNeuron, 1);
+		trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta, m_numNeuron, 1);
 
+		// output gate delta (Time t = seqIdx): m_outGateDelta
+		sigm_deriv(derivBuf, m_outGateActs[seqIdx], m_numNeuron);
+		memset(m_outGateDelta, 0x00, sizeof(float) * m_numNeuron);
+		elem_mul_triple(m_outGateDelta, m_outputErrs[seqIdx], derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
+		
 		// cell state error
 		tanh_deriv(derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
 		elem_mul_triple(m_cellStateErrs[seqIdx], m_outputErrs[seqIdx], m_outGateActs[seqIdx], derivBuf, m_numNeuron);
@@ -223,19 +232,22 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		elem_mul(m_cellStateErrs[seqIdx], W_f_c, m_forgetGateDelta, m_numNeuron);
 		elem_mul(m_cellStateErrs[seqIdx], W_o_c, m_outGateDelta, m_numNeuron);
 
-		// pre-gate state delta
+		// pre-gate state delta (Time t = seqIdx): m_preGateStateDelta
 		tanh_deriv(derivBuf, m_preGateStates[seqIdx], m_numNeuron);
+		memset(m_preGateStateDelta, 0x00, sizeof(float) * m_numNeuron);
 		elem_mul_triple(m_preGateStateDelta, m_cellStateErrs[seqIdx], m_inGateActs[seqIdx], derivBuf, m_numNeuron);
 
-		// forget gates delta
+		// forget gates delta (Time t = seqIdx): m_forgetGateDelta
 		sigm_deriv(derivBuf, m_forgetGateActs[seqIdx], m_numNeuron);
+		memset(m_forgetGateDelta, 0x00, sizeof(float) * m_numNeuron);
 		elem_mul_triple(m_forgetGateDelta, m_cellStateErrs[seqIdx], m_states[seqIdx-1], derivBuf, m_numNeuron);
 
-		// input gates delta
+		// input gates delta (Time t = seqIdx): m_inGateDelta
 		sigm_deriv(derivBuf, m_inGateActs[seqIdx], m_numNeuron);
+		memset(m_inGateDelta, 0x00, sizeof(float) * m_numNeuron);
 		elem_mul_triple(m_inGateDelta, m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], derivBuf, m_numNeuron);
 
-		// spatial input error
+		// spatial input error: m_inputErrs[seqIdx]
 		trans_dot(m_inputErrs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inGateDelta, m_numNeuron, 1);
 		trans_dot(m_inputErrs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_forgetGateDelta, m_numNeuron, 1);
 		trans_dot(m_inputErrs[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_preGateStateDelta, m_numNeuron, 1);
@@ -256,6 +268,14 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		outer(gradW_o_x, m_outGateDelta, m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_o_h, m_outGateDelta, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
 		elem_mul(gradW_o_c, m_outGateDelta, m_states[seqIdx-1], m_numNeuron);
+
+		// DEBUG CODE
+		// for (int j=0; j<m_numNeuron; ++j) {
+		// 	printf("m_outGateDelta(%d,%d):%f\n", seqIdx, j, m_outGateDelta[j]);
+			// printf("m_preGateStateDelta(%d,%d):%f\n", seqIdx, j, m_preGateStateDelta[j]);
+			// printf("m_forgetGateDelta(%d,%d):%f\n", seqIdx, j, m_forgetGateDelta[j]);
+			// printf("m_inGateDelta(%d,%d):%f\n", seqIdx, j, m_inGateDelta[j]);
+		// }
 	}
 
 	// delete working buffer

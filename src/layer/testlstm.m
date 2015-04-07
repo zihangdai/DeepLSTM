@@ -58,17 +58,21 @@ end
 
 labels = [0, 18, 16, 14, 12, 10, 0; 
            0, 9, 8, 7, 6, 5, 0];
-outErrs = W' * (softmaxRes - labels);
-outErrs = outErrs(1:2,:);
+spatialoutErrs = W' * (softmaxRes - labels);
+spatialoutErrs = spatialoutErrs(1:2,:);
 
 inErrs = zeros(2,7);
+outErrs = zeros(2,7);
 statesErrs = zeros(2,7);
 inGateDelta = zeros(2,7);
 foGateDelta = zeros(2,7);
 ouGateDelta = zeros(2,7);
 preStatesDelta = zeros(2,7);
 
-for i=6:-1:2    
+for i=6:-1:2
+    outErrs(:,i) = spatialoutErrs(:,i) ...
+                   + Wih' * inGateDelta(:,i+1)    + Wfh' * foGateDelta(:,i+1) ...
+                   + Wch' * preStatesDelta(:,i+1) + Woh' * ouGateDelta(:,i+1);
     ouGateDelta(:,i) = outErrs(:,i) .* sigmDeriv(ouGate(:,i)) .* preOutActs(:,i);
     statesErrs(:,i) = outErrs(:,i) .* ouGate(:,i) .* tanhDeriv(preOutActs(:,i)) ...
                     + statesErrs(:,i+1) .* foGate(:,i+1) ...
