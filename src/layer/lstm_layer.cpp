@@ -17,8 +17,9 @@ LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLay
 		allocateMem(seqIdx);
 	}
 
-	for (int idx=0; idx<4; ++idx) {
-		float *neuronSizeBuf = new float[m_numNeuron];		
+	int nThreads = omp_get_max_threads();
+	for (int idx=0; idx<nThreads; ++idx) {
+		float *neuronSizeBuf = new float[m_numNeuron];
 		m_neuronSizeBuf.push_back(neuronSizeBuf);
 		float *inputSizeBuf = new float[m_inputSize];
 		m_inputSizeBuf.push_back(inputSizeBuf);
@@ -51,7 +52,14 @@ LSTMLayer::~LSTMLayer() {
 
 	for (int seqIdx=0; seqIdx<m_maxSeqLen+2; ++seqIdx) {
 		releaseMem(seqIdx);
-	}	
+	}
+
+	int nThreads = omp_get_max_threads();
+	for (int idx=0; idx<nThreads; ++idx) {
+		delete [] m_neuronSizeBuf[idx];
+		delete [] m_inputSizeBuf[idx];
+	}
+
 }
 
 void LSTMLayer::initParams(float *params) {
