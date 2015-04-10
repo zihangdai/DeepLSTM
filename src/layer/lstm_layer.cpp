@@ -173,8 +173,8 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 }
 
 void LSTMLayer::feedForward(int inputSeqLen) {
-	double startTime = CycleTimer::currentSeconds();
 
+	double startTime = CycleTimer::currentSeconds();
 	// parafor each time step from T to 1
 	#pragma omp parallel for
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
@@ -190,7 +190,10 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		// compute output gate activation
 		dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 	}
+	double endTime = CycleTimer::currentSeconds();
+	printf("LSTMLayer feedForward paralleled time: %f\n", endTime - startTime);
 
+	startTime = CycleTimer::currentSeconds();
 	// for each time step from 1 to T
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
 		// compute input gate activation
@@ -226,8 +229,8 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		// compute output activation
 		elem_mul(m_outputActs[seqIdx], m_outGateActs[seqIdx], m_preOutGateActs[seqIdx], m_numNeuron);
 	}
-	double endTime = CycleTimer::currentSeconds();
-	printf("LSTMLayer feedForward time: %f\n", endTime - startTime);
+	endTime = CycleTimer::currentSeconds();
+	printf("LSTMLayer feedForward sequential time: %f\n", endTime - startTime);
 }
 
 void LSTMLayer::feedBackward(int inputSeqLen) {	
