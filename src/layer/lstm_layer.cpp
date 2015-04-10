@@ -208,8 +208,8 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 			case 3: {
 				// compute output gate activation
 				dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
-				sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
+				// elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
+				// sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
 				break;
 			}
 		}
@@ -267,8 +267,8 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		// compute output gate activation
 		// dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		// dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-		// elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
-		// sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
+		elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
+		sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
 
 		// compute pre-output-gate activation
 		tanh(m_preOutGateActs[seqIdx], m_states[seqIdx], m_numNeuron);
