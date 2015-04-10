@@ -77,6 +77,7 @@ private:
 	void allocateMem (int seqIdx);
 
 	void computeOutputErrs(int seqIdx);
+	void computeGatesActs(int seqIdx);
 };
 
 #endif
