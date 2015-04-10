@@ -77,22 +77,61 @@ void elem_mul (float *result, float *a, float *b, int dim) {
 }
 
 void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
-	for (int i=0; i<dim; ++i) {
-		// R_i += a_i * b_i * c_i
-		result[i] += a[i] * b[i] * c[i];
+	if (!SIMD) {
+		for (int i=0; i<dim; ++i) {
+			// R_i += a_i * b_i * c_i
+			result[i] += a[i] * b[i] * c[i];
+		}
+	} else {
+		__m256 vec_a, vec_b, vec_c, vec_res;
+		for (int i=0; i<dim; i+=SIMD_WIDTH) {
+			vec_a = _mm256_loadu_ps(a + i);
+			vec_b = _mm256_loadu_ps(b + i);
+			vec_c = _mm256_loadu_ps(c + i);
+			vec_res = _mm256_loadu_ps(result + i);
+
+			_mm256_mul_ps(vec_a, vec_b);
+			_mm256_mul_ps(vec_a, vec_c);
+			_mm256_add_ps(vec_res, vec_a);
+			_mm256_storeu_ps(result + i, vec_res);
+		}
 	}
 }
 
 void elem_sub (float *result, float *a, float *b, int dim) {
-	for (int i=0; i<dim; ++i) {
-		// R_i += a_i - b_i
-		result[i] += a[i] - b[i];
-	}	
+	if (!SIMD) {
+		for (int i=0; i<dim; ++i) {
+			// R_i += a_i - b_i
+			result[i] += a[i] - b[i];
+		}
+	} else {
+		__m256 vec_a, vec_b, vec_res;
+		for (int i=0; i<dim; i+=SIMD_WIDTH) {
+			vec_a = _mm256_loadu_ps(a + i);
+			vec_b = _mm256_loadu_ps(b + i);
+			vec_res = _mm256_loadu_ps(result + i);
+
+			_mm256_sub_ps(vec_a, vec_b);
+			_mm256_add_ps(vec_res, vec_a);
+			_mm256_storeu_ps(result + i, vec_res);
+		}
+	}
 }
 
 void elem_accum (float *result, float *a, int dim) {
-	for (int i=0; i<dim; ++i) {
-		// R_i += a_i
-		result[i] += a[i];
-	}	
+	if (!SIMD) {
+		for (int i=0; i<dim; ++i) {
+			// R_i += a_i
+			result[i] += a[i];
+		}
+	else {
+		__m256 vec_a, vec_res;
+		for (int i=0; i<dim; i+=SIMD_WIDTH) {
+			vec_a = _mm256_loadu_ps(a + i);
+			vec_res = _mm256_loadu_ps(result + i);
+
+			_mm256_add_ps(vec_res, vec_a);
+			_mm256_storeu_ps(result + i, vec_res);
+		}
+	}
 }
