@@ -22,7 +22,7 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
 		std::stringstream ss;
   		ss << connIdx;
-		m_connTypeList[connIdx] = confReader->getString("type_connection_" + ss.str());		
+		m_connTypeList[connIdx] = confReader->getString("type_connection_" + ss.str());
 	}
 	
 	m_nParamSize = 0;
@@ -36,11 +36,11 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 	}
 
 	/* initialize connections */
-	for (int connIdx=0; connIdx<m_numLayer-1; connIdx++) {				
+	for (int connIdx=0; connIdx<m_numLayer-1; connIdx++) {
 		RecConnection *conn = initConnection(connIdx);
 		m_nParamSize += conn->m_nParamSize;
 		m_vecConnections.push_back(conn);
-	}	
+	}
 	#ifdef DEBUG_LSTM_RNN
 	printf("LSTM_RNN Constructor finished\n");
 	#endif
@@ -165,7 +165,6 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *labe
 			m_vecConnections[connIdx]->feedBackward(inputSeqLen);
 			m_vecLayers[connIdx]->feedBackward(inputSeqLen);
 		}
-
 	}
 
 	// normalization by number of input sequences
