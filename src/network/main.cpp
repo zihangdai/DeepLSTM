@@ -17,9 +17,9 @@ int main() {
     // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};    
 
-    int inputSeqLen = 100;
-    int dimIn = 1024;
-    int dimOut = 1024;
+    int inputSeqLen = confReader->getInt("max_sequence_length");
+    int dimIn = confReader->getInt("num_neuron_layer_0");
+    int dimOut = confReader->getInt("num_neuron_layer_4");
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
