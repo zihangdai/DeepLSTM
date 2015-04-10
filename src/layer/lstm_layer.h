@@ -74,6 +74,8 @@ private:
 	void resize (int newSeqLen);
 	void releaseMem (int seqIdx);
 	void allocateMem (int seqIdx);
+
+	void computeOutputErrs(int seqIdx);
 };
 
 #endif

@@ -239,7 +239,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 	printf("LSTMLayer feedForward sequential time: %f\n", endTime - startTime);
 }
 
-void computeOutputErrs (int seqIdx) {
+void LSTMLayer::computeOutputErrs (int seqIdx) {
 	#pragma omp parallel for
 	for (int idx=0; idx<4; ++idx) {
 		memset(m_outputErrsBuf[idx], 0x00, sizeof(float) * m_numNeuron);
@@ -291,7 +291,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
 		// four computations are independent but write to the same memory
 		// output error: m_outputErrs[seqIdx]. all deltas are from Time t=seqIdx+1
-		computeOutputErrs (int seqIdx);
+		computeOutputErrs (seqIdx);
 		// trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
