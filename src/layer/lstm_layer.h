@@ -57,7 +57,8 @@ public:
 	vector<float *> m_forgetGateDelta;
 	vector<float *> m_outGateDelta;
 
-	vector<float *> m_outputErrsBuf;
+	vector<float *> m_neuronSizeBuf;
+	vector<float *> m_inputSizeBuf;
 
 	/* method */
 	void initParams(float *params);

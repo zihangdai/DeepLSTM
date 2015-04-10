@@ -18,8 +18,10 @@ LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLay
 	}
 
 	for (int idx=0; idx<4; ++idx) {
-		float *outputErrsBuf = new float[m_numNeuron];
-		m_outputErrsBuf.push_back(outputErrsBuf);
+		float *neuronSizeBuf = new float[m_numNeuron];		
+		m_neuronSizeBuf.push_back(neuronSizeBuf);
+		float *inputSizeBuf = new float[m_inputSize];
+		m_inputSizeBuf.push_back(inputSizeBuf);
 	}
 
 
@@ -243,34 +245,33 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 void LSTMLayer::computeOutputErrs (int seqIdx) {
 	#pragma omp parallel for
 	for (int idx=0; idx<4; ++idx) {
-		memset(m_outputErrsBuf[idx], 0x00, sizeof(float) * m_numNeuron);
+		memset(m_neuronSizeBuf[idx], 0x00, sizeof(float) * m_numNeuron);
 		switch (idx) {
 			case 0: {				
-				trans_dot(m_outputErrsBuf[idx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
+				trans_dot(m_neuronSizeBuf[idx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
 				break;
 			}
 			case 1: {
-				trans_dot(m_outputErrsBuf[idx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
+				trans_dot(m_neuronSizeBuf[idx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
 				break;
 			}
 			case 2: {
-				trans_dot(m_outputErrsBuf[idx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
+				trans_dot(m_neuronSizeBuf[idx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
 				break;
 			}
 			case 3: {
-				trans_dot(m_outputErrsBuf[idx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
+				trans_dot(m_neuronSizeBuf[idx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
 				break;
 			}
 		}
 	}
 
-	#pragma omp parallel for
 	for (int neuronIdx=0; neuronIdx<m_numNeuron; neuronIdx += 8) {
 		__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
-		vec_0 = _mm256_loadu_ps(m_outputErrsBuf[0] + neuronIdx);
-		vec_1 = _mm256_loadu_ps(m_outputErrsBuf[1] + neuronIdx);
-		vec_2 = _mm256_loadu_ps(m_outputErrsBuf[2] + neuronIdx);
-		vec_3 = _mm256_loadu_ps(m_outputErrsBuf[3] + neuronIdx);
+		vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + neuronIdx);
+		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + neuronIdx);
+		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + neuronIdx);
+		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + neuronIdx);
 		vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + neuronIdx);
 
 		vec_res = _mm256_add_ps(vec_res, vec_0);
@@ -279,7 +280,6 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 		vec_res = _mm256_add_ps(vec_res, vec_3);
 		_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
 	}
-
 }
 
 void LSTMLayer::feedBackward(int inputSeqLen) {	
@@ -326,13 +326,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		// input gates delta (Time t = seqIdx): m_inGateDelta[seqIdx]
 		sigm_deriv(derivBuf, m_inGateActs[seqIdx], m_numNeuron);
 		elem_mul_triple(m_inGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], derivBuf, m_numNeuron);
-
-		// computations are independent but write to the same memory
-		// spatial input error: m_inputErrs[seqIdx]
-		trans_dot(m_inputErrs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inGateDelta[seqIdx], m_numNeuron, 1);
-		trans_dot(m_inputErrs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_forgetGateDelta[seqIdx], m_numNeuron, 1);
-		trans_dot(m_inputErrs[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_preGateStateDelta[seqIdx], m_numNeuron, 1);
-		trans_dot(m_inputErrs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_outGateDelta[seqIdx], m_numNeuron, 1);
+		
 	}
 	double endTime = CycleTimer::currentSeconds();
 	printf("LSTMLayer feedBackward sequential part time: %f\n", endTime - startTime);
@@ -341,6 +335,13 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	// omp parafor each time step from T to 1
 	#pragma omp parallel for
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
+		// computations are independent but write to the same memory
+		// spatial input error: m_inputErrs[seqIdx]
+		trans_dot(m_inputErrs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inGateDelta[seqIdx], m_numNeuron, 1);
+		trans_dot(m_inputErrs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_forgetGateDelta[seqIdx], m_numNeuron, 1);
+		trans_dot(m_inputErrs[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_preGateStateDelta[seqIdx], m_numNeuron, 1);
+		trans_dot(m_inputErrs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_outGateDelta[seqIdx], m_numNeuron, 1);
+
 		// grad
 		outer(gradW_i_x, m_inGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_i_h, m_inGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
