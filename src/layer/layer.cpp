@@ -21,6 +21,7 @@ RecurrentLayer::RecurrentLayer (int numNeuron, int maxSeqLen, int inputSize) {
 		allocateMem(seqIdx);
 	}
 
+	m_nParamSize = 0;
 }
 
 RecurrentLayer::~RecurrentLayer () {

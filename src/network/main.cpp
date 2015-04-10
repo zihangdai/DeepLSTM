@@ -9,18 +9,13 @@ int main() {
     float *params = new float[paramSize];
     float *grad = new float[paramSize];
     net->initParams(params);
-    // printf("params:\n");
-    // for (int i=0; i<paramSize; ++i) {
-    // 	printf("%f\t", params[i]);
-    // }
-    // printf("\n");
 
     // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};    
 
-    int inputSeqLen = 10;
-    int dimIn = 1000; 
-    int dimOut = 20000;
+    int inputSeqLen = 100;
+    int dimIn = 1000;
+    int dimOut = 1000;
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
@@ -37,7 +32,6 @@ int main() {
     float error = net->computeGrad(grad, params, data, label);
 
     printf("Error: %f\n", error);
-
 
     // printf("LSTM output\n");
     // for (int i=1; i<inputSeqLen+1; ++i) {

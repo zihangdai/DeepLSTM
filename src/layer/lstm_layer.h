@@ -51,11 +51,11 @@ public:
 	// backward pass
 	vector<float *> m_cellStateErrs;
 	
-	float *m_preGateStateDelta;
+	vector<float *> m_preGateStateDelta;
 
-	float *m_inGateDelta;
-	float *m_forgetGateDelta;
-	float *m_outGateDelta;
+	vector<float *> m_inGateDelta;
+	vector<float *> m_forgetGateDelta;
+	vector<float *> m_outGateDelta;
 
 	/* method */
 	void initParams(float *params);

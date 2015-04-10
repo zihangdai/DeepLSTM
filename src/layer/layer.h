@@ -10,6 +10,7 @@
 
 #include "matrix.h"
 #include "nonlinearity.h"
+#include "cycle_timer.h"
 
 using namespace std;
 

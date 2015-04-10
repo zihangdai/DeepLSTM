@@ -1,8 +1,9 @@
 #ifndef __HELPER_MATRIX_H__
 #define __HELPER_MATRIX_H__
 
-// #include <cblas.h>
 #include <math.h>
+// #include "cblas.h"
+#include "mkl.h"
 
 void outer (float *result, float *a, int dim_a, float *b, int dim_b);
 

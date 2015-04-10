@@ -14,13 +14,7 @@ LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLay
 	// allocate memory
 	for (int seqIdx=0; seqIdx<m_maxSeqLen+2; ++seqIdx) {
 		allocateMem(seqIdx);
-	}
-
-	// four deltas
-	m_preGateStateDelta = new float [m_numNeuron];
-	m_inGateDelta = new float [m_numNeuron];
-	m_forgetGateDelta = new float [m_numNeuron];
-	m_outGateDelta = new float [m_numNeuron];
+	}	
 
 	// compute m_nParamSize
 	m_nParamSize = 0;
@@ -48,12 +42,7 @@ LSTMLayer::~LSTMLayer() {
 
 	for (int seqIdx=0; seqIdx<m_maxSeqLen+2; ++seqIdx) {
 		releaseMem(seqIdx);
-	}
-	// four deltas
-	if (!m_preGateStateDelta) {delete [] m_preGateStateDelta;}
-	if (!m_inGateDelta) {delete [] m_inGateDelta;}
-	if (!m_forgetGateDelta) {delete [] m_forgetGateDelta;}
-	if (!m_outGateDelta) {delete [] m_outGateDelta;}
+	}	
 }
 
 void LSTMLayer::initParams(float *params) {
@@ -76,6 +65,12 @@ void LSTMLayer::resize(int newSeqLen) {
 	
 	// states errors
 	m_cellStateErrs.resize(newSeqLen+2);
+
+	// four delta
+	m_preGateStateDelta.resize(newSeqLen+2);
+	m_inGateDelta.resize(newSeqLen+2);
+	m_forgetGateDelta.resize(newSeqLen+2);
+	m_outGateDelta.resize(newSeqLen+2);
 }
 
 void LSTMLayer::allocateMem(int seqIdx) {
@@ -91,6 +86,12 @@ void LSTMLayer::allocateMem(int seqIdx) {
 
 	// states errors
 	m_cellStateErrs[seqIdx] = new float [m_numNeuron];
+
+	// four deltas
+	m_preGateStateDelta[seqIdx] = new float [m_numNeuron];
+	m_inGateDelta[seqIdx] = new float [m_numNeuron];
+	m_forgetGateDelta[seqIdx] = new float [m_numNeuron];
+	m_outGateDelta[seqIdx] = new float [m_numNeuron];
 }
 
 void LSTMLayer::releaseMem(int seqIdx) {
@@ -106,6 +107,12 @@ void LSTMLayer::releaseMem(int seqIdx) {
 
 	// states errors
 	if (!m_cellStateErrs[seqIdx]) {delete [] m_cellStateErrs[seqIdx];}
+
+	// four deltas
+	if (!m_preGateStateDelta[seqIdx]) {delete [] m_preGateStateDelta[seqIdx];}
+	if (!m_inGateDelta[seqIdx]) {delete [] m_inGateDelta[seqIdx];}
+	if (!m_forgetGateDelta[seqIdx]) {delete [] m_forgetGateDelta[seqIdx];}
+	if (!m_outGateDelta[seqIdx]) {delete [] m_outGateDelta[seqIdx];}
 }
 
 void LSTMLayer::reshape(int newSeqLen) {
@@ -152,37 +159,54 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 		memset(m_preGateStates[seqIdx], 0x00, sizeof(float) * m_numNeuron);
 
 		// cell errors
-		memset(m_cellStateErrs[seqIdx], 0x00, sizeof(float) * m_numNeuron);	
-	}
+		memset(m_cellStateErrs[seqIdx], 0x00, sizeof(float) * m_numNeuron);
 
-	// four deltas at Time t=T+1
-	memset(m_outGateDelta, 0x00, sizeof(float) * m_numNeuron);
-	memset(m_preGateStateDelta, 0x00, sizeof(float) * m_numNeuron);
-	memset(m_forgetGateDelta, 0x00, sizeof(float) * m_numNeuron);
-	memset(m_inGateDelta, 0x00, sizeof(float) * m_numNeuron);
+		// four deltas at Time t=T+1
+		memset(m_outGateDelta[seqIdx], 0x00, sizeof(float) * m_numNeuron);
+		memset(m_preGateStateDelta[seqIdx], 0x00, sizeof(float) * m_numNeuron);
+		memset(m_forgetGateDelta[seqIdx], 0x00, sizeof(float) * m_numNeuron);
+		memset(m_inGateDelta[seqIdx], 0x00, sizeof(float) * m_numNeuron);
+	}	
 
 	// call parent class resetStates
 	RecurrentLayer::resetStates(inputSeqLen);
 }
 
 void LSTMLayer::feedForward(int inputSeqLen) {
+	double startTime = CycleTimer::currentSeconds();
+
+	// parafor each time step from T to 1
+	#pragma omp parallel for
+	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
+		// compute input gate activation
+		dot(m_inGateActs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+
+		// compute forget gate activation
+		dot(m_forgetGateActs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+
+		// compute pre-gate states
+		dot(m_preGateStates[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+
+		// compute output gate activation
+		dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+	}
 
 	// for each time step from 1 to T
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
 		// compute input gate activation
-		dot(m_inGateActs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+		// dot(m_inGateActs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 		elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
 		sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
 		
 		// compute forget gate activation
-		dot(m_forgetGateActs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+		// dot(m_forgetGateActs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 		elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
 		sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
 
 		// compute pre-gate states
-		dot(m_preGateStates[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+		// dot(m_preGateStates[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		dot(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 		tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
 
@@ -191,7 +215,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		elem_mul(m_states[seqIdx], m_inGateActs[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
 
 		// compute output gate activation
-		dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
+		// dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 		elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
 		sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
@@ -202,81 +226,87 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		// compute output activation
 		elem_mul(m_outputActs[seqIdx], m_outGateActs[seqIdx], m_preOutGateActs[seqIdx], m_numNeuron);
 	}
+	double endTime = CycleTimer::currentSeconds();
+	printf("LSTMLayer feedForward time: %f\n", endTime - startTime);
 }
 
-void LSTMLayer::feedBackward(int inputSeqLen) {
+void LSTMLayer::feedBackward(int inputSeqLen) {	
 
 	// allocate working buffer
 	float *derivBuf = new float[m_numNeuron];
 
-	// for each time step from T to 1
-	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {		
-		
-		// #pragma omp parallel
+	double startTime = CycleTimer::currentSeconds();
+	// sequential for each time step from T to 1
+	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
+		// four computations are independent but write to the same memory
 		// output error: m_outputErrs[seqIdx]. all deltas are from Time t=seqIdx+1
-		trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta, m_numNeuron, 1);
-		trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta, m_numNeuron, 1);
-		trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta, m_numNeuron, 1);
-		trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta, m_numNeuron, 1);
-
-		// output gate delta (Time t = seqIdx): m_outGateDelta
-		sigm_deriv(derivBuf, m_outGateActs[seqIdx], m_numNeuron);
-		memset(m_outGateDelta, 0x00, sizeof(float) * m_numNeuron);
-		elem_mul_triple(m_outGateDelta, m_outputErrs[seqIdx], derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
+		trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
 		
+		// computations are independent but use the same derivBuf
+		// output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
+		sigm_deriv(derivBuf, m_outGateActs[seqIdx], m_numNeuron);
+		elem_mul_triple(m_outGateDelta[seqIdx], m_outputErrs[seqIdx], derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
+
+		// computations are independent but write to the same memory and depend on the seqIdx+1 time step
 		// cell state error
 		tanh_deriv(derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
 		elem_mul_triple(m_cellStateErrs[seqIdx], m_outputErrs[seqIdx], m_outGateActs[seqIdx], derivBuf, m_numNeuron);
 		elem_mul(m_cellStateErrs[seqIdx], m_cellStateErrs[seqIdx+1], m_forgetGateActs[seqIdx+1], m_numNeuron);
-		elem_mul(m_cellStateErrs[seqIdx], W_i_c, m_inGateDelta, m_numNeuron);
-		elem_mul(m_cellStateErrs[seqIdx], W_f_c, m_forgetGateDelta, m_numNeuron);
-		elem_mul(m_cellStateErrs[seqIdx], W_o_c, m_outGateDelta, m_numNeuron);
+		elem_mul(m_cellStateErrs[seqIdx], W_i_c, m_inGateDelta[seqIdx+1], m_numNeuron);
+		elem_mul(m_cellStateErrs[seqIdx], W_f_c, m_forgetGateDelta[seqIdx+1], m_numNeuron);
+		elem_mul(m_cellStateErrs[seqIdx], W_o_c, m_outGateDelta[seqIdx], m_numNeuron);
 
-		// pre-gate state delta (Time t = seqIdx): m_preGateStateDelta
-		tanh_deriv(derivBuf, m_preGateStates[seqIdx], m_numNeuron);
-		memset(m_preGateStateDelta, 0x00, sizeof(float) * m_numNeuron);
-		elem_mul_triple(m_preGateStateDelta, m_cellStateErrs[seqIdx], m_inGateActs[seqIdx], derivBuf, m_numNeuron);
+		// computations are independent but use the same derivBuf
+		// pre-gate state delta (Time t = seqIdx): m_preGateStateDelta[seqIdx]
+		tanh_deriv(derivBuf, m_preGateStates[seqIdx], m_numNeuron);		
+		elem_mul_triple(m_preGateStateDelta[seqIdx], m_cellStateErrs[seqIdx], m_inGateActs[seqIdx], derivBuf, m_numNeuron);
 
-		// forget gates delta (Time t = seqIdx): m_forgetGateDelta
+		// computations are independent but use the same derivBuf
+		// forget gates delta (Time t = seqIdx): m_forgetGateDelta[seqIdx]
 		sigm_deriv(derivBuf, m_forgetGateActs[seqIdx], m_numNeuron);
-		memset(m_forgetGateDelta, 0x00, sizeof(float) * m_numNeuron);
-		elem_mul_triple(m_forgetGateDelta, m_cellStateErrs[seqIdx], m_states[seqIdx-1], derivBuf, m_numNeuron);
+		elem_mul_triple(m_forgetGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_states[seqIdx-1], derivBuf, m_numNeuron);
 
-		// input gates delta (Time t = seqIdx): m_inGateDelta
-		sigm_deriv(derivBuf, m_inGateActs[seqIdx], m_numNeuron);
-		memset(m_inGateDelta, 0x00, sizeof(float) * m_numNeuron);
-		elem_mul_triple(m_inGateDelta, m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], derivBuf, m_numNeuron);
+		// computations are independent but use the same derivBuf
+		// input gates delta (Time t = seqIdx): m_inGateDelta[seqIdx]
+		sigm_deriv(derivBuf, m_inGateActs[seqIdx], m_numNeuron);		
+		elem_mul_triple(m_inGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], derivBuf, m_numNeuron);
 
+		// computations are independent but write to the same memory
 		// spatial input error: m_inputErrs[seqIdx]
-		trans_dot(m_inputErrs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inGateDelta, m_numNeuron, 1);
-		trans_dot(m_inputErrs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_forgetGateDelta, m_numNeuron, 1);
-		trans_dot(m_inputErrs[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_preGateStateDelta, m_numNeuron, 1);
-		trans_dot(m_inputErrs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_outGateDelta, m_numNeuron, 1);
-
-		// grad
-		outer(gradW_i_x, m_inGateDelta, m_numNeuron, m_inputActs[seqIdx], m_inputSize);
-		outer(gradW_i_h, m_inGateDelta, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
-		elem_mul(gradW_i_c, m_inGateDelta, m_states[seqIdx-1], m_numNeuron);
-
-		outer(gradW_f_x, m_forgetGateDelta, m_numNeuron, m_inputActs[seqIdx], m_inputSize);
-		outer(gradW_f_h, m_forgetGateDelta, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
-		elem_mul(gradW_f_c, m_forgetGateDelta, m_states[seqIdx-1], m_numNeuron);
-
-		outer(gradW_c_x, m_preGateStateDelta, m_numNeuron, m_inputActs[seqIdx], m_inputSize);
-		outer(gradW_c_h, m_preGateStateDelta, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
-
-		outer(gradW_o_x, m_outGateDelta, m_numNeuron, m_inputActs[seqIdx], m_inputSize);
-		outer(gradW_o_h, m_outGateDelta, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
-		elem_mul(gradW_o_c, m_outGateDelta, m_states[seqIdx-1], m_numNeuron);
-
-		// DEBUG CODE
-		// for (int j=0; j<m_numNeuron; ++j) {
-		// 	printf("m_outGateDelta(%d,%d):%f\n", seqIdx, j, m_outGateDelta[j]);
-			// printf("m_preGateStateDelta(%d,%d):%f\n", seqIdx, j, m_preGateStateDelta[j]);
-			// printf("m_forgetGateDelta(%d,%d):%f\n", seqIdx, j, m_forgetGateDelta[j]);
-			// printf("m_inGateDelta(%d,%d):%f\n", seqIdx, j, m_inGateDelta[j]);
-		// }
+		trans_dot(m_inputErrs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inGateDelta[seqIdx], m_numNeuron, 1);
+		trans_dot(m_inputErrs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_forgetGateDelta[seqIdx], m_numNeuron, 1);
+		trans_dot(m_inputErrs[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_preGateStateDelta[seqIdx], m_numNeuron, 1);
+		trans_dot(m_inputErrs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_outGateDelta[seqIdx], m_numNeuron, 1);
 	}
+	double endTime = CycleTimer::currentSeconds();
+	printf("LSTMLayer feedBackward sequential part time: %f\n", endTime - startTime);
+
+	startTime = CycleTimer::currentSeconds();
+	// omp parafor each time step from T to 1
+	#pragma omp parallel for
+	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
+		// grad
+		outer(gradW_i_x, m_inGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
+		outer(gradW_i_h, m_inGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
+		elem_mul(gradW_i_c, m_inGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
+
+		outer(gradW_f_x, m_forgetGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
+		outer(gradW_f_h, m_forgetGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
+		elem_mul(gradW_f_c, m_forgetGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
+
+		outer(gradW_c_x, m_preGateStateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
+		outer(gradW_c_h, m_preGateStateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
+
+		outer(gradW_o_x, m_outGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
+		outer(gradW_o_h, m_outGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
+		elem_mul(gradW_o_c, m_outGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);		
+	}
+
+	endTime = CycleTimer::currentSeconds();
+	printf("LSTMLayer feedBackward paralleled part time: %f\n", endTime - startTime);
 
 	// delete working buffer
 	delete [] derivBuf;

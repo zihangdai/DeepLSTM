@@ -39,22 +39,27 @@ void FullConnection::initParams(float *params) {
 }
 
 void FullConnection::bindWeights(float *params, float *grad) {
-	// weights	
-	m_weights = params;
-	m_gradWeights = grad;
+	float *paramsCursor = params;
+	float *gradCursor = grad;
+	// weights
+	m_weights = paramsCursor;
+	m_gradWeights = gradCursor;
+	paramsCursor += m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
+	gradCursor += m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
 	// bias
-	m_bias = params + m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
-	m_gradBias = grad + m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
+	m_bias = paramsCursor;
+	m_gradBias = gradCursor;
 }
 
 void FullConnection::feedForward(int inputSeqLen) {
 	int preNumNeuron = m_preLayer->m_numNeuron;
-	int postNumNeuron = m_postLayer->m_numNeuron;
+	int postNumNeuron = m_postLayer->m_numNeuron;	
 	double startTime = CycleTimer::currentSeconds();
 	#pragma omp parallel for
-	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
+	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {		
 		// m_weights
-		dot(m_postLayer->m_inputActs[seqIdx], m_weights, postNumNeuron, preNumNeuron, m_preLayer->m_outputActs[seqIdx], preNumNeuron, 1);
+		float *weights = m_weights;
+		dot(m_postLayer->m_inputActs[seqIdx], weights, postNumNeuron, preNumNeuron, m_preLayer->m_outputActs[seqIdx], preNumNeuron, 1);
 		// m_bias
 		elem_accum(m_postLayer->m_inputActs[seqIdx], m_bias, postNumNeuron);
 	}
@@ -73,7 +78,7 @@ void FullConnection::feedBackward(int inputSeqLen) {
 		// m_gradWeights
 		outer(m_gradWeights, m_postLayer->m_inputErrs[seqIdx], postNumNeuron, m_preLayer->m_outputActs[seqIdx], preNumNeuron);
 		// m_gradBias
-		memcpy(m_gradBias, m_postLayer->m_inputErrs[seqIdx], sizeof(float)*postNumNeuron);
+		elem_accum(m_gradBias, m_postLayer->m_inputErrs[seqIdx], postNumNeuron);
 	}
 	double endTime = CycleTimer::currentSeconds();
 	printf("FullConnection feedBackward time: %f\n", endTime - startTime);
