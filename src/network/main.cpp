@@ -2,6 +2,10 @@
 #include "confreader.h"
 
 int main() {
+    openblas_set_num_threads(1);
+    int max_openmp_threads = 8;
+    omp_set_num_threads(max_openmp_threads);
+
     ConfReader *confReader = new ConfReader("config.conf", "LSTM");
     RecurrentNN *net = new LSTM_RNN(confReader);
     int paramSize = net->m_nParamSize;
@@ -14,8 +18,8 @@ int main() {
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};    
 
     int inputSeqLen = 100;
-    int dimIn = 1024;
-    int dimOut = 1024;
+    int dimIn = 1000;
+    int dimOut = 1000;
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
