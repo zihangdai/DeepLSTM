@@ -69,8 +69,8 @@ void elem_mul (float *result, float *a, float *b, int dim) {
 			vec_b = _mm256_loadu_ps(b + i);
 			vec_res = _mm256_loadu_ps(result + i);
 
-			_mm256_mul_ps(vec_a, vec_b);
-			_mm256_add_ps(vec_res, vec_a);
+			vec_a = _mm256_mul_ps(vec_a, vec_b);
+			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
 		}
 	}
@@ -90,9 +90,9 @@ void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
 			vec_c = _mm256_loadu_ps(c + i);
 			vec_res = _mm256_loadu_ps(result + i);
 
-			_mm256_mul_ps(vec_a, vec_b);
-			_mm256_mul_ps(vec_a, vec_c);
-			_mm256_add_ps(vec_res, vec_a);
+			vec_a = _mm256_mul_ps(vec_a, vec_b);
+			vec_a = _mm256_mul_ps(vec_a, vec_c);
+			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
 		}
 	}
@@ -111,8 +111,8 @@ void elem_sub (float *result, float *a, float *b, int dim) {
 			vec_b = _mm256_loadu_ps(b + i);
 			vec_res = _mm256_loadu_ps(result + i);
 
-			_mm256_sub_ps(vec_a, vec_b);
-			_mm256_add_ps(vec_res, vec_a);
+			vec_a = _mm256_sub_ps(vec_a, vec_b);
+			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
 		}
 	}
@@ -130,7 +130,7 @@ void elem_accum (float *result, float *a, int dim) {
 			vec_a = _mm256_loadu_ps(a + i);
 			vec_res = _mm256_loadu_ps(result + i);
 
-			_mm256_add_ps(vec_res, vec_a);
+			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
 		}
 	}
