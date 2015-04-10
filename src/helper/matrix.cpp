@@ -124,7 +124,7 @@ void elem_accum (float *result, float *a, int dim) {
 			// R_i += a_i
 			result[i] += a[i];
 		}
-	else {
+	} else {
 		__m256 vec_a, vec_res;
 		for (int i=0; i<dim; i+=SIMD_WIDTH) {
 			vec_a = _mm256_loadu_ps(a + i);
