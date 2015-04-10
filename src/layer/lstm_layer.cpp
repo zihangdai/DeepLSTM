@@ -244,7 +244,6 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 	#pragma omp parallel for
 	for (int idx=0; idx<4; ++idx) {
 		memset(m_outputErrsBuf[idx], 0x00, sizeof(float) * m_numNeuron);
-		printf("LSTMLayer computeOutputErrs from thread %d, nthreads %d\n", omp_get_thread_num(), omp_get_num_threads());
 		switch (idx) {
 			case 0: {				
 				trans_dot(m_outputErrsBuf[idx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
@@ -279,7 +278,6 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 		vec_res = _mm256_add_ps(vec_res, vec_0);
 		vec_res = _mm256_add_ps(vec_res, vec_2);
 		_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
-		printf("LSTMLayer computeOutputErrs from thread %d, nthreads %d, neuronIdx %d \n", omp_get_thread_num(), omp_get_num_threads(), neuronIdx);
 	}
 
 }
