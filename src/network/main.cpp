@@ -14,8 +14,8 @@ int main() {
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};    
 
     int inputSeqLen = 100;
-    int dimIn = 1000;
-    int dimOut = 1000;
+    int dimIn = 1024;
+    int dimOut = 1024;
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
