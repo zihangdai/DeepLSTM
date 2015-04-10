@@ -183,7 +183,7 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 
 void LSTMLayer::computeGatesActs(int seqIdx) {
 	#pragma omp parallel for
-	for (int gateIdx=1; gateIdx<=4; ++gateIdx) {
+	for (int gateIdx=0; gateIdx<3; ++gateIdx) {
 		switch (gateIdx) {
 			case 0: {
 				// compute input gate activation
@@ -259,7 +259,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		// tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
 
 		computeGatesActs(seqIdx);
-		
+
 		// compute cell states
 		elem_mul(m_states[seqIdx], m_forgetGateActs[seqIdx], m_states[seqIdx-1], m_numNeuron);
 		elem_mul(m_states[seqIdx], m_inGateActs[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
