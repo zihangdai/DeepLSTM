@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <immintrin.h>
 #include "lstm_layer.h"
 
 using namespace std;
@@ -277,6 +278,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 		_mm256_add_ps(vec_res, vec_0);
 		_mm256_add_ps(vec_res, vec_2);
 		_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
+		printf("LSTMLayer computeOutputErrs from thread %d, nthreads %d, neuronIdx %d \n", omp_get_thread_num(), omp_get_num_threads(), neuronIdx);
 	}
 
 }
