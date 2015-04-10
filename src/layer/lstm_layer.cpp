@@ -183,7 +183,7 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 
 void LSTMLayer::computeGatesActs(int seqIdx) {
 	#pragma omp parallel for
-	for (int gateIdx=0; gateIdx<3; ++gateIdx) {
+	for (int gateIdx=0; gateIdx<4; ++gateIdx) {
 		switch (gateIdx) {
 			case 0: {
 				// compute input gate activation
