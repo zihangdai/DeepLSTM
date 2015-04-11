@@ -73,7 +73,7 @@ void FullConnection::feedBackward(int inputSeqLen) {
 	double startTime = CycleTimer::currentSeconds();
 	#pragma omp parallel for
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		// m_preLayer->m_outputErrs		
+		// m_preLayer->m_outputErrs
 		trans_dot(m_preLayer->m_outputErrs[seqIdx], m_weights, postNumNeuron, preNumNeuron, m_postLayer->m_inputErrs[seqIdx], postNumNeuron, 1);
 		// m_gradWeights
 		outer(m_gradWeights, m_postLayer->m_inputErrs[seqIdx], postNumNeuron, m_preLayer->m_outputActs[seqIdx], preNumNeuron);

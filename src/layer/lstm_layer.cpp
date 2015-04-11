@@ -17,14 +17,12 @@ LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLay
 		allocateMem(seqIdx);
 	}
 
-	int nThreads = omp_get_max_threads();
-	for (int idx=0; idx<nThreads; ++idx) {
+	for (int idx=0; idx<4; ++idx) {
 		float *neuronSizeBuf = new float[m_numNeuron];
 		m_neuronSizeBuf.push_back(neuronSizeBuf);
 		float *inputSizeBuf = new float[m_inputSize];
 		m_inputSizeBuf.push_back(inputSizeBuf);
 	}
-
 
 	// compute m_nParamSize
 	m_nParamSize = 0;
@@ -54,8 +52,7 @@ LSTMLayer::~LSTMLayer() {
 		releaseMem(seqIdx);
 	}
 
-	int nThreads = omp_get_max_threads();
-	for (int idx=0; idx<nThreads; ++idx) {
+	for (int idx=0; idx<4; ++idx) {
 		delete [] m_neuronSizeBuf[idx];
 		delete [] m_inputSizeBuf[idx];
 	}
@@ -357,6 +354,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		// cell state error
 		tanh_deriv(derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
 		elem_mul_triple(m_cellStateErrs[seqIdx], m_outputErrs[seqIdx], m_outGateActs[seqIdx], derivBuf, m_numNeuron);
+
 		elem_mul(m_cellStateErrs[seqIdx], m_cellStateErrs[seqIdx+1], m_forgetGateActs[seqIdx+1], m_numNeuron);
 		elem_mul(m_cellStateErrs[seqIdx], W_i_c, m_inGateDelta[seqIdx+1], m_numNeuron);
 		elem_mul(m_cellStateErrs[seqIdx], W_f_c, m_forgetGateDelta[seqIdx+1], m_numNeuron);
@@ -406,7 +404,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 
 		outer(gradW_o_x, m_outGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_o_h, m_outGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
-		elem_mul(gradW_o_c, m_outGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);		
+		elem_mul(gradW_o_c, m_outGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
 	}
 
 	endTime = CycleTimer::currentSeconds();
