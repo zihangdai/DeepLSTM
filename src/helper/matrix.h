@@ -23,4 +23,6 @@ void dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int
 
 void trans_dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B);
 
+void elem_mul_threads (float *result, float *a, float *b, int dim);
+
 #endif
