@@ -187,10 +187,6 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 }
 
 void LSTMLayer::computeGatesActs(int seqIdx) {
-	// dot_threads(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	// dot_threads(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	// dot_threads(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	// dot_threads(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	
 	int maxThreads = omp_get_max_threads();
 	int blockSize = (m_numNeuron + (maxThreads / 4) - 1) / (maxThreads / 4);
@@ -199,7 +195,7 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 		int blockIdx = threadIdx / 4;
 		int startIdx = blockIdx * blockSize;
 		int actualSize = min(blockSize, m_numNeuron-startIdx);
-		printf("actualSize %d from thread %d\n", actualSize, omp_get_thread_num());
+
 		switch (threadIdx%4) {
 			case 0: {
 				// compute input gate activation
