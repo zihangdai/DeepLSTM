@@ -11,7 +11,7 @@ CXXFLAGS+=-O3 -m64 -mavx
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
-INCFLAGS+=-I$(SRCDIR)/openblas/lib
+INCFLAGS+=-I$(SRCDIR)/openblas/include
 
 # link flags
 LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -fopenmp #-lmpi -lmpi_cxx
