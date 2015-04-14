@@ -78,6 +78,7 @@ private:
 
 	void computeOutputErrs(int seqIdx);
 	void computeGatesActs(int seqIdx);
+	void feedbackSequential (int seqIdx);
 };
 
 #endif
