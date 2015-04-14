@@ -192,8 +192,8 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 	// dot_threads(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	// dot_threads(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	
-	int maxThreads = omp_get_max_threads();	
-	int blockSize = (m_numNeuron ＋ (maxThreads / 4) － 1) / (maxThreads / 4);
+	int maxThreads = omp_get_max_threads();
+	int blockSize = (m_numNeuron + (maxThreads / 4) － 1) / (maxThreads / 4);
 	#pragma omp parallel for
 	for (int threadIdx=0; threadIdx<maxThreads; ++threadIdx) {
 		int blockIdx = threadIdx / 4;
