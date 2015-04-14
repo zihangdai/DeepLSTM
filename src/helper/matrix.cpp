@@ -181,8 +181,8 @@ void trans_dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *
 	assert(dim1_A == dim1_B);
 	int max_threads = omp_get_max_threads();
 	#pragma omp parallel for
-	for (int i=0; i<dim2_A; i+=4) {
-		int actualSize = min(4, dim2_A-i);
+	for (int i=0; i<dim2_A; i+=256) {
+		int actualSize = min(256, dim2_A-i);
 		// dot (result+i, A+i*dim2_A, actualSize, dim2_A, B, dim1_B, dim2_B);
 		cblas_sgemv(CblasColMajor, CblasNoTrans, actualSize, dim1_A, 1.0, A, actualSize, B, 1, 1.0, result, 1);
 	}
