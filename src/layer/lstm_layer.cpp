@@ -210,7 +210,7 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 			case 1: {
 				// compute forget gate activation
 				dot(m_forgetGateActs[seqIdx]+startIdx, W_f_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				elem_mul(m_forgetGateActs[seqIdx]+startIdx, W_f_c, m_states[seqIdx-1]+startIdx, actualSize);
+				elem_mul(m_forgetGateActs[seqIdx]+startIdx, W_f_c+startIdx, m_states[seqIdx-1]+startIdx, actualSize);
 				sigm(m_forgetGateActs[seqIdx]+startIdx, m_forgetGateActs[seqIdx]+startIdx, actualSize);
 				break;
 			}
