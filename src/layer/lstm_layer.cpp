@@ -419,36 +419,36 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		// trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
 
-		feedbackSequential (seqIdx, derivBuf);
-		// // computations are independent but use the same derivBuf
-		// // output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
-		// sigm_deriv(derivBuf, m_outGateActs[seqIdx], m_numNeuron);
-		// elem_mul_triple(m_outGateDelta[seqIdx], m_outputErrs[seqIdx], derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
+		// feedbackSequential (seqIdx, derivBuf);
+		// computations are independent but use the same derivBuf
+		// output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
+		sigm_deriv(derivBuf, m_outGateActs[seqIdx], m_numNeuron);
+		elem_mul_triple(m_outGateDelta[seqIdx], m_outputErrs[seqIdx], derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
 
-		// // computations are independent but write to the same memory and depend on the seqIdx+1 time step
-		// // cell state error
-		// tanh_deriv(derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
-		// elem_mul_triple(m_cellStateErrs[seqIdx], m_outputErrs[seqIdx], m_outGateActs[seqIdx], derivBuf, m_numNeuron);
+		// computations are independent but write to the same memory and depend on the seqIdx+1 time step
+		// cell state error
+		tanh_deriv(derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
+		elem_mul_triple(m_cellStateErrs[seqIdx], m_outputErrs[seqIdx], m_outGateActs[seqIdx], derivBuf, m_numNeuron);
 
-		// elem_mul(m_cellStateErrs[seqIdx], m_cellStateErrs[seqIdx+1], m_forgetGateActs[seqIdx+1], m_numNeuron);
-		// elem_mul(m_cellStateErrs[seqIdx], W_i_c, m_inGateDelta[seqIdx+1], m_numNeuron);
-		// elem_mul(m_cellStateErrs[seqIdx], W_f_c, m_forgetGateDelta[seqIdx+1], m_numNeuron);
-		// elem_mul(m_cellStateErrs[seqIdx], W_o_c, m_outGateDelta[seqIdx], m_numNeuron);
+		elem_mul(m_cellStateErrs[seqIdx], m_cellStateErrs[seqIdx+1], m_forgetGateActs[seqIdx+1], m_numNeuron);
+		elem_mul(m_cellStateErrs[seqIdx], W_i_c, m_inGateDelta[seqIdx+1], m_numNeuron);
+		elem_mul(m_cellStateErrs[seqIdx], W_f_c, m_forgetGateDelta[seqIdx+1], m_numNeuron);
+		elem_mul(m_cellStateErrs[seqIdx], W_o_c, m_outGateDelta[seqIdx], m_numNeuron);
 
-		// // computations are independent but use the same derivBuf
-		// // pre-gate state delta (Time t = seqIdx): m_preGateStateDelta[seqIdx]
-		// tanh_deriv(derivBuf, m_preGateStates[seqIdx], m_numNeuron);
-		// elem_mul_triple(m_preGateStateDelta[seqIdx], m_cellStateErrs[seqIdx], m_inGateActs[seqIdx], derivBuf, m_numNeuron);
+		// computations are independent but use the same derivBuf
+		// pre-gate state delta (Time t = seqIdx): m_preGateStateDelta[seqIdx]
+		tanh_deriv(derivBuf, m_preGateStates[seqIdx], m_numNeuron);
+		elem_mul_triple(m_preGateStateDelta[seqIdx], m_cellStateErrs[seqIdx], m_inGateActs[seqIdx], derivBuf, m_numNeuron);
 
-		// // computations are independent but use the same derivBuf
-		// // forget gates delta (Time t = seqIdx): m_forgetGateDelta[seqIdx]
-		// sigm_deriv(derivBuf, m_forgetGateActs[seqIdx], m_numNeuron);
-		// elem_mul_triple(m_forgetGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_states[seqIdx-1], derivBuf, m_numNeuron);
+		// computations are independent but use the same derivBuf
+		// forget gates delta (Time t = seqIdx): m_forgetGateDelta[seqIdx]
+		sigm_deriv(derivBuf, m_forgetGateActs[seqIdx], m_numNeuron);
+		elem_mul_triple(m_forgetGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_states[seqIdx-1], derivBuf, m_numNeuron);
 
-		// // computations are independent but use the same derivBuf
-		// // input gates delta (Time t = seqIdx): m_inGateDelta[seqIdx]
-		// sigm_deriv(derivBuf, m_inGateActs[seqIdx], m_numNeuron);
-		// elem_mul_triple(m_inGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], derivBuf, m_numNeuron);
+		// computations are independent but use the same derivBuf
+		// input gates delta (Time t = seqIdx): m_inGateDelta[seqIdx]
+		sigm_deriv(derivBuf, m_inGateActs[seqIdx], m_numNeuron);
+		elem_mul_triple(m_inGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], derivBuf, m_numNeuron);
 		
 	}
 	double endTime = CycleTimer::currentSeconds();
