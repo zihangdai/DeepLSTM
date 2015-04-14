@@ -199,6 +199,7 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 		int blockIdx = threadIdx / 4;
 		int startIdx = blockIdx * blockSize;
 		int actualSize = min(blockSize, m_numNeuron-startIdx);
+		printf("actualSize %d from thread %d\n", actualSize, omp_get_thread_num());
 		switch (threadIdx%4) {
 			case 0: {
 				// compute input gate activation
