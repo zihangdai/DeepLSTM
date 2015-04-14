@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <algorithm>
+#include <immintrin.h>
+#include <omp.h>
 
 #include "matrix.h"
-#include <immintrin.h>
+
 
 using namespace std;
 
