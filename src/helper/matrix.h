@@ -2,8 +2,8 @@
 #define __HELPER_MATRIX_H__
 
 #include <math.h>
-// #include "cblas.h"
-#include "mkl.h"
+#include "cblas.h"
+// #include "mkl.h"
 
 void outer (float *result, float *a, int dim_a, float *b, int dim_b);
 
@@ -18,5 +18,7 @@ void elem_mul_triple (float *result, float *a, float *b, float *c, int dim);
 void elem_sub (float *result, float *a, float *b, int dim);
 
 void elem_accum (float *result, float *a, int dim);
+
+void dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B);
 
 #endif

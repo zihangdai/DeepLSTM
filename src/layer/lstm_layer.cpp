@@ -191,6 +191,7 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 	dot_threads(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	dot_threads(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	dot_threads(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	
 	#pragma omp parallel for
 	for (int gateIdx=0; gateIdx<4; ++gateIdx) {
 		switch (gateIdx) {
