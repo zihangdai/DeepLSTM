@@ -187,3 +187,11 @@ void trans_dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *
 		cblas_sgemv(CblasColMajor, CblasNoTrans, actualSize, dim1_A, 1.0, A, actualSize, B, 1, 1.0, result, 1);
 	}
 }
+
+void elem_mul_threads (float *result, float *a, float *b, int dim) {
+	#pragma omp parallel for
+	for (int i=0; i<dim; i+=BLOCK_SIZE) {
+		int actualSize = min(BLOCK_SIZE, dim-i);
+		elem_mul(result+i, a+i, b+i, actualSize);
+	}	
+}
