@@ -187,41 +187,77 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 }
 
 void LSTMLayer::computeGatesActs(int seqIdx) {
-	dot_threads(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	dot_threads(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	dot_threads(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	dot_threads(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// dot_threads(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// dot_threads(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// dot_threads(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// dot_threads(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	
+	int maxThreads = omp_get_max_threads();	
+	int blockSize = (m_numNeuron ＋ (maxThreads / 4) － 1) / (maxThreads / 4);
 	#pragma omp parallel for
-	for (int gateIdx=0; gateIdx<4; ++gateIdx) {
-		switch (gateIdx) {
+	for (int threadIdx=0; threadIdx<maxThreads; ++threadIdx) {
+		int blockIdx = threadIdx / 4;
+		int startIdx = blockIdx * blockSize
+		int actualSize = min(blockSize, m_numNeuron-startIdx);
+		switch (threadIdx%4) {
 			case 0: {
 				// compute input gate activation
-				// dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
-				sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
+				dot(m_inGateActs[seqIdx]+startIdx, W_i_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+				elem_mul(m_inGateActs[seqIdx]+startIdx, W_i_c+startIdx, m_states[seqIdx-1]+startIdx, actualSize);
+				sigm(m_inGateActs[seqIdx]+startIdx, m_inGateActs[seqIdx]+startIdx, actualSize);
 				break;
 			}
 			case 1: {
 				// compute forget gate activation
-				// dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
-				sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
+				dot(m_forgetGateActs[seqIdx]+startIdx, W_f_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+				elem_mul(m_forgetGateActs[seqIdx]+startIdx, W_f_c, m_states[seqIdx-1]+startIdx, actualSize);
+				sigm(m_forgetGateActs[seqIdx]+startIdx, m_forgetGateActs[seqIdx]+startIdx, actualSize);
 				break;
 			}
 			case 2: {
 				// compute pre-gate states
-				// dot(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
+				dot(m_preGateStates[seqIdx]+startIdx, W_c_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+				tanh(m_preGateStates[seqIdx]+startIdx, m_preGateStates[seqIdx]+startIdx, actualSize);
 				break;
 			}
 			case 3: {
 				// compute output gate activation
-				// dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+				dot(m_outGateActs[seqIdx]+startIdx, W_o_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 				break;
 			}
 		}
 	}
 
+	// #pragma omp parallel for
+	// for (int threadIdx=0; threadIdx<4; ++threadIdx) {
+	// 	switch (threadIdx) {
+	// 		case 0: {
+	// 			// compute input gate activation
+	// 			dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// 			elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
+	// 			sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
+	// 			break;
+	// 		}
+	// 		case 1: {
+	// 			// compute forget gate activation
+	// 			dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// 			elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
+	// 			sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
+	// 			break;
+	// 		}
+	// 		case 2: {
+	// 			// compute pre-gate states
+	// 			dot(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// 			tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
+	// 			break;
+	// 		}
+	// 		case 3: {
+	// 			// compute output gate activation
+	// 			dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+	// 			break;
+	// 		}
+	// 	}
+	// }
 }
 
 void LSTMLayer::feedForward(int inputSeqLen) {
