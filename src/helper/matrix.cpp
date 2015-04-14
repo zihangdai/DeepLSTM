@@ -8,6 +8,7 @@ using namespace std;
 
 #define SIMD_WIDTH 8
 #define SIMD 1
+#define BLOCK_SIZE 64
 
 void outer (float *result, float *a, int dim_a, float *b, int dim_b) {
 	if (!SIMD) {
@@ -63,8 +64,11 @@ void elem_mul (float *result, float *a, float *b, int dim) {
 			result[i] += a[i] * b[i];
 		}
 	} else {
+		int residual = dim % SIMD_WIDTH;
+		int stopSIMD = dim - residual;
+
 		__m256 vec_a, vec_b, vec_res;
-		for (int i=0; i<dim; i+=SIMD_WIDTH) {
+		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
 			vec_a = _mm256_loadu_ps(a + i);
 			vec_b = _mm256_loadu_ps(b + i);
 			vec_res = _mm256_loadu_ps(result + i);
@@ -72,6 +76,10 @@ void elem_mul (float *result, float *a, float *b, int dim) {
 			vec_a = _mm256_mul_ps(vec_a, vec_b);
 			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
+		}
+
+		for (int i=stopSIMD; i<dim; ++i) {
+			result[i] += a[i] * b[i];
 		}
 	}
 }
@@ -83,8 +91,11 @@ void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
 			result[i] += a[i] * b[i] * c[i];
 		}
 	} else {
+		int residual = dim % SIMD_WIDTH;
+		int stopSIMD = dim - residual;
+
 		__m256 vec_a, vec_b, vec_c, vec_res;
-		for (int i=0; i<dim; i+=SIMD_WIDTH) {
+		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
 			vec_a = _mm256_loadu_ps(a + i);
 			vec_b = _mm256_loadu_ps(b + i);
 			vec_c = _mm256_loadu_ps(c + i);
@@ -95,6 +106,10 @@ void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
 			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
 		}
+
+		for (int i=stopSIMD; i<dim; ++i) {
+			result[i] += a[i] * b[i] * c[i];
+		}
 	}
 }
 
@@ -104,9 +119,12 @@ void elem_sub (float *result, float *a, float *b, int dim) {
 			// R_i += a_i - b_i
 			result[i] += a[i] - b[i];
 		}
-	} else {
+	} else {		
+		int residual = dim % SIMD_WIDTH;
+		int stopSIMD = dim - residual;
+		
 		__m256 vec_a, vec_b, vec_res;
-		for (int i=0; i<dim; i+=SIMD_WIDTH) {
+		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
 			vec_a = _mm256_loadu_ps(a + i);
 			vec_b = _mm256_loadu_ps(b + i);
 			vec_res = _mm256_loadu_ps(result + i);
@@ -114,6 +132,10 @@ void elem_sub (float *result, float *a, float *b, int dim) {
 			vec_a = _mm256_sub_ps(vec_a, vec_b);
 			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
+		}
+
+		for (int i=stopSIMD; i<dim; ++i) {
+			result[i] += a[i] - b[i];
 		}
 	}
 }
@@ -125,13 +147,30 @@ void elem_accum (float *result, float *a, int dim) {
 			result[i] += a[i];
 		}
 	} else {
+		int residual = dim % SIMD_WIDTH;
+		int stopSIMD = dim - residual;
+
 		__m256 vec_a, vec_res;
-		for (int i=0; i<dim; i+=SIMD_WIDTH) {
+		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
 			vec_a = _mm256_loadu_ps(a + i);
 			vec_res = _mm256_loadu_ps(result + i);
 
 			vec_res = _mm256_add_ps(vec_res, vec_a);
 			_mm256_storeu_ps(result + i, vec_res);
 		}
+
+		for (int i=stopSIMD; i<dim; ++i) {
+			result[i] += a[i];
+		}
+	}
+}
+
+void dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B) {
+	assert(dim2_A == dim1_B);
+	int max_threads = omp_get_max_threads();
+	#pragma omp parallel for
+	for (int i=0; i<dim1_A; i+=BLOCK_SIZE) {
+		int actualSize = min(BLOCK_SIZE, dim1_A-i);
+		dot (result+i, A+i*dim2_A, actualSize, dim2_A, B, dim1_B, dim2_B);
 	}
 }
