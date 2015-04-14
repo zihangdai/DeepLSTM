@@ -188,9 +188,7 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 
 void LSTMLayer::computeGatesActs(int seqIdx) {
 	dot_threads(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	elem_mul_threads(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
 	dot_threads(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	elem_mul_threads(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
 	dot_threads(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	dot_threads(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	#pragma omp parallel for
@@ -199,14 +197,14 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 			case 0: {
 				// compute input gate activation
 				// dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				// elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
+				elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
 				sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
 				break;
 			}
 			case 1: {
 				// compute forget gate activation
 				// dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				// elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
+				elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
 				sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
 				break;
 			}
@@ -270,20 +268,20 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		computeGatesActs(seqIdx);
 
 		// compute cell states
-		elem_mul_threads(m_states[seqIdx], m_forgetGateActs[seqIdx], m_states[seqIdx-1], m_numNeuron);
-		elem_mul_threads(m_states[seqIdx], m_inGateActs[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
+		elem_mul(m_states[seqIdx], m_forgetGateActs[seqIdx], m_states[seqIdx-1], m_numNeuron);
+		elem_mul(m_states[seqIdx], m_inGateActs[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
 
 		// compute output gate activation
 		// dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		// dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-		elem_mul_threads(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
+		elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
 		sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
 
 		// compute pre-output-gate activation
 		tanh(m_preOutGateActs[seqIdx], m_states[seqIdx], m_numNeuron);
 
 		// compute output activation
-		elem_mul_threads(m_outputActs[seqIdx], m_outGateActs[seqIdx], m_preOutGateActs[seqIdx], m_numNeuron);
+		elem_mul(m_outputActs[seqIdx], m_outGateActs[seqIdx], m_preOutGateActs[seqIdx], m_numNeuron);
 	}
 	endTime = CycleTimer::currentSeconds();
 	printf("LSTMLayer feedForward sequential time: %f\n", endTime - startTime);
@@ -345,15 +343,15 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
 		// four computations are independent but write to the same memory
 		// output error: m_outputErrs[seqIdx]. all deltas are from Time t=seqIdx+1
-		computeOutputErrs (seqIdx);
+		// computeOutputErrs (seqIdx);
 		// trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
-		// trans_dot_threads(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
-		// trans_dot_threads(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
-		// trans_dot_threads(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
-		// trans_dot_threads(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
 		
 		// computations are independent but use the same derivBuf
 		// output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
