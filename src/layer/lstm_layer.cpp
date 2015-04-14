@@ -367,9 +367,10 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 }
 
 void LSTMLayer::feedbackSequential (int seqIdx, float *derivBuf) {
+	int blockSize = 64;
 	#pragma omp parallel for 
-	for (int i=0; i<m_numNeuron; i+=128) {
-		int actualSize = min(128, m_numNeuron-i);
+	for (int i=0; i<m_numNeuron; i+=blockSize) {
+		int actualSize = min(blockSize, m_numNeuron-i);
 		// computations are independent but use the same derivBuf
 		// output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
 		sigm_deriv(derivBuf+i, m_outGateActs[seqIdx]+i, actualSize);
