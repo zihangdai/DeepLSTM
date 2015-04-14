@@ -21,4 +21,6 @@ void elem_accum (float *result, float *a, int dim);
 
 void dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B);
 
+void trans_dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B);
+
 #endif

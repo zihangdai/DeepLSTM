@@ -191,7 +191,6 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 	dot_threads(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	dot_threads(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 	dot_threads(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	
 	#pragma omp parallel for
 	for (int gateIdx=0; gateIdx<4; ++gateIdx) {
 		switch (gateIdx) {
@@ -344,11 +343,15 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
 		// four computations are independent but write to the same memory
 		// output error: m_outputErrs[seqIdx]. all deltas are from Time t=seqIdx+1
-		computeOutputErrs (seqIdx);
+		// computeOutputErrs (seqIdx);
 		// trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
+		trans_dot_threads(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
 		
 		// computations are independent but use the same derivBuf
 		// output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
