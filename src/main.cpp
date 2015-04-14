@@ -3,7 +3,7 @@
 
 int main() {
     openblas_set_num_threads(1);
-    int max_openmp_threads = 8;
+    int max_openmp_threads = 20;
     omp_set_num_threads(max_openmp_threads);
 
     ConfReader *confReader = new ConfReader("config.conf", "LSTM");

@@ -59,7 +59,7 @@ $(OBJDIR):
 
 # compile all objs from corresponding %.cpp file and all other *.h files
 %.o: %.cpp 
-	$(CXX) $(CPPFLAGS) $(INCFLAGS) $(CXXFLAGS) $< -c -o $@
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) $(LDFLAGS) $< -c -o $@
 
 # clean
 clean:
