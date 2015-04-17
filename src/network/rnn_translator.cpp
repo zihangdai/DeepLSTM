@@ -2,6 +2,7 @@
 
 RNNTranslator::RNNTranslator(ConfReader *confReader) {		
 	// init encoder and decoder
+	m_reverseEncoder = confReader->getInt("reverse_encoder");
 	string encoderConfSec = confReader->getString("encoder_conf");
 	string decoderConfSec = confReader->getString("decoder_conf");
 
@@ -15,8 +16,7 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	m_nParamSize = 0;
 	m_nParamSize += m_encoder->m_nParamSize;
 	m_nParamSize += m_decoder->m_nParamSize;
-	m_nParamSize += m_decoder->m_dataSize * m_encoder->m_targetSize;	
-
+	m_nParamSize += m_decoder->m_dataSize * m_encoder->m_targetSize;
 }
 
 RNNTranslator::~RNNTranslator() {
@@ -84,9 +84,16 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		RecurrentLayer *enInputLayer  = m_encoder->m_vecLayers[0];
 		RecurrentLayer *enOutputLayer = m_encoder->m_vecLayers[m_encoder->m_numLayer-1];
 		// bind input sequence to m_inputActs of the input layer of the encoder
-		for (int seqIdx=1; seqIdx<=encoderSeqLen; ++seqIdx) {
-			memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_dataSize);
-			dataCursor += m_encoder->m_dataSize;
+		if (m_reverseEncoder) {
+			for (int seqIdx=encoderSeqLen; seqIdx>=1; --seqIdx) {
+				memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_dataSize);
+				dataCursor += m_encoder->m_dataSize;
+			}
+		} else {
+			for (int seqIdx=1; seqIdx<=encoderSeqLen; ++seqIdx) {
+				memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_dataSize);
+				dataCursor += m_encoder->m_dataSize;
+			}
 		}
 		m_encoder->feedForward(encoderSeqLen);
 
@@ -141,5 +148,5 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 	}
 	error *= normFactor;
 
-	return error;	
+	return error;
 }
