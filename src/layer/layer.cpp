@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#define DEBUG_LAYER
+// #define DEBUG_LAYER
 
 RecurrentLayer::RecurrentLayer (int numNeuron, int maxSeqLen, int inputSize) {
 	#ifdef DEBUG_LAYER
