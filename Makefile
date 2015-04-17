@@ -37,6 +37,7 @@ SRCS=\
 	$(SRCDIR)/layer/layer.cpp \
 	$(SRCDIR)/layer/lstm_layer.cpp \
 	$(SRCDIR)/layer/softmax_layer.cpp \
+	$(SRCDIR)/layer/mse_layer.cpp \
 	$(SRCDIR)/network/lstm_rnn.cpp
 
 # obj files using patsubst matching

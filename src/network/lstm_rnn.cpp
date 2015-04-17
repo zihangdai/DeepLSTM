@@ -88,11 +88,13 @@ RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
 	RecurrentLayer *layer;
 	if (layerType == "input_layer") {
 		layer = new InputLayer(numNeuron, m_maxSeqLen);
-	} else if (layerType == "softmax_layer") {
-		layer = new SoftmaxLayer(numNeuron, m_maxSeqLen);
 	} else if (layerType == "lstm_layer") {
 		int inputSize = m_numNeuronList[layerIdx-1];
 		layer = new LSTMLayer(numNeuron, m_maxSeqLen, inputSize);
+	} else if (layerType == "softmax_layer") {
+		layer = new SoftmaxLayer(numNeuron, m_maxSeqLen);
+	} else if (layerType == "mse_layer") {
+		layer = new MSELayer(numNeuron, m_maxSeqLen);
 	} else {
 		printf("Error in initLayer.\n");
 		exit(-1);
@@ -117,7 +119,7 @@ void LSTM_RNN::initParams(float *params) {
 	}
 }
 
-float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *label) {
+float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *label, int minibatchSize) {
 	float error = 0.f;
 	
 	memset(grad, 0x00, sizeof(float)*m_nParamSize);
@@ -126,7 +128,7 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *labe
 	float *labelCursor = label;
 	
 	/*** feed forward and feed backward ***/
-	for (int dataIdx=0; dataIdx<1; ++dataIdx) {
+	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
 		// TODO
 		int inputSeqLen = m_maxSeqLen;
 
@@ -154,6 +156,7 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *labe
 			memcpy(curLayer->m_outputErrs[seqIdx], labelCursor, sizeof(float)*curNumNeuron);
 			// compute error
 			for (int i=0; i<curNumNeuron; ++i) {
+				// cross-entropy error
 				error += labelCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
 			}
 			labelCursor += curNumNeuron;
@@ -167,16 +170,24 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *labe
 		}
 	}
 
-	// normalization by number of input sequences
-
-	// clip gradients to [-1, 1]
+	// normalization by number of input sequences and clip gradients to [-1, 1]
+	float normFactor = 1.f / (float) minibatchSize;
+	for (int dim=0; dim<m_nParamSize; ++dim) {
+		grad[dim] *= normFactor;
+		if (grad[dim] < -1.f) {
+			grad[dim] = -1.f;
+		} else if (grad[dim] > 1.f) {
+			grad[dim] = 1.f;
+		}
+	}
+	error *= normFactor;
 
 	return error;
 }
 
 void LSTM_RNN::resetStates(int inputSeqLen) {
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
-		m_vecLayers[layerIdx]->resetStates(inputSeqLen);		
+		m_vecLayers[layerIdx]->resetStates(inputSeqLen);
 	}
 }
 

@@ -32,10 +32,11 @@ int main() {
         }   
     }   
 
-
-    float error = net->computeGrad(grad, params, data, label);
+    for (int i=0; i<5; ++i) {
+    float error = net->computeGrad(grad, params, data, label, 1);
 
     printf("Error: %f\n", error);
+    }
 
     // printf("LSTM output\n");
     // for (int i=1; i<inputSeqLen+1; ++i) {
