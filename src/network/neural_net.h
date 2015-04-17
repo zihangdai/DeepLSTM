@@ -21,6 +21,8 @@ public:
 	int m_numLayer;
 	int m_maxSeqLen;
 	int m_nParamSize;
+	
+	string m_errorType;
 
 	int *m_numNeuronList;
 	string *m_layerTypeList;

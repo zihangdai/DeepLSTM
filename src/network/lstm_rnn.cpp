@@ -18,7 +18,7 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
   		ss << layerIdx;
 		m_numNeuronList[layerIdx] = confReader->getInt("num_neuron_layer_" + ss.str());
 		m_layerTypeList[layerIdx] = confReader->getString("type_layer_" + ss.str());
-	}
+	}	
 	
 	// type of each conectection
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
@@ -92,10 +92,12 @@ RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
 		layer = new InputLayer(numNeuron, m_maxSeqLen);
 	} else if (layerType == "lstm_layer") {
 		int inputSize = m_numNeuronList[layerIdx-1];
-		layer = new LSTMLayer(numNeuron, m_maxSeqLen, inputSize);
+		layer = new LSTMLayer(numNeuron, m_maxSeqLen, inputSize);		
 	} else if (layerType == "softmax_layer") {
+		m_errorType = "cross_entropy_error";
 		layer = new SoftmaxLayer(numNeuron, m_maxSeqLen);
 	} else if (layerType == "mse_layer") {
+		m_errorType = "mean_squared_error";
 		layer = new MSELayer(numNeuron, m_maxSeqLen);
 	} else {
 		printf("Error in initLayer.\n");
@@ -158,8 +160,13 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *labe
 			memcpy(curLayer->m_outputErrs[seqIdx], labelCursor, sizeof(float)*curNumNeuron);
 			// compute error
 			for (int i=0; i<curNumNeuron; ++i) {
-				// cross-entropy error
-				error += labelCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
+				if (m_errorType == "cross_entropy_error") {
+					error += labelCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
+				} else if (m_errorType == "mean_squared_error") {
+					float diff = labelCursor[i] - curLayer->m_outputActs[seqIdx][i];
+					error += diff * diff;
+				}
+
 			}
 			labelCursor += curNumNeuron;
 		}
