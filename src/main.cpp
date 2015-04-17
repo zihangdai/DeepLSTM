@@ -1,4 +1,4 @@
-#include "neural_net.h"
+#include "lstm_rnn.h"
 #include "confreader.h"
 
 int main() {
