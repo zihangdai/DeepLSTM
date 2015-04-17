@@ -35,6 +35,7 @@ SRCS=\
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/layer/layer.cpp \
+	$(SRCDIR)/layer/input_layer.cpp \
 	$(SRCDIR)/layer/lstm_layer.cpp \
 	$(SRCDIR)/layer/softmax_layer.cpp \
 	$(SRCDIR)/layer/mse_layer.cpp \
