@@ -29,7 +29,7 @@ public:
 	vector<RecConnection *> m_vecConnections;
 
 	/* method */
-	float virtual computeGrad (float *grad, float *params, float *data, float *label) {return 0.f;};
+	float virtual computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize) {return 0.f;};
 	void virtual initParams (float *params) {};
 };
 
@@ -42,7 +42,7 @@ public:
 	/* data */
 
 	/* method */
-	float computeGrad (float *grad, float *params, float *data, float *label);
+	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);
 	void initParams (float *params);
 
 private:
