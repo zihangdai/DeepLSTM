@@ -21,7 +21,7 @@ public:
 	int m_numLayer;
 	int m_maxSeqLen;
 	int m_nParamSize;
-	
+
 	string m_errorType;
 
 	int *m_numNeuronList;
@@ -34,25 +34,6 @@ public:
 	/* method */
 	float virtual computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize) {return 0.f;};
 	void virtual initParams (float *params) {};
-};
-
-class LSTM_RNN: public RecurrentNN
-{
-public:
-	LSTM_RNN(ConfReader *confReader);
-	~LSTM_RNN();
-
-	/* data */
-
-	/* method */
-	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);
-	void initParams (float *params);
-
-private:
-	RecurrentLayer *initLayer (int layerIdx);
-	RecConnection *initConnection(int connIdx);
-	void bindWeights(float *params, float *grad);
-	void resetStates(int inputSeqLen);
 };
 
 #endif

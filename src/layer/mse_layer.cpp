@@ -19,3 +19,4 @@ void MSELayer::feedBackward(int inputSeqLen) {
 	double endTime = CycleTimer::currentSeconds();
 	printf("MSELayer feedBackward time: %f\n", endTime - startTime);
 }
+

@@ -26,17 +26,15 @@ int main() {
     for (int i=0; i<inputSeqLen; ++i) {
         for (int j=0; j<dimIn; ++j) {
             data[i*dimIn+j] = 1.f * (float(rand()) / float(RAND_MAX) + 0.5);
-        }   
+        }
         for (int j=0; j<dimOut; ++j) {
             label[i*dimOut+j] = 5.f * (float(rand()) / float(RAND_MAX) + 0.5);
-        }   
+        }
     }   
-
-    for (int i=0; i<5; ++i) {
+    
     float error = net->computeGrad(grad, params, data, label, 1);
 
     printf("Error: %f\n", error);
-    }
 
     // printf("LSTM output\n");
     // for (int i=1; i<inputSeqLen+1; ++i) {
