@@ -3,6 +3,8 @@
 
 using namespace std;
 
+#define DEBUG_LSTM_RNN
+
 LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 	/* read conf and allocate memory */
 	m_numLayer = confReader->getInt("num_layer");
