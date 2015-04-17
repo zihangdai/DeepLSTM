@@ -123,7 +123,7 @@ void LSTM_RNN::initParams(float *params) {
 	}
 }
 
-void LSTM_RNN::feedForward(float *sampleData) {
+void LSTM_RNN::feedForward(float *sampleData, int inputSeqLen) {
 	float *dataCursor = sampleData;
 	/* bind input sequence to the input layer */
 	RecurrentLayer *curLayer = m_vecLayers[0];
@@ -139,7 +139,7 @@ void LSTM_RNN::feedForward(float *sampleData) {
 	}
 }
 
-void LSTM_RNN::feedBackward(float *sampleLabel) {
+void LSTM_RNN::feedBackward(float *sampleLabel, int inputSeqLen) {
 	float *labelCursor = sampleLabel;
 	/* bind target label to output layer */
 	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
@@ -158,18 +158,21 @@ void LSTM_RNN::feedBackward(float *sampleLabel) {
 	}	
 }
 
-float LSTM_RNN::computeError(float *sampleLabel) {
+float LSTM_RNN::computeError(float *sampleLabel, int inputSeqLen) {
 	float sampleError = 0.f;
 	float *labelCursor = sampleLabel;
 	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
 	int curNumNeuron = curLayer->m_numNeuron;
-	for (int i=0; i<curNumNeuron; ++i) {
-		if (m_errorType == "cross_entropy_error") {
-			sampleError += labelCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
-		} else if (m_errorType == "mean_squared_error") {
-			float diff = labelCursor[i] - curLayer->m_outputActs[seqIdx][i];
-			sampleError += diff * diff;
+	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
+		for (int i=0; i<curNumNeuron; ++i) {
+			if (m_errorType == "cross_entropy_error") {
+				sampleError += labelCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
+			} else if (m_errorType == "mean_squared_error") {
+				float diff = labelCursor[i] - curLayer->m_outputActs[seqIdx][i];
+				sampleError += diff * diff;
+			}
 		}
+		labelCursor += curNumNeuron;
 	}
 	return sampleError;
 }
@@ -188,13 +191,13 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *labe
 		float *sampleLabel = label + dataIdx * m_vecLayers[m_numLayer-1]->m_numNeuron;
 		
 		// feedforward
-		feedForward(sampleData);
+		feedForward(sampleData, inputSeqLen);
 
 		// compute error
-		error += computeError(sampleLabel);		
+		error += computeError(sampleLabel, inputSeqLen);		
 
 		// feedbackword
-		feedBackward(sampleLabel);
+		feedBackward(sampleLabel, inputSeqLen);
 
 		/* reset internal states of LSTM layers */
 		resetStates(inputSeqLen); // this is subject to change
