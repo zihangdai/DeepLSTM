@@ -195,7 +195,7 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 		feedForward(sampleData, inputSeqLen);
 
 		// compute error
-		error += computeError(sampleTarget, inputSeqLen);		
+		error += computeError(sampleTarget, inputSeqLen);
 
 		// feedbackword
 		feedBackward(sampleTarget, inputSeqLen);

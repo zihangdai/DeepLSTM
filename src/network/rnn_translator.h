@@ -14,7 +14,7 @@ public:
 	int m_nParamSize;
 
 	float *m_encodingW;
-	float *m_decodingW;
+	float *m_gradEncodingW;
 
 	LSTM_RNN *m_encoder;
 	LSTM_RNN *m_decoder;	
@@ -24,7 +24,7 @@ public:
 	void initParams (float *params);
 
 private:
-	
+	void bindWeights(float *params, float *grad);	
 };
 
 #endif
