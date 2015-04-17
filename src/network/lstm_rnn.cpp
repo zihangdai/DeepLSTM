@@ -127,7 +127,7 @@ void LSTM_RNN::initParams(float *params) {
 
 void LSTM_RNN::feedForward(int inputSeqLen) {	
 	/* feed forward through connections and layers */
-	curLayer->feedForward(inputSeqLen);
+	m_vecLayers[0]->feedForward(inputSeqLen);
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
 		m_vecConnections[connIdx]->feedForward(inputSeqLen);
 		m_vecLayers[connIdx+1]->feedForward(inputSeqLen);
@@ -136,7 +136,7 @@ void LSTM_RNN::feedForward(int inputSeqLen) {
 
 void LSTM_RNN::feedBackward(int inputSeqLen) {
 	/* feed backward through connections and layers */
-	curLayer->feedBackward(inputSeqLen);
+	m_vecLayers[m_numLayer-1]->feedBackward(inputSeqLen);
 	for (int connIdx=m_numLayer-2; connIdx>=0; --connIdx) {
 		m_vecConnections[connIdx]->feedBackward(inputSeqLen);
 		m_vecLayers[connIdx]->feedBackward(inputSeqLen);
@@ -178,9 +178,9 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 		/* feedforward */
 		float *dataCursor = sampleData;
 		// bind input sequence to m_inputActs of the input layer 
-		RecurrentLayer *curLayer = m_vecLayers[0];
+		RecurrentLayer *inputLayer = m_vecLayers[0];
 		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-			memcpy(curLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_dataSize);
+			memcpy(inputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_dataSize);
 			dataCursor += m_dataSize;
 		}
 		// feedForward through connections and layers
@@ -192,9 +192,9 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 		/* feedbackword */
 		float *targetCursor = sampleTarget;
 		// bind target sequence to m_outputErrs of the output layer
-		RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
+		RecurrentLayer *outputLayer = m_vecLayers[m_numLayer-1];
 		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-			memcpy(curLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_targetSize);
+			memcpy(outputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_targetSize);
 			targetCursor += m_targetSize;
 		}
 		// feedback through connections and layers
