@@ -49,7 +49,8 @@ OBJS=$(SRCS:%.cpp=%.o)
 # .PHONY: 
 
 # all comes first in the file, so it is the default 
-all : lstmRNN
+# all : lstmRNN
+all : RNNTranslator
 
 # compile main program parallelSGD from all objs 
 # lstmRNN: $(OBJS)
