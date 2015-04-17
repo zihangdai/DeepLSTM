@@ -114,12 +114,12 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			memcpy(deOutputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_targetSize);
 			targetCursor += m_decoder->m_targetSize;
 		}
-		m_decoder->feedBackword(decoderSeqLen);
+		m_decoder->feedBackward(decoderSeqLen);
 
 		// *** encoder ***
 		trans_dot(enOutputLayer->m_outputErrs[encoderSeqLen], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
 			deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 1);
-		m_encoder->feedBackword(encoderSeqLen);
+		m_encoder->feedBackward(encoderSeqLen);
 
 		outer(m_gradEncodingW, deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 
 			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize);		
