@@ -36,6 +36,8 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 		m_nParamSize += layer->m_nParamSize;
 		m_vecLayers.push_back(layer);
 	}
+	m_dataSize = m_vecLayers[0]->m_inputSize;
+	m_targetSize = m_vecLayers[m_numLayer-1]->m_numNeuron;
 
 	/* initialize connections */
 	for (int connIdx=0; connIdx<m_numLayer-1; connIdx++) {
@@ -126,11 +128,10 @@ void LSTM_RNN::initParams(float *params) {
 void LSTM_RNN::feedForward(float *sampleData, int inputSeqLen) {
 	float *dataCursor = sampleData;
 	/* bind input sequence to the input layer */
-	RecurrentLayer *curLayer = m_vecLayers[0];
-	int curNumNeuron = curLayer->m_numNeuron;
+	RecurrentLayer *curLayer = m_vecLayers[0];	
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		memcpy(curLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*curNumNeuron);
-		dataCursor += curNumNeuron;
+		memcpy(curLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_dataSize);
+		dataCursor += m_dataSize;
 	}
 
 	/* feed forward through connections and layers */
@@ -141,15 +142,14 @@ void LSTM_RNN::feedForward(float *sampleData, int inputSeqLen) {
 	}
 }
 
-void LSTM_RNN::feedBackward(float *sampleLabel, int inputSeqLen) {
-	float *labelCursor = sampleLabel;
-	/* bind target label to output layer */
-	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
-	int curNumNeuron = curLayer->m_numNeuron;
+void LSTM_RNN::feedBackward(float *sampleTarget, int inputSeqLen) {
+	float *targetCursor = sampleTarget;
+	/* bind target target to output layer */
+	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];	
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		// bind target label to m_outputErrs of output layer
-		memcpy(curLayer->m_outputErrs[seqIdx], labelCursor, sizeof(float)*curNumNeuron);		
-		labelCursor += curNumNeuron;
+		// bind target target to m_outputErrs of output layer
+		memcpy(curLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_targetSize);
+		targetCursor += m_targetSize;
 	}
 
 	/* feed backward through connections and layers */
@@ -160,26 +160,25 @@ void LSTM_RNN::feedBackward(float *sampleLabel, int inputSeqLen) {
 	}
 }
 
-float LSTM_RNN::computeError(float *sampleLabel, int inputSeqLen) {
+float LSTM_RNN::computeError(float *sampleTarget, int inputSeqLen) {
 	float sampleError = 0.f;
-	float *labelCursor = sampleLabel;
+	float *targetCursor = sampleTarget;
 	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
-	int curNumNeuron = curLayer->m_numNeuron;
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		for (int i=0; i<curNumNeuron; ++i) {
+		for (int i=0; i<m_targetSize; ++i) {
 			if (m_errorType == "cross_entropy_error") {
-				sampleError += labelCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
+				sampleError += targetCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
 			} else if (m_errorType == "mean_squared_error") {
-				float diff = labelCursor[i] - curLayer->m_outputActs[seqIdx][i];
+				float diff = targetCursor[i] - curLayer->m_outputActs[seqIdx][i];
 				sampleError += diff * diff;
 			}
 		}
-		labelCursor += curNumNeuron;
+		targetCursor += m_targetSize;
 	}
 	return sampleError;
 }
 
-float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *label, int minibatchSize) {
+float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *target, int minibatchSize) {
 	float error = 0.f;
 	
 	memset(grad, 0x00, sizeof(float)*m_nParamSize);
@@ -189,17 +188,17 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *labe
 	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
 		// TODO
 		int inputSeqLen = m_maxSeqLen;
-		float *sampleData = data + dataIdx * m_vecLayers[0]->m_numNeuron;
-		float *sampleLabel = label + dataIdx * m_vecLayers[m_numLayer-1]->m_numNeuron;
+		float *sampleData = data + dataIdx * m_dataSize;
+		float *sampleTarget = target + dataIdx * m_targetSize;
 		
 		// feedforward
 		feedForward(sampleData, inputSeqLen);
 
 		// compute error
-		error += computeError(sampleLabel, inputSeqLen);		
+		error += computeError(sampleTarget, inputSeqLen);		
 
 		// feedbackword
-		feedBackward(sampleLabel, inputSeqLen);
+		feedBackward(sampleTarget, inputSeqLen);
 
 		/* reset internal states of LSTM layers */
 		resetStates(inputSeqLen); // this is subject to change

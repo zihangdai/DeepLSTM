@@ -24,6 +24,9 @@ public:
 	int m_maxSeqLen;
 	int m_nParamSize;
 
+	int m_dataSize;
+	int m_targetSize;
+
 	string m_errorType;
 
 	int *m_numNeuronList;

@@ -12,6 +12,9 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	m_decoder = new lstm(decoderConf);
 
 	// init m_encodingW and m_decodingW
+	
+
+	// compute m_nParamSize
 }
 
 RNNTranslator::~RNNTranslator() {
