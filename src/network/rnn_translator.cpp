@@ -15,11 +15,7 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	m_nParamSize = 0;
 	m_nParamSize += m_encoder->m_nParamSize;
 	m_nParamSize += m_decoder->m_nParamSize;
-	m_nParamSize += m_decoder->m_dataSize * m_encoder->m_targetSize;
-
-	// allocate memory for decode buffer
-	m_codeSize = m_decoder->m_dataSize;
-	m_decodeBuf = new float [m_codeSize * m_decoder->m_maxSeqLen];
+	m_nParamSize += m_decoder->m_dataSize * m_encoder->m_targetSize;	
 
 }
 
@@ -29,9 +25,6 @@ RNNTranslator::~RNNTranslator() {
 	}
 	if (!m_decoder) {
 		delete m_decoder;
-	}
-	if (!m_decodeBuf) {
-		delete [] m_decodeBuf;
 	}
 }
 
@@ -95,8 +88,8 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 
 		// *** decoder ***
 		float *targetCursor = sampleTarget;
-		RecurrentLayer deInputLayer  = m_decoder->m_vecLayers[0];
-		RecurrentLayer deOutputLayer = m_decoder->m_vecLayers[m_decoder->m_numLayer-1];
+		RecurrentLayer *deInputLayer  = m_decoder->m_vecLayers[0];
+		RecurrentLayer *deOutputLayer = m_decoder->m_vecLayers[m_decoder->m_numLayer-1];
 		// bind input sequence to m_inputActs of the input layer of the encoder
 		dot(deInputLayer->m_inputActs[1], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
 			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize, 1);
