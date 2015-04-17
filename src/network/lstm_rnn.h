@@ -15,9 +15,10 @@ public:
 	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);
 	void initParams (float *params);
 
-	float computeError(float *sampleLabel, int inputSeqLen);
-	void feedBackward(float *sampleLabel, int inputSeqLen);
-	void feedForward(float *sampleData, int inputSeqLen);
+	float computeError(float *sampleTarget, int inputSeqLen);
+	
+	void feedBackward(int inputSeqLen);
+	void feedForward(int inputSeqLen);
 
 private:
 	RecurrentLayer *initLayer (int layerIdx);

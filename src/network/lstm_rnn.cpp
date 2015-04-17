@@ -125,15 +125,7 @@ void LSTM_RNN::initParams(float *params) {
 	}
 }
 
-void LSTM_RNN::feedForward(float *sampleData, int inputSeqLen) {
-	float *dataCursor = sampleData;
-	/* bind input sequence to the input layer */
-	RecurrentLayer *curLayer = m_vecLayers[0];	
-	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		memcpy(curLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_dataSize);
-		dataCursor += m_dataSize;
-	}
-
+void LSTM_RNN::feedForward(int inputSeqLen) {	
 	/* feed forward through connections and layers */
 	curLayer->feedForward(inputSeqLen);
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
@@ -142,16 +134,7 @@ void LSTM_RNN::feedForward(float *sampleData, int inputSeqLen) {
 	}
 }
 
-void LSTM_RNN::feedBackward(float *sampleTarget, int inputSeqLen) {
-	float *targetCursor = sampleTarget;
-	/* bind target target to output layer */
-	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];	
-	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		// bind target target to m_outputErrs of output layer
-		memcpy(curLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_targetSize);
-		targetCursor += m_targetSize;
-	}
-
+void LSTM_RNN::feedBackward(int inputSeqLen) {
 	/* feed backward through connections and layers */
 	curLayer->feedBackward(inputSeqLen);
 	for (int connIdx=m_numLayer-2; connIdx>=0; --connIdx) {
@@ -184,25 +167,44 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 	memset(grad, 0x00, sizeof(float)*m_nParamSize);
 	bindWeights(params, grad);
 	
+	float *sampleData = data;
+	float *sampleTarget = target;
+
 	/*** feed forward and feed backward ***/
 	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
 		// TODO
 		int inputSeqLen = m_maxSeqLen;
-		float *sampleData = data + dataIdx * m_dataSize;
-		float *sampleTarget = target + dataIdx * m_targetSize;
 		
-		// feedforward
-		feedForward(sampleData, inputSeqLen);
+		/* feedforward */
+		float *dataCursor = sampleData;
+		// bind input sequence to m_inputActs of the input layer 
+		RecurrentLayer *curLayer = m_vecLayers[0];
+		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
+			memcpy(curLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_dataSize);
+			dataCursor += m_dataSize;
+		}
+		// feedForward through connections and layers
+		feedForward(inputSeqLen);
 
-		// compute error
+		/* compute error */
 		error += computeError(sampleTarget, inputSeqLen);
 
-		// feedbackword
-		feedBackward(sampleTarget, inputSeqLen);
+		/* feedbackword */
+		float *targetCursor = sampleTarget;
+		// bind target sequence to m_outputErrs of the output layer
+		RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
+		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
+			memcpy(curLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_targetSize);
+			targetCursor += m_targetSize;
+		}
+		// feedback through connections and layers
+		feedBackward(inputSeqLen);
 
 		/* reset internal states of LSTM layers */
 		resetStates(inputSeqLen); // this is subject to change
-		
+
+		sampleData += m_dataSize * inputSeqLen;
+		sampleTarget += m_targetSize * inputSeqLen;
 	}
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
