@@ -28,6 +28,7 @@ int main() {
         for (int j=0; j<dimIn; ++j) {
             data[i*dimIn+j] = 1.f * (float(rand()) / float(RAND_MAX) + 0.5);
         }
+    }
     for (int i=0; i<targetSeqLen; ++i) {
         for (int j=0; j<dimOut; ++j) {
             label[i*dimOut+j] = 5.f * (float(rand()) / float(RAND_MAX) + 0.5);
