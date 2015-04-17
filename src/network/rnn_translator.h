@@ -12,6 +12,7 @@ public:
 
 	/* data */
 	int m_nParamSize;
+	int m_reverseEncoder;
 
 	float *m_encodingW;
 	float *m_gradEncodingW;
