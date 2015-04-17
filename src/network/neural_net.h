@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "confreader.h"
+#include "input_layer.h"
 #include "lstm_layer.h"
 #include "softmax_layer.h"
 #include "mse_layer.h"

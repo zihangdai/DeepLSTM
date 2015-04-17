@@ -129,10 +129,12 @@ void LSTM_RNN::feedForward(float *sampleData, int inputSeqLen) {
 	RecurrentLayer *curLayer = m_vecLayers[0];
 	int curNumNeuron = curLayer->m_numNeuron;
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		memcpy(curLayer->m_outputActs[seqIdx], dataCursor, sizeof(float)*curNumNeuron);
+		memcpy(curLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*curNumNeuron);
 		dataCursor += curNumNeuron;
 	}
+
 	/* feed forward through connections and layers */
+	curLayer->feedForward(inputSeqLen);
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
 		m_vecConnections[connIdx]->feedForward(inputSeqLen);
 		m_vecLayers[connIdx+1]->feedForward(inputSeqLen);
@@ -155,7 +157,7 @@ void LSTM_RNN::feedBackward(float *sampleLabel, int inputSeqLen) {
 	for (int connIdx=m_numLayer-2; connIdx>=0; --connIdx) {
 		m_vecConnections[connIdx]->feedBackward(inputSeqLen);
 		m_vecLayers[connIdx]->feedBackward(inputSeqLen);
-	}	
+	}
 }
 
 float LSTM_RNN::computeError(float *sampleLabel, int inputSeqLen) {

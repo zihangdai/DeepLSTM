@@ -54,19 +54,6 @@ private:
 	void allocateMem (int seqIdx);
 };
 
-class InputLayer : public RecurrentLayer
-{
-public:
-	InputLayer(int numNeuron, int maxSeqLen) : RecurrentLayer(numNeuron, maxSeqLen, numNeuron) {
-		#ifdef DEBUG_LAYER
-		printf("InputLayer constructor.\n");
-		#endif
-	};
-	~InputLayer() {};
-
-	/* data */
-};
-
 /****************************************************************
 * Forward Layer
 ****************************************************************/
