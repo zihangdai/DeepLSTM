@@ -16,15 +16,16 @@ public:
 	void initParams (float *params);
 
 	float computeError(float *sampleTarget, int inputSeqLen);
-	
+
 	void feedBackward(int inputSeqLen);
 	void feedForward(int inputSeqLen);
 
-private:
-	RecurrentLayer *initLayer (int layerIdx);
-	RecConnection *initConnection(int connIdx);
 	void bindWeights(float *params, float *grad);
 	void resetStates(int inputSeqLen);
+	
+private:
+	RecurrentLayer *initLayer (int layerIdx);
+	RecConnection *initConnection(int connIdx);	
 };
 
 #endif

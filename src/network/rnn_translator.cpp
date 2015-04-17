@@ -15,7 +15,7 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	m_nParamSize = 0;
 	m_nParamSize += m_encoder->m_nParamSize;
 	m_nParamSize += m_decoder->m_nParamSize;
-	m_nParamSize += m_encoder->m_targetSize * m_decoder->m_dataSize;
+	m_nParamSize += m_decoder->m_dataSize * m_encoder->m_targetSize;
 
 	// allocate memory for decode buffer
 	m_codeSize = m_decoder->m_dataSize;
@@ -45,7 +45,7 @@ void RNNTranslator::initParams (float *params) {
 	paramsCursor += m_decoder->m_nParamSize;
 
 	float multiplier = 0.08;
-	for (int i=0; i<m_encoder->m_targetSize * m_decoder->m_dataSize; i++) {
+	for (int i=0; i<m_decoder->m_dataSize * m_encoder->m_targetSize; i++) {
 		paramsCursor[i] = multiplier * SYM_UNIFORM_RAND;
 	}
 }
@@ -81,17 +81,55 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		int encoderSeqLen = m_encoder->m_maxSeqLen;
 		int decoderSeqLen = m_decoder->m_maxSeqLen;		
 		
-		// feedforward
-		// m_encoder->feedForward(sampleData, encoderSeqLen);
-		// m_decoder->feedForward(, decoderSeqLen);
-		// compute error
-		
+		// ******** feedforward phase ******** //
+		// *** encoder ***
+		float *dataCursor = sampleData;		
+		RecurrentLayer *enInputLayer  = m_encoder->m_vecLayers[0];
+		RecurrentLayer *enOutputLayer = m_encoder->m_vecLayers[m_encoder->m_numLayer-1];
+		// bind input sequence to m_inputActs of the input layer of the encoder
+		for (int seqIdx=1; seqIdx<=encoderSeqLen; ++seqIdx) {
+			memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_dataSize);
+			dataCursor += m_encoder->m_dataSize;
+		}
+		m_encoder->feedForward(encoderSeqLen);
 
-		// feedbackword
-		// feedBackward(sampleTarget, inputSeqLen);
+		// *** decoder ***
+		float *targetCursor = sampleTarget;
+		RecurrentLayer deInputLayer  = m_decoder->m_vecLayers[0];
+		RecurrentLayer deOutputLayer = m_decoder->m_vecLayers[m_decoder->m_numLayer-1];
+		// bind input sequence to m_inputActs of the input layer of the encoder
+		dot(deInputLayer->m_inputActs[1], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
+			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize, 1);
+		for (int seqIdx=2; seqIdx<=decoderSeqLen; ++seqIdx) {
+			memcpy(deInputLayer->m_inputActs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_dataSize);
+			targetCursor += m_decoder->m_dataSize;
+		}
+		m_decoder->feedForward(decoderSeqLen);
+
+		// ******** compute error phase ******** //
+		error += m_decoder->computeError(sampleTarget, decoderSeqLen);
+
+		// ******** feedbackword phase ******** //
+		// *** decoder ***		
+		targetCursor = sampleTarget; // reset the target cursor to sample target
+		// bind target sequence to m_outputErrs of the output layer of the decoder
+		for (int seqIdx=1; seqIdx<=decoderSeqLen; ++seqIdx) {
+			memcpy(deOutputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_targetSize);
+			targetCursor += m_decoder->m_targetSize;
+		}
+		m_decoder->feedbackword(decoderSeqLen);
+
+		// *** encoder ***
+		trans_dot(enOutputLayer->m_outputErrs[encoderSeqLen], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
+			deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 1);
+		m_encoder->feedbackword(encoderSeqLen);
+
+		outer(m_gradEncodingW, deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 
+			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize);
 
 		/* reset internal states of LSTM layers */
-		// resetStates(inputSeqLen); // this is subject to change
+		m_encoder->resetStates();
+		m_decoder->resetStates();
 
 		// move cursor to new position
 		sampleData += encoderSeqLen * m_encoder->m_dataSize;

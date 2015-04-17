@@ -27,7 +27,7 @@ VPATH = $(SRCDIR) \
 
 # src files
 SRCS=\
-	$(SRCDIR)/main.cpp \
+	$(SRCDIR)/translator.cpp \
 	$(SRCDIR)/config/chameleon.cpp \
 	$(SRCDIR)/config/configfile.cpp \
 	$(SRCDIR)/config/confreader.cpp \
@@ -39,7 +39,8 @@ SRCS=\
 	$(SRCDIR)/layer/lstm_layer.cpp \
 	$(SRCDIR)/layer/softmax_layer.cpp \
 	$(SRCDIR)/layer/mse_layer.cpp \
-	$(SRCDIR)/network/lstm_rnn.cpp
+	$(SRCDIR)/network/lstm_rnn.cpp \
+	$(SRCDIR)/network/rnn_translator.cpp
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)
@@ -51,7 +52,8 @@ OBJS=$(SRCS:%.cpp=%.o)
 all : lstmRNN
 
 # compile main program parallelSGD from all objs 
-lstmRNN: $(OBJS)
+# lstmRNN: $(OBJS)
+RNNTranslator: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) $(LDFLAGS) $^ -o $@
 
 # order-only prerequisites for OBJDIR
