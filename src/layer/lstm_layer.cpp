@@ -180,7 +180,7 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 		memset(m_preGateStateDelta[seqIdx], 0x00, sizeof(float) * m_numNeuron);
 		memset(m_forgetGateDelta[seqIdx], 0x00, sizeof(float) * m_numNeuron);
 		memset(m_inGateDelta[seqIdx], 0x00, sizeof(float) * m_numNeuron);
-	}	
+	}
 
 	// call parent class resetStates
 	RecurrentLayer::resetStates(inputSeqLen);

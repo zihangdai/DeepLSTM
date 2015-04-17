@@ -72,7 +72,11 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
 		// TODO
 		int encoderSeqLen = m_encoder->m_maxSeqLen;
-		int decoderSeqLen = m_decoder->m_maxSeqLen;		
+		int decoderSeqLen = m_decoder->m_maxSeqLen;
+
+		/* reset internal states of LSTM layers */
+		m_encoder->resetStates(encoderSeqLen);
+		m_decoder->resetStates(decoderSeqLen);
 		
 		// ******** feedforward phase ******** //
 		// *** encoder ***
@@ -110,19 +114,15 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			memcpy(deOutputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_targetSize);
 			targetCursor += m_decoder->m_targetSize;
 		}
-		m_decoder->feedbackword(decoderSeqLen);
+		m_decoder->feedBackword(decoderSeqLen);
 
 		// *** encoder ***
 		trans_dot(enOutputLayer->m_outputErrs[encoderSeqLen], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
 			deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 1);
-		m_encoder->feedbackword(encoderSeqLen);
+		m_encoder->feedBackword(encoderSeqLen);
 
 		outer(m_gradEncodingW, deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 
-			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize);
-
-		/* reset internal states of LSTM layers */
-		m_encoder->resetStates();
-		m_decoder->resetStates();
+			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize);		
 
 		// move cursor to new position
 		sampleData += encoderSeqLen * m_encoder->m_dataSize;

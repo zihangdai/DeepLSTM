@@ -175,6 +175,9 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 		// TODO
 		int inputSeqLen = m_maxSeqLen;
 		
+		/* reset internal states of LSTM layers */
+		resetStates(inputSeqLen); // this is subject to change
+		
 		/* feedforward */
 		float *dataCursor = sampleData;
 		// bind input sequence to m_inputActs of the input layer 
@@ -198,10 +201,7 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 			targetCursor += m_targetSize;
 		}
 		// feedback through connections and layers
-		feedBackward(inputSeqLen);
-
-		/* reset internal states of LSTM layers */
-		resetStates(inputSeqLen); // this is subject to change
+		feedBackward(inputSeqLen);		
 
 		sampleData += m_dataSize * inputSeqLen;
 		sampleTarget += m_targetSize * inputSeqLen;
