@@ -5,11 +5,11 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	string encoderConfSec = confReader->getString("encoder_conf");
 	string decoderConfSec = confReader->getString("decoder_conf");
 
-	confReader *encoderConf = new confReader("config.conf", encoderConfSec);
-	confReader *decoderConf = new confReader("config.conf", decoderConfSec);
+	ConfReader *encoderConf = new ConfReader("config.conf", encoderConfSec);
+	ConfReader *decoderConf = new ConfReader("config.conf", decoderConfSec);
 
-	m_encoder = new lstm(encoderConf);	
-	m_decoder = new lstm(decoderConf);
+	m_encoder = new LSTM_RNN(encoderConf);	
+	m_decoder = new LSTM_RNN(decoderConf);
 	
 	// compute paramSize
 	m_nParamSize = 0;
