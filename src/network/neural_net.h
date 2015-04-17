@@ -6,6 +6,7 @@
 #include "confreader.h"
 #include "lstm_layer.h"
 #include "softmax_layer.h"
+#include "mse_layer.h"
 #include "connection.h"
 
 using namespace std;
