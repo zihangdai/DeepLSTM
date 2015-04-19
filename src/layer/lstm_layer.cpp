@@ -189,7 +189,12 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 void LSTMLayer::computeGatesActs(int seqIdx) {
 
 	int maxThreads = omp_get_max_threads();
-	int blockSize = (m_numNeuron + (maxThreads / 4) - 1) / (maxThreads / 4);
+	int blockSize;
+	if (maxThreads >= 4) {
+	 	blockSize = (m_numNeuron + (maxThreads / 4) - 1) / (maxThreads / 4);
+	} else {
+		blockSize = m_numNeuron;
+	}
 	#pragma omp parallel for
 	for (int threadIdx=0; threadIdx<maxThreads; ++threadIdx) {
 		int blockIdx = threadIdx / 4;
