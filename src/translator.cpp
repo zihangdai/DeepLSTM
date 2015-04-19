@@ -1,8 +1,12 @@
+#include <time.h>
 #include "confreader.h"
 #include "rnn_translator.h"
 #include "sgd.h"
 
 int main() {
+
+    srand (time(NULL));
+    
     openblas_set_num_threads(1);
     int max_openmp_threads = 20;
     omp_set_num_threads(max_openmp_threads);

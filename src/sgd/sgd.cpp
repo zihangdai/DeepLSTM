@@ -5,12 +5,12 @@ sgdBase::sgdBase(ConfReader *confReader, int paramSize) {
 	m_stepCount = 0;
 	m_useMomentum = confReader->getInt("use_momentum");
 	if (m_useMomentum) {
-		m_momentumFactor = confReader->getFloat("momentum_factor");
-		m_velocity = new float [m_nParamSize];
+		m_momentumFactor = confReader->getFloat("momentum_factor");		
 	} else {
 		m_momentumFactor = 0.f;
-		m_velocity = NULL;
 	}
+	m_velocity = new float [m_nParamSize];
+	memset(m_velocity, 0x00, sizeof(float)*m_nParamSize);
 }
 
 sgdBase::~sgdBase() {
