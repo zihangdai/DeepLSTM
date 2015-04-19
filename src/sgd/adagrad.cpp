@@ -21,10 +21,12 @@ adagrad::~adagrad () {
 
 void adagrad::updateParams (float *params, float *grad, int rank) {
 	m_stepCount += 1;
-	float delta;
+
+	elem_mul(m_histSquareGrad[i], grad[i], grad[i], m_nParamSize);
 	for (int i=0; i<m_nParamSize; i++) {
-		m_histSquareGrad[i] += grad[i] * grad[i];		
+		// m_histSquareGrad[i] += grad[i] * grad[i];
 		m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
-		params[i] += m_velocity[i];		
-	}	
+		// params[i] += m_velocity[i];
+	}
+	elem_accum(params, m_velocity, m_nParamSize);
 }
