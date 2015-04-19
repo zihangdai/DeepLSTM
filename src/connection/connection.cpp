@@ -64,7 +64,9 @@ void FullConnection::feedForward(int inputSeqLen) {
 		elem_accum(m_postLayer->m_inputActs[seqIdx], m_bias, postNumNeuron);
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("FullConnection feedForward time: %f\n", endTime - startTime);
+	#endif
 }
 
 void FullConnection::feedBackward(int inputSeqLen) {
@@ -81,7 +83,9 @@ void FullConnection::feedBackward(int inputSeqLen) {
 		elem_accum(m_gradBias, m_postLayer->m_inputErrs[seqIdx], postNumNeuron);
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("FullConnection feedBackward time: %f\n", endTime - startTime);
+	#endif
 }
 
 

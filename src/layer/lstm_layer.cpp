@@ -276,7 +276,9 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("LSTMLayer feedForward paralleled time: %f\n", endTime - startTime);
+	#endif
 
 	startTime = CycleTimer::currentSeconds();
 	// for each time step from 1 to T
@@ -317,7 +319,9 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		elem_mul(m_outputActs[seqIdx], m_outGateActs[seqIdx], m_preOutGateActs[seqIdx], m_numNeuron);
 	}
 	endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("LSTMLayer feedForward sequential time: %f\n", endTime - startTime);
+	#endif
 }
 
 void LSTMLayer::computeOutputErrs (int seqIdx) {
@@ -452,7 +456,9 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("LSTMLayer feedBackward sequential part time: %f\n", endTime - startTime);
+	#endif
 
 	startTime = CycleTimer::currentSeconds();
 	// omp parafor each time step from T to 1
@@ -483,7 +489,9 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	}
 
 	endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("LSTMLayer feedBackward paralleled part time: %f\n", endTime - startTime);
+	#endif
 
 	// delete working buffer
 	delete [] derivBuf;

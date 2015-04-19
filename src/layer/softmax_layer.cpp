@@ -10,7 +10,9 @@ void SoftmaxLayer::feedForward(int inputSeqLen) {
 		softmax(m_outputActs[seqIdx], m_inputActs[seqIdx], m_numNeuron);		
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("SoftmaxLayer feedForward time: %f\n", endTime - startTime);
+	#endif
 	
 }
 
@@ -24,5 +26,7 @@ void SoftmaxLayer::feedBackward(int inputSeqLen) {
 		elem_sub(m_inputErrs[seqIdx], m_outputActs[seqIdx], m_outputErrs[seqIdx], m_numNeuron);		
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("SoftmaxLayer feedBackward time: %f\n", endTime - startTime);
+	#endif
 }

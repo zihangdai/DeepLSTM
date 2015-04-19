@@ -7,7 +7,9 @@ void MSELayer::feedForward(int inputSeqLen) {
 		memcpy(m_outputActs[seqIdx], m_inputActs[seqIdx], sizeof(float) * m_numNeuron);
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("MSELayer feedForward time: %f\n", endTime - startTime);
+	#endif
 }
 
 void MSELayer::feedBackward(int inputSeqLen) {
@@ -17,6 +19,8 @@ void MSELayer::feedBackward(int inputSeqLen) {
 		elem_sub(m_inputErrs[seqIdx], m_outputActs[seqIdx], m_outputErrs[seqIdx], m_numNeuron);
 	}
 	double endTime = CycleTimer::currentSeconds();
+	#ifdef TIME_SPEED
 	printf("MSELayer feedBackward time: %f\n", endTime - startTime);
+	#endif
 }
 
