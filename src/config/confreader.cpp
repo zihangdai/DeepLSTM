@@ -5,6 +5,7 @@ ConfReader::ConfReader (std::string filename, std::string confKey) {
 	printf("ConfReader Constructor: %s, %s\n", filename.c_str(), confKey.c_str());
 	m_configFile = new ConfigFile(filename);
 	m_confKey = confKey;
+	printf("ConfReader Constructor finished.\n");
 }
 
 ConfReader::~ConfReader () {
