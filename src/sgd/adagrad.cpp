@@ -2,10 +2,12 @@
 #include <string.h>
 #include "sgd.h"
 
+using namespace std;
+
 adagrad::adagrad (ConfReader *confReader, int paramSize) {
 	m_nParamSize = paramSize;
-	m_learningRate = confReader->getFloat("learning rate");
-	m_useMomentum  = confReader->getInt("use momentum");
+	m_learningRate = confReader->getFloat("learning_rate");
+	m_useMomentum  = confReader->getInt("use_momentum");
 	m_stepCount = 0;
 
 	m_histSquareGrad = new float [m_nParamSize];

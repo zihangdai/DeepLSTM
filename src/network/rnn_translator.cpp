@@ -1,11 +1,10 @@
 #include "rnn_translator.h"
 
-#define DEBUG_RNN_TRANSLATOR 1
+// #define DEBUG_RNN_TRANSLATOR 1
 
 using namespace std;
 
-RNNTranslator::RNNTranslator(ConfReader *confReader) {
-	printf("RNNTranslator constructor begin.\n");
+RNNTranslator::RNNTranslator(ConfReader *confReader) {	
 	// init encoder and decoder
 	m_reverseEncoder = confReader->getInt("reverse_encoder");
 	#ifdef DEBUG_RNN_TRANSLATOR

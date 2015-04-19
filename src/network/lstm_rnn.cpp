@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#define DEBUG_LSTM_RNN 0
+// #define DEBUG_LSTM_RNN
 
 LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 	/* read conf and allocate memory */	
