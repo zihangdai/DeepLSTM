@@ -8,7 +8,7 @@
 class sgdBase
 {
 public:
-    sgdBase();
+    sgdBase(ConfReader *confReader, int paramSize);
     virtual ~sgdBase();
 
     /* data */
