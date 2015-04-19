@@ -6,7 +6,7 @@
 int main() {
 
     srand (time(NULL));
-    
+
     openblas_set_num_threads(1);
     int max_openmp_threads = 20;
     omp_set_num_threads(max_openmp_threads);
@@ -21,8 +21,8 @@ int main() {
     translator->initParams(params);
 
     // init sgd optimizer 
-    // sgdBase *optimizer = new adagrad(confReader, paramSize);
-    sgdBase *optimizer = new adadelta(confReader, paramSize);    
+    sgdBase *optimizer = new adagrad(confReader, paramSize);
+    // sgdBase *optimizer = new adadelta(confReader, paramSize);    
 
     // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};
@@ -36,12 +36,12 @@ int main() {
     float *label = new float[dimOut * targetSeqLen];
     for (int i=0; i<dataSeqLen; ++i) {
         for (int j=0; j<dimIn; ++j) {
-            data[i*dimIn+j] = 1.f * (float(rand()) / float(RAND_MAX) + 0.5);
+            data[i*dimIn+j] = j;
         }
     }
     for (int i=0; i<targetSeqLen; ++i) {
         for (int j=0; j<dimOut; ++j) {
-            label[i*dimOut+j] = 5.f * (float(rand()) / float(RAND_MAX) + 0.5);
+            label[i*dimOut+j] = 2 * j;
         }
     }   
     
