@@ -190,7 +190,7 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 
 	int maxThreads = omp_get_max_threads();
 	int blockSize = (m_numNeuron + (maxThreads / 4) - 1) / (maxThreads / 4);
-	// #pragma omp parallel for
+	#pragma omp parallel for
 	for (int threadIdx=0; threadIdx<maxThreads; ++threadIdx) {
 		int blockIdx = threadIdx / 4;
 		int startIdx = blockIdx * blockSize;
@@ -261,7 +261,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 
 	double startTime = CycleTimer::currentSeconds();
 	// parafor each time step from T to 1
-	// #pragma omp parallel for
+	#pragma omp parallel for
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
 		// compute input gate activation
 		dot(m_inGateActs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
@@ -325,7 +325,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 }
 
 void LSTMLayer::computeOutputErrs (int seqIdx) {
-	// #pragma omp parallel for
+	#pragma omp parallel for
 	for (int idx=0; idx<4; ++idx) {
 		memset(m_neuronSizeBuf[idx], 0x00, sizeof(float) * m_numNeuron);
 		switch (idx) {
@@ -349,7 +349,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 	}
 
 	int blockNum = m_numNeuron / 4;	
-	// #pragma omp parallel for
+	#pragma omp parallel for
 	for (int idx=0; idx<4; ++idx) {
 		int start = idx * blockNum;
 		int end = start + blockNum;
@@ -372,7 +372,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 
 void LSTMLayer::feedbackSequential (int seqIdx, float *derivBuf) {
 	int blockSize = 64;
-	// #pragma omp parallel for 
+	#pragma omp parallel for 
 	for (int i=0; i<m_numNeuron; i+=blockSize) {
 		int actualSize = min(blockSize, m_numNeuron-i);
 		// computations are independent but use the same derivBuf
@@ -462,7 +462,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 
 	startTime = CycleTimer::currentSeconds();
 	// omp parafor each time step from T to 1
-	// #pragma omp parallel for
+	#pragma omp parallel for
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
 		// computations are independent but write to the same memory
 		// spatial input error: m_inputErrs[seqIdx]
