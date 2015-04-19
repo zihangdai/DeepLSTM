@@ -403,7 +403,7 @@ void LSTMLayer::feedbackSequential (int seqIdx, float *derivBuf) {
 	}
 }
 
-void LSTMLayer::feedBackward(int inputSeqLen) {	
+void LSTMLayer::feedBackward(int inputSeqLen) {
 
 	// allocate working buffer
 	float *derivBuf = new float[m_numNeuron];

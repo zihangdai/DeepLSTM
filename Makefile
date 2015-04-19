@@ -20,9 +20,10 @@ LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib
 # vpath
 VPATH = $(SRCDIR) \
 	$(SRCDIR)/config \
-	$(SRCDIR)/connection \
 	$(SRCDIR)/helper \
+	$(SRCDIR)/sgd \
 	$(SRCDIR)/layer \
+	$(SRCDIR)/connection \
 	$(SRCDIR)/network \
 
 # src files
@@ -30,15 +31,19 @@ SRCS=\
 	$(SRCDIR)/translator.cpp \
 	$(SRCDIR)/config/chameleon.cpp \
 	$(SRCDIR)/config/configfile.cpp \
-	$(SRCDIR)/config/confreader.cpp \
-	$(SRCDIR)/connection/connection.cpp \
+	$(SRCDIR)/config/confreader.cpp \	
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
+	$(SRCDIR)/sgd/sgd.cpp \
+	$(SRCDIR)/sgd/adagrad.cpp \
+	$(SRCDIR)/sgd/adadelta.cpp \
+	$(SRCDIR)/sgd/rmsprop.cpp \
 	$(SRCDIR)/layer/layer.cpp \
 	$(SRCDIR)/layer/input_layer.cpp \
 	$(SRCDIR)/layer/lstm_layer.cpp \
 	$(SRCDIR)/layer/softmax_layer.cpp \
 	$(SRCDIR)/layer/mse_layer.cpp \
+	$(SRCDIR)/connection/connection.cpp \
 	$(SRCDIR)/network/lstm_rnn.cpp \
 	$(SRCDIR)/network/rnn_translator.cpp
 

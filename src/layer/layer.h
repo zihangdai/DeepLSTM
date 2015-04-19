@@ -43,6 +43,10 @@ public:
 
 	void virtual feedForward(int inputSeqLen) {};
 	void virtual feedBackward(int inputSeqLen) {};
+
+	void virtual forwardStep(int seqIdx) {};
+	void virtual backwardStep(int seqIdx) {};
+
 	void virtual bindWeights(float *params, float *grad) {};
 
 	void virtual resetStates(int inputSeqLen);
