@@ -6,12 +6,12 @@
 int main() {
 
     srand (time(NULL));
-
-    openblas_set_num_threads(1);
-    int max_openmp_threads = 20;
-    omp_set_num_threads(max_openmp_threads);
+    openblas_set_num_threads(1);    
 
     ConfReader *confReader = new ConfReader("translator.conf", "Translator");
+    int max_openmp_threads = confReader->getInt("max_threads");
+    omp_set_num_threads(max_openmp_threads);
+
     RNNTranslator *translator = new RNNTranslator(confReader);
 
     int paramSize = translator->m_nParamSize;
