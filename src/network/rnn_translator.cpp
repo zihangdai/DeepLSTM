@@ -6,8 +6,11 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	printf("RNNTranslator constructor begin.\n");
 	// init encoder and decoder
 	m_reverseEncoder = confReader->getInt("reverse_encoder");
+	printf("m_reverseEncoder %d.\n", m_reverseEncoder);
 	string encoderConfSec = confReader->getString("encoder_conf");
+	printf("encoderConfSec %s.\n", encoderConfSec.c_str());
 	string decoderConfSec = confReader->getString("decoder_conf");
+	printf("decoderConfSec: %s.\n", decoderConfSec.c_str());
 
 	printf("RNNTranslator constructor encoderConf.\n");
 	ConfReader *encoderConf = new ConfReader("config.conf", encoderConfSec);
