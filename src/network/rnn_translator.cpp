@@ -16,8 +16,11 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 
 	printf("RNNTranslator constructor encoderConf.\n");
 	ConfReader *encoderConf = new ConfReader("config.conf", encoderConfSec);
+	printf("encoderConf m_numLayer: %d.\n", encoderConf->getInt("num_layer"));
 	printf("RNNTranslator constructor decoderConf.\n");
 	ConfReader *decoderConf = new ConfReader("config.conf", decoderConfSec);
+	printf("decoderConf m_numLayer: %d.\n", decoderConf->getInt("num_layer"));
+
 
 	printf("RNNTranslator m_encoder LSTM_RNN begin.\n");
 	m_encoder = new LSTM_RNN(encoderConf);
