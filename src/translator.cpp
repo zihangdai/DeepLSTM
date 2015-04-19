@@ -45,12 +45,15 @@ int main() {
         }
     }   
     
+    double startTime = CycleTimer::currentSeconds();
     int maxiter = confReader->getInt("max_iteration");
     for (int i=0; i<maxiter; i++) {
         float error = translator->computeGrad(grad, params, data, label, 1);
         optimizer->updateParams(params, grad);
-        printf("Error: %f\n", error);
+        printf("Error[%d]: %f\n", i, error);
     }
+    double endTime = CycleTimer::currentSeconds();
+    printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);
     
     return 0;
 }
