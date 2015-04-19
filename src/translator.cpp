@@ -40,7 +40,8 @@ int main() {
         }
     }   
     
-    for (int i=0; i<100; i++) {
+    int maxiter = confReader->getInt("max_iteration");
+    for (int i=0; i<maxiter; i++) {
         float error = translator->computeGrad(grad, params, data, label, 1);
         optimizer->updateParams(params, grad);
         printf("Error: %f\n", error);
