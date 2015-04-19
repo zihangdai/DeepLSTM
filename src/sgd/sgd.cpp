@@ -1,9 +1,26 @@
 #include "sgd.h"
 
-sgdBasic::sgdBasic (ConfReader *confReader, int paramSize) {
+sgdBase::sgdBase(ConfReader *confReader, int paramSize) {
 	m_nParamSize = paramSize;
+	m_stepCount = 0;
+	m_useMomentum = confReader->getInt("use_momentum");
+	if (m_useMomentum) {
+		m_momentumFactor = confReader->getFloat("momentum_factor");
+		m_velocity = new float [m_nParamSize];
+	} else {
+		m_momentumFactor = 0.f;
+		m_velocity = NULL;
+	}
+}
+
+sgdBase::~sgdBase() {
+	if(m_velocity != NULL) {
+		delete [] m_velocity;
+	}
+}
+
+sgdBasic::sgdBasic (ConfReader *confReader, int paramSize) : sgdBase(confReader, paramSize) {
 	m_learningRate = confReader->getFloat("learning rate");
-	m_useMomentum  = confReader->getInt("use momentum");
 }
 
 sgdBasic::~sgdBasic () {

@@ -8,8 +8,8 @@
 class sgdBase
 {
 public:
-    sgdBase() {};
-    virtual ~sgdBase() {};
+    sgdBase();
+    virtual ~sgdBase();
 
     /* data */
 
@@ -19,8 +19,12 @@ public:
 protected:
     /* data */
     int m_useMomentum;
-    int m_nParamSize;
+    int m_nParamSize;    
     float m_learningRate;
+    float m_momentumFactor;
+
+    float *m_velocity;
+
     int m_stepCount;
 
     /* method */

@@ -7,7 +7,7 @@ ConfReader::ConfReader (std::string filename, std::string confKey) {
 }
 
 ConfReader::~ConfReader () {
-	if (!m_configFile) {
+	if (m_configFile != NULL) {
 		delete m_configFile;
 	}
 }

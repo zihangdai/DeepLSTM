@@ -2,8 +2,7 @@
 #include <string.h>
 #include "sgd.h"
 
-rmsprop::rmsprop (ConfReader *confReader, int paramSize) {
-	m_nParamSize = paramSize;
+rmsprop::rmsprop (ConfReader *confReader, int paramSize) : sgdBase(confReader, paramSize){	
 	m_decayFactor = confReader->getFloat("rmsprop decay factor");
 	m_useMomentum  = confReader->getInt("use momentum");
 
@@ -13,7 +12,7 @@ rmsprop::rmsprop (ConfReader *confReader, int paramSize) {
 }
 
 rmsprop::~rmsprop () {
-	if (!m_meanSquareGrad) {
+	if (m_meanSquareGrad != NULL) {
 		delete [] m_meanSquareGrad;
 	}
 }

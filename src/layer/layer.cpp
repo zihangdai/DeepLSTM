@@ -67,12 +67,12 @@ void RecurrentLayer::allocateMem (int seqIdx) {
 
 void RecurrentLayer::releaseMem (int seqIdx) {
 	// m_inputActs and m_inputErrs
-	if (!m_inputActs[seqIdx]) {delete [] m_inputActs[seqIdx];}
-	if (!m_inputErrs[seqIdx]) {delete [] m_inputErrs[seqIdx];}
+	if (m_inputActs[seqIdx] != NULL) {delete [] m_inputActs[seqIdx];}
+	if (m_inputErrs[seqIdx] != NULL) {delete [] m_inputErrs[seqIdx];}
 
 	// m_outputActs and m_outputErrs
-	if (!m_outputActs[seqIdx]) {delete [] m_outputActs[seqIdx];}
-	if (!m_outputErrs[seqIdx]) {delete [] m_outputErrs[seqIdx];}
+	if (m_outputActs[seqIdx] != NULL) {delete [] m_outputActs[seqIdx];}
+	if (m_outputErrs[seqIdx] != NULL) {delete [] m_outputErrs[seqIdx];}
 }
 
 void RecurrentLayer::reshape(int newSeqLen) {

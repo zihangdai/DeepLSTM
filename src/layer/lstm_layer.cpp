@@ -110,23 +110,23 @@ void LSTMLayer::allocateMem(int seqIdx) {
 
 void LSTMLayer::releaseMem(int seqIdx) {
 	// three gate units
-	if (!m_inGateActs[seqIdx]) {delete [] m_inGateActs[seqIdx];}
-	if (!m_forgetGateActs[seqIdx]) {delete [] m_forgetGateActs[seqIdx];}
-	if (!m_outGateActs[seqIdx]) {delete [] m_outGateActs[seqIdx];}
+	if (m_inGateActs[seqIdx] != NULL) {delete [] m_inGateActs[seqIdx];}
+	if (m_forgetGateActs[seqIdx] != NULL) {delete [] m_forgetGateActs[seqIdx];}
+	if (m_outGateActs[seqIdx] != NULL) {delete [] m_outGateActs[seqIdx];}
 
 	// states related
-	if (!m_preOutGateActs[seqIdx]) {delete [] m_preOutGateActs[seqIdx];}
-	if (!m_states[seqIdx]) {delete [] m_states[seqIdx];}
-	if (!m_preGateStates[seqIdx]) {delete [] m_preGateStates[seqIdx];}	
+	if (m_preOutGateActs[seqIdx] != NULL) {delete [] m_preOutGateActs[seqIdx];}
+	if (m_states[seqIdx] != NULL) {delete [] m_states[seqIdx];}
+	if (m_preGateStates[seqIdx] != NULL) {delete [] m_preGateStates[seqIdx];}	
 
 	// states errors
-	if (!m_cellStateErrs[seqIdx]) {delete [] m_cellStateErrs[seqIdx];}
+	if (m_cellStateErrs[seqIdx] != NULL) {delete [] m_cellStateErrs[seqIdx];}
 
 	// four deltas
-	if (!m_preGateStateDelta[seqIdx]) {delete [] m_preGateStateDelta[seqIdx];}
-	if (!m_inGateDelta[seqIdx]) {delete [] m_inGateDelta[seqIdx];}
-	if (!m_forgetGateDelta[seqIdx]) {delete [] m_forgetGateDelta[seqIdx];}
-	if (!m_outGateDelta[seqIdx]) {delete [] m_outGateDelta[seqIdx];}
+	if (m_preGateStateDelta[seqIdx] != NULL) {delete [] m_preGateStateDelta[seqIdx];}
+	if (m_inGateDelta[seqIdx] != NULL) {delete [] m_inGateDelta[seqIdx];}
+	if (m_forgetGateDelta[seqIdx] != NULL) {delete [] m_forgetGateDelta[seqIdx];}
+	if (m_outGateDelta[seqIdx] != NULL) {delete [] m_outGateDelta[seqIdx];}
 }
 
 void LSTMLayer::reshape(int newSeqLen) {

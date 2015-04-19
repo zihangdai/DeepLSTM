@@ -66,16 +66,16 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 }
 
 LSTM_RNN::~LSTM_RNN() {
-	if (!m_numNeuronList) {delete [] m_numNeuronList;}
-	if (!m_layerTypeList) {delete [] m_layerTypeList;}
-	if (!m_connTypeList) {delete [] m_connTypeList;}
+	if (m_numNeuronList != NULL) {delete [] m_numNeuronList;}
+	if (m_layerTypeList != NULL) {delete [] m_layerTypeList;}
+	if (m_connTypeList != NULL) {delete [] m_connTypeList;}
 	
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
-		if (!m_vecLayers[layerIdx]) {delete [] m_vecLayers[layerIdx];}
+		if (m_vecLayers[layerIdx] != NULL) {delete [] m_vecLayers[layerIdx];}
 	}
 
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
-		if (!m_vecConnections[connIdx]) {delete [] m_vecConnections[connIdx];}
+		if (m_vecConnections[connIdx] != NULL) {delete [] m_vecConnections[connIdx];}
 	}
 }
 

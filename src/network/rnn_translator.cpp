@@ -29,10 +29,10 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 }
 
 RNNTranslator::~RNNTranslator() {
-	if (!m_encoder) {
+	if (m_encoder != NULL) {
 		delete m_encoder;
 	}
-	if (!m_decoder) {
+	if (m_decoder != NULL) {
 		delete m_decoder;
 	}
 }
@@ -87,7 +87,9 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		m_encoder->resetStates(encoderSeqLen);
 		m_decoder->resetStates(decoderSeqLen);
 		
-		// ******** feedforward phase ******** //
+		/****************************************************************
+		*                      Feed Forward Phase                       *
+		****************************************************************/
 		// *** encoder ***
 		float *dataCursor = sampleData;		
 		RecurrentLayer *enInputLayer  = m_encoder->m_vecLayers[0];
@@ -118,14 +120,21 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			targetCursor += m_decoder->m_dataSize;
 		}
 		// set the internal states of the decoder at t = 0 to the internal states of encoder at the last step
-		
+		for (int layerIdx=1; layerIdx<m_decoder->m_numLayer; layerIdx++) {
+			RecurrentLayer *enLayer = m_encoder->m_vecLayers[layerIdx];
+			RecurrentLayer *deLayer = m_decoder->m_vecLayers[layerIdx];
+			memcpy(deLayer->m_states[0], enLayer->m_states[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
+			memcpy(deLayer->m_outputActs[0], enLayer->m_outputActs[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
+		}
 		// decoder feedforward
 		m_decoder->feedForward(decoderSeqLen);
 
 		// ******** compute error phase ******** //
 		error += m_decoder->computeError(sampleTarget, decoderSeqLen);
-
-		// ******** feedbackword phase ******** //
+		
+		/****************************************************************
+		*                      Feed Backword Phase                      *
+		****************************************************************/
 		// *** decoder ***		
 		targetCursor = sampleTarget; // reset the target cursor to sample target
 		// bind target sequence to m_outputErrs of the output layer of the decoder
@@ -136,8 +145,19 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		m_decoder->feedBackward(decoderSeqLen);
 
 		// *** encoder ***
+		// set the error signal of encoder
 		trans_dot(enOutputLayer->m_outputErrs[encoderSeqLen], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
 			deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 1);
+		for (int layerIdx=1; layerIdx<m_decoder->m_numLayer; layerIdx++) {
+			RecurrentLayer *enLayer = m_encoder->m_vecLayers[layerIdx];
+			RecurrentLayer *deLayer = m_decoder->m_vecLayers[layerIdx];
+			memcpy(enLayer->m_inGateDelta[encoderSeqLen+1], deLayer->m_inGateDelta[1], sizeof(float) * deLayer->m_numNeuron);
+			memcpy(enLayer->m_forgetGateDelta[encoderSeqLen+1], deLayer->m_forgetGateDelta[1], sizeof(float) * deLayer->m_numNeuron);
+			memcpy(enLayer->m_outGateDelta[encoderSeqLen+1], deLayer->m_outGateDelta[1], sizeof(float) * deLayer->m_numNeuron);
+			memcpy(enLayer->m_preGateStateDelta[encoderSeqLen+1], deLayer->m_preGateStateDelta[1], sizeof(float) * deLayer->m_numNeuron);
+			memcpy(enLayer->m_forgetGateActs[encoderSeqLen+1], deLayer->m_forgetGateActs[1], sizeof(float) * deLayer->m_numNeuron);
+		}
+		// encoder feed backward
 		m_encoder->feedBackward(encoderSeqLen);
 
 		outer(m_gradEncodingW, deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 
