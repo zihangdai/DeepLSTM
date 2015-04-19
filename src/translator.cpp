@@ -8,10 +8,10 @@ int main() {
     omp_set_num_threads(max_openmp_threads);
 
     printf("init confReader\n");
-    ConfReader *confReader = new ConfReader("config.conf", "TRANSLATOR");
+    ConfReader *confReader = new ConfReader("config.conf", "Translator");
     printf("init RNNTranslator\n");
     RNNTranslator *translator = new RNNTranslator(confReader);
-    
+
     int paramSize = translator->m_nParamSize;
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];

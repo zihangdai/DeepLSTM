@@ -15,10 +15,10 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	// printf("decoderConfSec: %s.\n", decoderConfSec.c_str());
 
 	printf("RNNTranslator constructor encoderConf.\n");
-	ConfReader *encoderConf = new ConfReader("translator.conf", "ENCODER");
+	ConfReader *encoderConf = new ConfReader("translator.conf", "Encoder");
 	printf("encoderConf m_numLayer: %d.\n", encoderConf->getInt("num_layer"));
 	printf("RNNTranslator constructor decoderConf.\n");
-	ConfReader *decoderConf = new ConfReader("translator.conf", "DECODER");
+	ConfReader *decoderConf = new ConfReader("translator.conf", "Decoder");
 	printf("decoderConf m_numLayer: %d.\n", decoderConf->getInt("num_layer"));
 
 
