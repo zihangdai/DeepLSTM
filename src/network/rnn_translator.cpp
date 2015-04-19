@@ -120,12 +120,14 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			targetCursor += m_decoder->m_dataSize;
 		}
 		// set the internal states of the decoder at t = 0 to the internal states of encoder at the last step
+		printf("forward static_cast begin\n");
 		for (int layerIdx=1; layerIdx<m_decoder->m_numLayer; layerIdx++) {
 			LSTMLayer *enLayer = static_cast<LSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
 			LSTMLayer *deLayer = static_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
 			memcpy(deLayer->m_states[0], enLayer->m_states[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(deLayer->m_outputActs[0], enLayer->m_outputActs[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 		}
+		printf("forward static_cast finish\n");
 		// decoder feedforward
 		m_decoder->feedForward(decoderSeqLen);
 
@@ -148,6 +150,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		// set the error signal of encoder
 		trans_dot(enOutputLayer->m_outputErrs[encoderSeqLen], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
 			deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 1);
+		printf("backward static_cast begin\n");
 		for (int layerIdx=1; layerIdx<m_decoder->m_numLayer; layerIdx++) {
 			LSTMLayer *enLayer = static_cast<LSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
 			LSTMLayer *deLayer = static_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
@@ -157,6 +160,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			memcpy(enLayer->m_preGateStateDelta[encoderSeqLen+1], deLayer->m_preGateStateDelta[1], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(enLayer->m_forgetGateActs[encoderSeqLen+1], deLayer->m_forgetGateActs[1], sizeof(float) * deLayer->m_numNeuron);
 		}
+		printf("backward static_cast finish\n");
 		// encoder feed backward
 		m_encoder->feedBackward(encoderSeqLen);
 
