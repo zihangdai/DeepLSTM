@@ -8,7 +8,7 @@ int main() {
     omp_set_num_threads(max_openmp_threads);
 
     printf("init confReader\n");
-    ConfReader *confReader = new ConfReader("config.conf", "Translator");
+    ConfReader *confReader = new ConfReader("translator.conf", "Translator");
     printf("init RNNTranslator\n");
     RNNTranslator *translator = new RNNTranslator(confReader);
 
