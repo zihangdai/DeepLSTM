@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <map>
-#include <stdlib.h>
+#include <string.h>
 #include "confreader.h"
 
 class sgdBase
