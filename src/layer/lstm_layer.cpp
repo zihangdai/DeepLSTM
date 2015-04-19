@@ -196,7 +196,7 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 		blockSize = m_numNeuron;
 	}
 	#pragma omp parallel for
-	for (int threadIdx=0; threadIdx<maxThreads; ++threadIdx) {
+	for (int threadIdx=0; threadIdx<max(maxThreads, 4); ++threadIdx) {
 		int blockIdx = threadIdx / 4;
 		int startIdx = blockIdx * blockSize;
 		int actualSize = min(blockSize, m_numNeuron-startIdx);
