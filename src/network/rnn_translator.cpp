@@ -7,27 +7,16 @@ using namespace std;
 RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	printf("RNNTranslator constructor begin.\n");
 	// init encoder and decoder
-	// m_reverseEncoder = confReader->getInt("reverse_encoder");
+	m_reverseEncoder = confReader->getInt("reverse_encoder");
+	#ifdef DEBUG_RNN_TRANSLATOR
 	printf("m_reverseEncoder %d.\n", m_reverseEncoder);
-	// string encoderConfSec = confReader->getString("encoder_conf");
-	// printf("encoderConfSec %s.\n", encoderConfSec.c_str());
-	// string decoderConfSec = confReader->getString("decoder_conf");
-	// printf("decoderConfSec: %s.\n", decoderConfSec.c_str());
+	#endif
+	
+	ConfReader *encoderConf = new ConfReader("translator.conf", "Encoder");	
+	ConfReader *decoderConf = new ConfReader("translator.conf", "Decoder");	
 
-	printf("RNNTranslator constructor encoderConf.\n");
-	ConfReader *encoderConf = new ConfReader("translator.conf", "Encoder");
-	printf("encoderConf m_numLayer: %d.\n", encoderConf->getInt("num_layer"));
-	printf("RNNTranslator constructor decoderConf.\n");
-	ConfReader *decoderConf = new ConfReader("translator.conf", "Decoder");
-	printf("decoderConf m_numLayer: %d.\n", decoderConf->getInt("num_layer"));
-
-
-	printf("RNNTranslator m_encoder LSTM_RNN begin.\n");
-	m_encoder = new LSTM_RNN(encoderConf);
-	printf("RNNTranslator m_encoder LSTM_RNN finish.\n");
-	printf("RNNTranslator m_decoder LSTM_RNN begin.\n");
+	m_encoder = new LSTM_RNN(encoderConf);	
 	m_decoder = new LSTM_RNN(decoderConf);
-	printf("RNNTranslator m_decoder LSTM_RNN finish.\n");
 	
 	// compute paramSize
 	m_nParamSize = 0;

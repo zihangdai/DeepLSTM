@@ -3,14 +3,11 @@
 
 using namespace std;
 
-#define DEBUG_LSTM_RNN 1
+#define DEBUG_LSTM_RNN 0
 
 LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 	/* read conf and allocate memory */	
-	m_numLayer = confReader->getInt("num_layer");
-	#ifdef DEBUG_LSTM_RNN
-	printf("m_numLayer: %d.\n", m_numLayer);
-	#endif
+	m_numLayer = confReader->getInt("num_layer");	
 	m_numNeuronList = new int[m_numLayer];
 	m_layerTypeList = new string[m_numLayer];
 	m_connTypeList = new string[m_numLayer-1];
