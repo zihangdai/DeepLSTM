@@ -2,6 +2,8 @@
 
 #define DEBUG_RNN_TRANSLATOR 1
 
+using namespace std;
+
 RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	printf("RNNTranslator constructor begin.\n");
 	// init encoder and decoder
