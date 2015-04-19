@@ -77,6 +77,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 	float *sampleData = data;
 	float *sampleTarget = target;
 
+	double startTime, endTime;
 	/*** feed forward and feed backward ***/
 	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
 		// TODO
@@ -84,13 +85,17 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		int decoderSeqLen = m_decoder->m_maxSeqLen;
 
 		/* reset internal states of LSTM layers */
+		startTime = CycleTimer::currentSeconds();
 		m_encoder->resetStates(encoderSeqLen);
 		m_decoder->resetStates(decoderSeqLen);
+		endTime = CycleTimer::currentSeconds();
+		printf("Time for resetStates: %f\n", endTime - startTime);
 		
 		/****************************************************************
 		*                      Feed Forward Phase                       *
 		****************************************************************/
 		// *** encoder ***
+		startTime = CycleTimer::currentSeconds();
 		float *dataCursor = sampleData;		
 		RecurrentLayer *enInputLayer  = m_encoder->m_vecLayers[0];
 		RecurrentLayer *enOutputLayer = m_encoder->m_vecLayers[m_encoder->m_numLayer-1];
@@ -107,8 +112,11 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			}
 		}
 		m_encoder->feedForward(encoderSeqLen);
+		endTime = CycleTimer::currentSeconds();
+		printf("Time for encoder feedForward: %f\n", endTime - startTime);
 
 		// *** decoder ***
+		startTime = CycleTimer::currentSeconds();
 		float *targetCursor = sampleTarget;
 		RecurrentLayer *deInputLayer  = m_decoder->m_vecLayers[0];
 		RecurrentLayer *deOutputLayer = m_decoder->m_vecLayers[m_decoder->m_numLayer-1];
@@ -119,17 +127,17 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			memcpy(deInputLayer->m_inputActs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_dataSize);
 			targetCursor += m_decoder->m_dataSize;
 		}
-		// set the internal states of the decoder at t = 0 to the internal states of encoder at the last step
-		
+		// set the internal states of the decoder at t = 0 to the internal states of encoder at the last step		
 		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {		
 			LSTMLayer *enLayer = dynamic_cast<LSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
 			LSTMLayer *deLayer = dynamic_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);			
 			memcpy(deLayer->m_states[0], enLayer->m_states[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(deLayer->m_outputActs[0], enLayer->m_outputActs[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
-		}
-		
+		}		
 		// decoder feedforward
 		m_decoder->feedForward(decoderSeqLen);
+		endTime = CycleTimer::currentSeconds();
+		printf("Time for decoder feedForward: %f\n", endTime - startTime);
 
 		// ******** compute error phase ******** //
 		error += m_decoder->computeError(sampleTarget, decoderSeqLen);
@@ -137,7 +145,8 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		/****************************************************************
 		*                      Feed Backword Phase                      *
 		****************************************************************/
-		// *** decoder ***		
+		// *** decoder ***
+		startTime = CycleTimer::currentSeconds();
 		targetCursor = sampleTarget; // reset the target cursor to sample target
 		// bind target sequence to m_outputErrs of the output layer of the decoder
 		for (int seqIdx=1; seqIdx<=decoderSeqLen; ++seqIdx) {
@@ -145,9 +154,12 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			targetCursor += m_decoder->m_targetSize;
 		}
 		m_decoder->feedBackward(decoderSeqLen);
+		endTime = CycleTimer::currentSeconds();
+		printf("Time for decoder feedBackward: %f\n", endTime - startTime);
 
 		// *** encoder ***
 		// set the error signal of encoder
+		startTime = CycleTimer::currentSeconds();
 		trans_dot(enOutputLayer->m_outputErrs[encoderSeqLen], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
 			deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 1);
 		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
@@ -161,7 +173,10 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		}
 		// encoder feed backward
 		m_encoder->feedBackward(encoderSeqLen);
+		endTime = CycleTimer::currentSeconds();
+		printf("Time for encoder feedBackward: %f\n", endTime - startTime);
 
+		// compute m_gradEncodingW
 		outer(m_gradEncodingW, deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 
 			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize);		
 
