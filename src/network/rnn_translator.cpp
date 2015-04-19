@@ -17,10 +17,12 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	printf("RNNTranslator constructor decoderConf.\n");
 	ConfReader *decoderConf = new ConfReader("config.conf", decoderConfSec);
 
+	printf("RNNTranslator m_encoder LSTM_RNN begin.\n");
 	m_encoder = new LSTM_RNN(encoderConf);
-	printf("RNNTranslator m_encoder LSTM_RNN.\n");
+	printf("RNNTranslator m_encoder LSTM_RNN finish.\n");
+	printf("RNNTranslator m_decoder LSTM_RNN begin.\n");
 	m_decoder = new LSTM_RNN(decoderConf);
-	printf("RNNTranslator m_decoder LSTM_RNN.\n");
+	printf("RNNTranslator m_decoder LSTM_RNN finish.\n");
 	
 	// compute paramSize
 	m_nParamSize = 0;
