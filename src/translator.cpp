@@ -17,7 +17,8 @@ int main() {
     translator->initParams(params);
 
     // init sgd optimizer 
-    sgdBase *optimizer = new adagrad(confReader, paramSize);
+    // sgdBase *optimizer = new adagrad(confReader, paramSize);
+    sgdBase *optimizer = new adadelta(confReader, paramSize);    
 
     // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};

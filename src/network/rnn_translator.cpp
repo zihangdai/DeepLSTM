@@ -117,6 +117,9 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			memcpy(deInputLayer->m_inputActs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_dataSize);
 			targetCursor += m_decoder->m_dataSize;
 		}
+		// set the internal states of the decoder at t = 0 to the internal states of encoder at the last step
+		
+		// decoder feedforward
 		m_decoder->feedForward(decoderSeqLen);
 
 		// ******** compute error phase ******** //
