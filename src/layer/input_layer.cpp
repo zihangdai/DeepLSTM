@@ -2,7 +2,7 @@
 
 using namespace std;
 
-#define DEBUG_INPUT_LAYER 1
+// #define DEBUG_INPUT_LAYER
 
 void InputLayer::feedForward(int inputSeqLen) {
 	double startTime = CycleTimer::currentSeconds();
