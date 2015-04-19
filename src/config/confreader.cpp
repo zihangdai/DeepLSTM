@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "confreader.h"
 
 ConfReader::ConfReader (std::string filename, std::string confKey) {
