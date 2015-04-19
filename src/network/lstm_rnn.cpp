@@ -6,11 +6,14 @@ using namespace std;
 #define DEBUG_LSTM_RNN 1
 
 LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
-	/* read conf and allocate memory */
+	/* read conf and allocate memory */	
 	m_numLayer = confReader->getInt("num_layer");
 	m_numNeuronList = new int[m_numLayer];
 	m_layerTypeList = new string[m_numLayer];
 	m_connTypeList = new string[m_numLayer-1];
+	#ifdef DEBUG_LSTM_RNN
+	printf("Finish reading conf and allocating memory.\n");
+	#endif
 
 	// type and number of neurons of each layer
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
@@ -18,7 +21,10 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
   		ss << layerIdx;
 		m_numNeuronList[layerIdx] = confReader->getInt("num_neuron_layer_" + ss.str());
 		m_layerTypeList[layerIdx] = confReader->getString("type_layer_" + ss.str());
-	}	
+	}
+	#ifdef DEBUG_LSTM_RNN
+	printf("Finish reading type and number of neurons of each layer.\n");
+	#endif
 	
 	// type of each conectection
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
@@ -26,9 +32,15 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
   		ss << connIdx;
 		m_connTypeList[connIdx] = confReader->getString("type_connection_" + ss.str());
 	}
+	#ifdef DEBUG_LSTM_RNN
+	printf("Finish reading type of each conectection.\n");
+	#endif
 	
 	m_nParamSize = 0;
 	m_maxSeqLen = confReader->getInt("max_sequence_length");
+	#ifdef DEBUG_LSTM_RNN
+	printf("Finish reading max_sequence_length.\n");
+	#endif
 
 	/* initialize layers */
 	for (int layerIdx=0; layerIdx<m_numLayer; layerIdx++) {
@@ -38,6 +50,9 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 	}
 	m_dataSize = m_vecLayers[0]->m_inputSize;
 	m_targetSize = m_vecLayers[m_numLayer-1]->m_numNeuron;
+	#ifdef DEBUG_LSTM_RNN
+	printf("Finish initializine layers.\n");
+	#endif
 
 	/* initialize connections */
 	for (int connIdx=0; connIdx<m_numLayer-1; connIdx++) {
