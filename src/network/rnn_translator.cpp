@@ -9,16 +9,16 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	// init encoder and decoder
 	// m_reverseEncoder = confReader->getInt("reverse_encoder");
 	printf("m_reverseEncoder %d.\n", m_reverseEncoder);
-	string encoderConfSec = confReader->getString("encoder_conf");
-	printf("encoderConfSec %s.\n", encoderConfSec.c_str());
-	string decoderConfSec = confReader->getString("decoder_conf");
-	printf("decoderConfSec: %s.\n", decoderConfSec.c_str());
+	// string encoderConfSec = confReader->getString("encoder_conf");
+	// printf("encoderConfSec %s.\n", encoderConfSec.c_str());
+	// string decoderConfSec = confReader->getString("decoder_conf");
+	// printf("decoderConfSec: %s.\n", decoderConfSec.c_str());
 
 	printf("RNNTranslator constructor encoderConf.\n");
-	ConfReader *encoderConf = new ConfReader("config.conf", encoderConfSec.c_str());
+	ConfReader *encoderConf = new ConfReader("translator.conf", "ENCODER");
 	printf("encoderConf m_numLayer: %d.\n", encoderConf->getInt("num_layer"));
 	printf("RNNTranslator constructor decoderConf.\n");
-	ConfReader *decoderConf = new ConfReader("config.conf", decoderConfSec.c_str());
+	ConfReader *decoderConf = new ConfReader("translator.conf", "DECODER");
 	printf("decoderConf m_numLayer: %d.\n", decoderConf->getInt("num_layer"));
 
 
