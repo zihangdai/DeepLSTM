@@ -14,7 +14,7 @@ public:
     /* data */
 
     /* method */
-    void virtual updateParams (float *params, float *grad, int rank) {};
+    void virtual updateParams (float *params, float *grad, int rank=0) {};
 
 protected:
     /* data */
@@ -46,7 +46,7 @@ public:
     /* data */
 
     /* method */
-    void updateParams (float *params, float *grad, int rank);
+    void updateParams (float *params, float *grad, int rank=0);
 };
 
 /****************************************************************
@@ -61,7 +61,7 @@ public:
     /* data */
 
     /* method */
-    void updateParams (float *params, float *grad, int rank);
+    void updateParams (float *params, float *grad, int rank=0);
 
 private:
     /* data */
