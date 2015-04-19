@@ -11,6 +11,7 @@ int main() {
     ConfReader *confReader = new ConfReader("config.conf", "TRANSLATOR");
     printf("init RNNTranslator\n");
     RNNTranslator *translator = new RNNTranslator(confReader);
+    
     int paramSize = translator->m_nParamSize;
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];

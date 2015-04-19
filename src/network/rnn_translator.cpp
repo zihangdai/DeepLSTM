@@ -5,7 +5,7 @@
 RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	printf("RNNTranslator constructor begin.\n");
 	// init encoder and decoder
-	m_reverseEncoder = confReader->getInt("reverse_encoder");
+	// m_reverseEncoder = confReader->getInt("reverse_encoder");
 	printf("m_reverseEncoder %d.\n", m_reverseEncoder);
 	string encoderConfSec = confReader->getString("encoder_conf");
 	printf("encoderConfSec %s.\n", encoderConfSec.c_str());
@@ -18,7 +18,9 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	ConfReader *decoderConf = new ConfReader("config.conf", decoderConfSec);
 
 	m_encoder = new LSTM_RNN(encoderConf);
+	printf("RNNTranslator m_encoder LSTM_RNN.\n");
 	m_decoder = new LSTM_RNN(decoderConf);
+	printf("RNNTranslator m_decoder LSTM_RNN.\n");
 	
 	// compute paramSize
 	m_nParamSize = 0;
