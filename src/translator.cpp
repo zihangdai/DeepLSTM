@@ -6,8 +6,8 @@
 
 using namespace std;
 
-int main() {
-
+int main(int argc, char* argv[]) {
+    google::InitGoogleLogging(argv[0]);
     LOG(INFO) << "Test Glog" << endl;
     LOG(WARNING) << "Test Glog" << endl;
     LOG(ERROR) << "Test Glog" << endl;
