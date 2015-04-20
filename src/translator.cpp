@@ -1,3 +1,5 @@
+// #define NDEBUG
+
 #include <time.h>
 #include <glog/logging.h>
 #include "confreader.h"
@@ -8,7 +10,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    google::InitGoogleLogging(argv[0]);    
+    google::InitGoogleLogging(argv[0]);
 
     srand (time(NULL));
     openblas_set_num_threads(1);    

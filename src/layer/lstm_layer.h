@@ -59,6 +59,8 @@ public:
 
 	vector<float *> m_neuronSizeBuf;
 	vector<float *> m_inputSizeBuf;
+	
+	float *m_derivBuf;
 
 	/* method */
 	void initParams(float *params);
