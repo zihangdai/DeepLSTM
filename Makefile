@@ -12,11 +12,12 @@ CXXFLAGS+=-O3 -m64 -mavx
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
 INCFLAGS+=-I$(LIBDIR)/openblas/include
+INCFLAGS+=-I$(LIBDIR)/glog/include
 INCFLAGS+=-I$(HOME)/tool/openmpi/include
 
 # link flags
 LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -fopenmp #-lmpi -lmpi_cxx
-LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib
+LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 
 # vpath

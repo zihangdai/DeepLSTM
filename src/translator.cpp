@@ -2,8 +2,15 @@
 #include "confreader.h"
 #include "rnn_translator.h"
 #include "sgd.h"
+#include "glog/logging.h"
+
+using namespace std;
 
 int main() {
+
+    LOG(INFO) << "Test Glog" << endl;
+    LOG(WARNING) << "Test Glog" << endl;
+    LOG(ERROR) << "Test Glog" << endl;
 
     srand (time(NULL));
     openblas_set_num_threads(1);    

@@ -161,6 +161,7 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 	printf("LSTMLayer resetStates.\n");
 	#endif
 
+	#pragma omp parallel for
 	for (int seqIdx=0; seqIdx<inputSeqLen+2; ++seqIdx) {
 		// three gate units
 		memset(m_inGateActs[seqIdx], 0x00, sizeof(float) * m_numNeuron);
@@ -229,37 +230,6 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 			}
 		}
 	}
-
-	// #pragma omp parallel for
-	// for (int threadIdx=0; threadIdx<4; ++threadIdx) {
-	// 	switch (threadIdx) {
-	// 		case 0: {
-	// 			// compute input gate activation
-	// 			dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	// 			elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
-	// 			sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
-	// 			break;
-	// 		}
-	// 		case 1: {
-	// 			// compute forget gate activation
-	// 			dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	// 			elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
-	// 			sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
-	// 			break;
-	// 		}
-	// 		case 2: {
-	// 			// compute pre-gate states
-	// 			dot(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	// 			tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
-	// 			break;
-	// 		}
-	// 		case 3: {
-	// 			// compute output gate activation
-	// 			dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-	// 			break;
-	// 		}
-	// 	}
-	// }
 }
 
 void LSTMLayer::feedForward(int inputSeqLen) {

@@ -5,7 +5,6 @@
 
 #include "matrix.h"
 
-
 using namespace std;
 
 #define SIMD_WIDTH 8

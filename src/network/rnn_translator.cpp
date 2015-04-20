@@ -4,7 +4,7 @@
 
 using namespace std;
 
-RNNTranslator::RNNTranslator(ConfReader *confReader) {	
+RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	// init encoder and decoder
 	m_reverseEncoder = confReader->getInt("reverse_encoder");
 	#ifdef DEBUG_RNN_TRANSLATOR
@@ -100,7 +100,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 				memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_dataSize);
 				dataCursor += m_encoder->m_dataSize;
 			}
-		} else {
+		} else {			
 			for (int seqIdx=1; seqIdx<=encoderSeqLen; ++seqIdx) {
 				memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_dataSize);
 				dataCursor += m_encoder->m_dataSize;
@@ -120,10 +120,10 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			targetCursor += m_decoder->m_dataSize;
 		}
 		// set the internal states of the decoder at t = 0 to the internal states of encoder at the last step
-		
-		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {		
+		#pragma omp parallel for
+		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
 			LSTMLayer *enLayer = dynamic_cast<LSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
-			LSTMLayer *deLayer = dynamic_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);			
+			LSTMLayer *deLayer = dynamic_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
 			memcpy(deLayer->m_states[0], enLayer->m_states[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(deLayer->m_outputActs[0], enLayer->m_outputActs[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 		}
@@ -147,9 +147,10 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		m_decoder->feedBackward(decoderSeqLen);
 
 		// *** encoder ***
-		// set the error signal of encoder
+		// set the spatial error signal of encoder
 		trans_dot(enOutputLayer->m_outputErrs[encoderSeqLen], m_encodingW, m_decoder->m_dataSize, m_encoder->m_targetSize, 
 			deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 1);
+		#pragma omp parallel for
 		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
 			LSTMLayer *enLayer = dynamic_cast<LSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
 			LSTMLayer *deLayer = dynamic_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
@@ -164,7 +165,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 
 		// compute m_gradEncodingW
 		outer(m_gradEncodingW, deInputLayer->m_inputErrs[0], m_decoder->m_dataSize, 
-			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize);		
+			enOutputLayer->m_outputActs[encoderSeqLen], m_encoder->m_targetSize);
 
 		// move cursor to new position
 		sampleData += encoderSeqLen * m_encoder->m_dataSize;

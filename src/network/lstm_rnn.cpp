@@ -237,12 +237,13 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 	return error;
 }
 
-void LSTM_RNN::resetStates(int inputSeqLen) {
+void LSTM_RNN::resetStates(int inputSeqLen) {	
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
 		m_vecLayers[layerIdx]->resetStates(inputSeqLen);
 	}
 }
 
+// Sequential Part
 void LSTM_RNN::bindWeights(float *params, float *grad) {
 	// define cursors
 	float *paramsCursor = params;
