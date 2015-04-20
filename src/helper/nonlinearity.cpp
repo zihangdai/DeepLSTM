@@ -70,8 +70,8 @@ void tanh_deriv_threads (float *deriv_res, float *tanh_res, int dim) {
 }
 
 void softmax_threads (float *result, float *input, int dim) {
-	#pragma omp parallel for
 	float sum = 0.f;
+	#pragma omp parallel for reduction(+:sum)
 	for (int i=0; i<dim; i++) {
 		result[i] = exp(input[i]);
 		sum += result[i];
