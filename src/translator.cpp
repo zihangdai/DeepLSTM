@@ -8,6 +8,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
+    google::SetLogDestination(0,"./glog_test");
     google::InitGoogleLogging(argv[0]);
     LOG(INFO) << "Test Glog" << endl;
     LOG(WARNING) << "Test Glog" << endl;
