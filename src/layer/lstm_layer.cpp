@@ -339,7 +339,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 }
 
 void LSTMLayer::feedbackSequential (int seqIdx) {
-	int blockSize = 64;
+	int blockSize = 16;
 	#pragma omp parallel for 
 	for (int i=0; i<m_numNeuron; i+=blockSize) {
 		int actualSize = min(blockSize, m_numNeuron-i);
@@ -350,7 +350,7 @@ void LSTMLayer::feedbackSequential (int seqIdx) {
 
 		// computations are independent but write to the same memory and depend on the seqIdx+1 time step
 		// cell state error
-		tanh_deriv(m_derivBuf, m_preOutGateActs[seqIdx]+i, actualSize);
+		tanh_deriv(m_derivBuf+i, m_preOutGateActs[seqIdx]+i, actualSize);
 		elem_mul_triple(m_cellStateErrs[seqIdx]+i, m_outputErrs[seqIdx]+i, m_outGateActs[seqIdx]+i, m_derivBuf+i, actualSize);
 
 		elem_mul(m_cellStateErrs[seqIdx]+i, m_cellStateErrs[seqIdx+1]+i, m_forgetGateActs[seqIdx+1]+i, actualSize);
@@ -370,7 +370,7 @@ void LSTMLayer::feedbackSequential (int seqIdx) {
 
 		// computations are independent but use the same m_derivBuf
 		// input gates delta (Time t = seqIdx): m_inGateDelta[seqIdx]
-		sigm_deriv(m_derivBuf, m_inGateActs[seqIdx]+i, actualSize);
+		sigm_deriv(m_derivBuf+i, m_inGateActs[seqIdx]+i, actualSize);
 		elem_mul_triple(m_inGateDelta[seqIdx]+i, m_cellStateErrs[seqIdx]+i, m_preGateStates[seqIdx]+i, m_derivBuf+i, actualSize);
 	}
 }
