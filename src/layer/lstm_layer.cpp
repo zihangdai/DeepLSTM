@@ -131,7 +131,7 @@ void LSTMLayer::releaseMem(int seqIdx) {
 }
 
 void LSTMLayer::reshape(int newSeqLen) {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "reshape LSTMLayer from" << m_maxSeqLen " to " << newSeqLen << endl;
+	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "reshape LSTMLayer from" << m_maxSeqLen << " to " << newSeqLen << endl;
 	// release mem if needed
 	if (newSeqLen < m_maxSeqLen) {
 		for (int seqIdx=newSeqLen+2; seqIdx<m_maxSeqLen+2; ++seqIdx) {
