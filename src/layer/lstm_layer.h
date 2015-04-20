@@ -59,7 +59,7 @@ public:
 
 	vector<float *> m_neuronSizeBuf;
 	vector<float *> m_inputSizeBuf;
-	
+
 	float *m_derivBuf;
 
 	/* method */
@@ -80,7 +80,7 @@ private:
 
 	void computeOutputErrs(int seqIdx);
 	void computeGatesActs(int seqIdx);
-	void feedbackSequential (int seqIdx, float *derivBuf);
+	void feedbackSequential (int seqIdx);
 };
 
 #endif
