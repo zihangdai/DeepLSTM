@@ -8,11 +8,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    google::SetLogDestination(0,"./glog_test");
-    google::InitGoogleLogging(argv[0]);
-    LOG(INFO) << "Test Glog" << endl;
-    LOG(WARNING) << "Test Glog" << endl;
-    LOG(ERROR) << "Test Glog" << endl;
+    google::InitGoogleLogging(argv[0]);    
 
     srand (time(NULL));
     openblas_set_num_threads(1);    
