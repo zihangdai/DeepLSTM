@@ -248,7 +248,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 	}
 	double endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 5) << "[" << google::COUNTER << "]" << "LSTMLayer feedForward paralleled time: " << endTime - startTime << endl;
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedForward paralleled time: " << endTime - startTime << endl;
 
 	startTime = CycleTimer::currentSeconds();
 	// for each time step from 1 to T
@@ -289,7 +289,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		elem_mul(m_outputActs[seqIdx], m_outGateActs[seqIdx], m_preOutGateActs[seqIdx], m_numNeuron);
 	}
 	endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 5) << "[" << google::COUNTER << "]" << "LSTMLayer feedForward sequential time: " << endTime - startTime << endl;	
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedForward sequential time: " << endTime - startTime << endl;	
 }
 
 void LSTMLayer::computeOutputErrs (int seqIdx) {
@@ -421,7 +421,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		
 	}
 	double endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 5) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward sequential time: " << endTime - startTime << endl;
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward sequential time: " << endTime - startTime << endl;
 
 	startTime = CycleTimer::currentSeconds();
 	// omp parafor each time step from T to 1
@@ -452,7 +452,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	}
 
 	endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 5) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward paralleled time: " << endTime - startTime << endl;	
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward paralleled time: " << endTime - startTime << endl;	
 }
 
 void LSTMLayer::bindWeights(float *params, float *grad) {
