@@ -29,40 +29,41 @@ adagrad::~adagrad () {
 void adagrad::updateParams (float *params, float *grad, int rank) {
 	m_stepCount += 1;
 
-	// elem_mul(m_histSquareGrad, grad, grad, m_nParamSize);
-	// for (int i=0; i<m_nParamSize; i++) {
-	// 	// m_histSquareGrad[i] += grad[i] * grad[i];
-	// 	m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
-	// 	// params[i] += m_velocity[i];
-	// }
-	// elem_accum(params, m_velocity, m_nParamSize);
+	if (!SIMD) {
+		#pragma omp parallel for
+		for (int i=0; i<m_nParamSize; i++) {
+			m_histSquareGrad[i] += grad[i] * grad[i];
+			m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
+			params[i] += m_velocity[i];
+		}
+	} else {
+		__m256 vecLearnRate = _mm256_set1_ps(m_learningRate);
+		__m256 vecMomentum  = _mm256_set1_ps(m_momentumFactor);
+		
+		#pragma omp parallel for
+		for (int i=0; i<m_stopSIMD; i+=SIMD_WIDTH) {
+			__m256 vec_grad, vec_vel, vec_param, vec_hist;
+			vec_grad = _mm256_loadu_ps(grad + i);
+			vec_param = _mm256_loadu_ps(params + i);
+			vec_vel = _mm256_loadu_ps(m_velocity + i);
+			vec_hist = _mm256_loadu_ps(m_histSquareGrad + i);
 
-	__m256 vecLearnRate = _mm256_set1_ps(m_learningRate);
-	__m256 vecMomentum  = _mm256_set1_ps(m_momentumFactor);
-	
-	#pragma omp parallel for
-	for (int i=0; i<m_stopSIMD; i+=SIMD_WIDTH) {
-		__m256 vec_grad, vec_vel, vec_param, vec_hist;
-		vec_grad = _mm256_loadu_ps(grad + i);
-		vec_param = _mm256_loadu_ps(params + i);
-		vec_vel = _mm256_loadu_ps(m_velocity + i);
-		vec_hist = _mm256_loadu_ps(m_histSquareGrad + i);
+			// m_histSquareGrad[i] += grad[i] * grad[i];
+			vec_hist = _mm256_add_ps(vec_hist, _mm256_mul_ps(vec_grad, vec_grad));
+			// m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
+			vec_vel = _mm256_sub_ps(_mm256_mul_ps(vecMomentum, vec_vel), _mm256_div_ps(_mm256_mul_ps(vecLearnRate, vec_grad), _mm256_sqrt_ps(vec_hist)));
+			// params[i] += m_velocity[i];
+			vec_param = _mm256_add_ps(vec_param, vec_vel);
 
-		// m_histSquareGrad[i] += grad[i] * grad[i];
-		vec_hist = _mm256_add_ps(vec_hist, _mm256_mul_ps(vec_grad, vec_grad));
-		// m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
-		vec_vel = _mm256_sub_ps(_mm256_mul_ps(vecMomentum, vec_vel), _mm256_div_ps(_mm256_mul_ps(vecLearnRate, vec_grad), _mm256_sqrt_ps(vec_hist)));
-		// params[i] += m_velocity[i];
-		vec_param = _mm256_add_ps(vec_param, vec_vel);
+			_mm256_storeu_ps(params + i, vec_param);
+			_mm256_storeu_ps(m_velocity + i, vec_vel);
+			_mm256_storeu_ps(m_histSquareGrad + i, vec_hist);
+		}
 
-		_mm256_storeu_ps(params + i, vec_param);
-		_mm256_storeu_ps(m_velocity + i, vec_vel);
-		_mm256_storeu_ps(m_histSquareGrad + i, vec_hist);
-	}
-
-	for (int i=m_stopSIMD; i<m_nParamSize; i++) {
-		m_histSquareGrad[i] += grad[i] * grad[i];
-		m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
-		params[i] += m_velocity[i];
+		for (int i=m_stopSIMD; i<m_nParamSize; i++) {
+			m_histSquareGrad[i] += grad[i] * grad[i];
+			m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
+			params[i] += m_velocity[i];
+		}
 	}
 }
