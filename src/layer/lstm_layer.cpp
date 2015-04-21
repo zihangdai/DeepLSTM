@@ -341,21 +341,21 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 	int stopSIMD = m_numNeuron - residual;
 
 	#pragma omp parallel for
-	for (int i=0; neuronIdx<stopSIMD; i+=SIMD_WIDTH) {
+	for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
 		__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
-			vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + neuronIdx);
-			vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + neuronIdx);
-			vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + neuronIdx);
-			vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + neuronIdx);
+		vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + i);
+		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
+		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
+		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
 
-			vec_res = _mm256_add_ps(vec_res, vec_0);
-			vec_res = _mm256_add_ps(vec_res, vec_1);
-			vec_res = _mm256_add_ps(vec_res, vec_2);
-			vec_res = _mm256_add_ps(vec_res, vec_3);
-			_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
+		vec_res = _mm256_add_ps(vec_res, vec_0);
+		vec_res = _mm256_add_ps(vec_res, vec_1);
+		vec_res = _mm256_add_ps(vec_res, vec_2);
+		vec_res = _mm256_add_ps(vec_res, vec_3);
+		_mm256_storeu_ps(m_outputErrs[seqIdx] + i, vec_res);
 	}
 
-	for (int i=stopSIMD; neuronIdx<m_numNeuron; ++i) {
+	for (int i=stopSIMD; i<m_numNeuron; ++i) {
 		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
 		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
 		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
