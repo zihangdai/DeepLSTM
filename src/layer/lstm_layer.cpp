@@ -340,7 +340,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 
 void LSTMLayer::feedbackSequential (int seqIdx) {
 	int blockSize = 16;
-	#pragma omp parallel for 
+	#pragma omp parallel for
 	for (int i=0; i<m_numNeuron; i+=blockSize) {
 		int actualSize = min(blockSize, m_numNeuron-i);
 		// computations are independent but use the same m_derivBuf
@@ -382,13 +382,19 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
 		// four computations are independent but write to the same memory
 		// output error: m_outputErrs[seqIdx]. all deltas are from Time t=seqIdx+1
+		double seqBegTime = CycleTimer::currentSeconds();
 		computeOutputErrs (seqIdx);
 		// trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
+		double seqEndTime = CycleTimer::currentSeconds();
+		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward computeOutputErrs time: " << seqEndTime - seqBegTime << endl;
 
+		seqBegTime = CycleTimer::currentSeconds();
 		feedbackSequential (seqIdx);
+		seqEndTime = CycleTimer::currentSeconds();
+		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward feedbackSequential time: " << seqEndTime - seqBegTime << endl;
 		// // computations are independent but use the same m_derivBuf
 		// // output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
 		// sigm_deriv(m_derivBuf, m_outGateActs[seqIdx], m_numNeuron);
