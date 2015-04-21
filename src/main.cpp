@@ -34,14 +34,10 @@ int main(int argc, char* argv[]) {
             data[i*dimIn+j] = i*dimIn+j;
         }
         for (int j=0; j<dimOut; ++j) {
-            label[i*dimOut+j] = dimOut * inputSeqLen - i*dimIn+j;
+            label[i*dimOut+j] = dimOut * inputSeqLen - (i*dimIn+j);
         }
-    }   
-    for (int i=0; i<20; ++i) {
-        printf("%f\t", params[i]);
-    }
-    printf("\n");
-        
+    }       
+
     float error = net->computeGrad(grad, params, data, label, 1);
 
     for (int i=0; i<20; ++i) {
