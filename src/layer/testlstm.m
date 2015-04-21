@@ -1,7 +1,7 @@
 %%
 clear; clc;
 
-num_neurons = [32, 32, 32, 32];
+num_neurons = [128, 128, 128, 128];
 numlayer = numel(num_neurons);
 
 Wix = cell(2,1);
@@ -156,7 +156,7 @@ for i=max_seq+1:-1:2
         GWfc{j} = GWfc{j} + lstms{j}.foGateDelta(:,i) .* lstms{j}.states(:,i-1);
 
         GWcx{j} = GWcx{j} + lstms{j}.preStatesDelta(:,i) * lstms{j}.inputs(:,i)';
-        GWch{j} = GWch{j} + lstms{j}.preStatesDelta(:,i) * lstms{j}.outputs(:,i-1)';       
+        GWch{j} = GWch{j} + lstms{j}.preStatesDelta(:,i) * lstms{j}.outputs(:,i-1)';
         
         GWox{j} = GWox{j} + lstms{j}.ouGateDelta(:,i) * lstms{j}.inputs(:,i)';
         GWoh{j} = GWoh{j} + lstms{j}.ouGateDelta(:,i) * lstms{j}.outputs(:,i-1)';

@@ -1,8 +1,6 @@
 // #define NDEBUG
 
 #include <time.h>
-#include <glog/logging.h>
-#include "confreader.h"
 #include "rnn_translator.h"
 #include "sgd.h"
 

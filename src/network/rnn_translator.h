@@ -2,7 +2,7 @@
 #define __RNN_TRANSLATOR_H__
 
 #include "lstm_rnn.h"
-#include "confreader.h"
+#include "common.h"
 
 class RNNTranslator
 {

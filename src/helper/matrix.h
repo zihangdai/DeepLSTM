@@ -3,6 +3,8 @@
 
 
 #include <math.h>
+#include <algorithm>
+
 #include "cblas.h"
 #include "common.h"
 // #include "mkl.h"

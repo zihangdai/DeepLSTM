@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "layer.h"
 
 using namespace std;

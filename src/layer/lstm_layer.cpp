@@ -1,6 +1,3 @@
-#include <glog/logging.h>
-#include <stdlib.h>
-#include <immintrin.h>
 #include "lstm_layer.h"
 
 using namespace std;

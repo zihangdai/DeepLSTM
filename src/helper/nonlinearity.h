@@ -2,7 +2,6 @@
 #define __HELPER_NONLINEARITY_H__
 
 #include <math.h>
-#include <omp.h>
 #include "common.h"
 
 /****************************************************************

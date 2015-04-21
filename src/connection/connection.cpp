@@ -1,9 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
 #include "connection.h"
-#include "matrix.h"
-#include "cycle_timer.h"
 
 using namespace std;
 

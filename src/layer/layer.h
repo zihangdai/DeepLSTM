@@ -1,17 +1,12 @@
 #ifndef __LAYER_H__
 #define __LAYER_H__
 
-#include <glog/logging.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <omp.h>
-
 #include <vector>
 
 #include "matrix.h"
 #include "nonlinearity.h"
-#include "cycle_timer.h"
+
+#include "common.h"
 
 using namespace std;
 

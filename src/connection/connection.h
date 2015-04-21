@@ -1,6 +1,8 @@
 #ifndef __REC_CONNECTION_H__
 #define __REC_CONNECTION_H__
 
+#include "common.h"
+#include "matrix.h"
 #include "layer.h"
 
 using namespace std;

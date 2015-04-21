@@ -1,6 +1,5 @@
-#include <glog/logging.h>
+#include "common.h"
 #include "lstm_rnn.h"
-#include "confreader.h"
 
 using namespace std;
 
