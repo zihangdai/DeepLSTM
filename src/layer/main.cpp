@@ -47,6 +47,11 @@ int main () {
         printf("%f\t", grad[i]);
     }
     printf("\n");
+    printf("grad\n");
+    for (int i=0; i<paramSize; i++) {
+        printf("%f\t", grad[paramSize-1-i]);
+    }
+    printf("\n");
     
     delete L;
     delete [] params;
