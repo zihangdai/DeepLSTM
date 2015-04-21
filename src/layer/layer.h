@@ -1,6 +1,7 @@
 #ifndef __LAYER_H__
 #define __LAYER_H__
 
+#include <glog/logging.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

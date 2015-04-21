@@ -93,9 +93,9 @@ tanhDeriv = @(x) (1 - x .^ 2);
 
 %%
 for i=2:max_seq+1
-    disp(int2str(i))    
-    for j=1:lstmnum
-        lstms{j}.inputs(:,i) = inputs(:,i-1);
+    disp(int2str(i))
+    lstms{1}.inputs(:,i) = inputs(:,i-1);
+    for j=1:lstmnum        
         lstms{j}.inGate(:,i)     = sigmoid (Wix{j} * lstms{j}.inputs(:,i) + Wih{j} * lstms{j}.outputs(:,i-1) + Wic{j} .* lstms{j}.states(:,i-1));
         lstms{j}.foGate(:,i)     = sigmoid (Wfx{j} * lstms{j}.inputs(:,i) + Wfh{j} * lstms{j}.outputs(:,i-1) + Wfc{j} .* lstms{j}.states(:,i-1));
         lstms{j}.preStates(:,i)  = tanh(Wcx{j} * lstms{j}.inputs(:,i) + Wch{j} * lstms{j}.outputs(:,i-1));
@@ -108,7 +108,7 @@ for i=2:max_seq+1
         end
     end
     softmaxRes(:,i) = W * [lstms{lstmnum}.outputs(:,i); 1];
-    softmaxRes(:,i) = exp(softmaxRes(:,i)) / sum(exp(softmaxRes(:,i)));
+    % softmaxRes(:,i) = exp(softmaxRes(:,i)) / sum(exp(softmaxRes(:,i)));
 end
 
 %%
