@@ -1,24 +1,24 @@
 #include "common.h"
 
-__m256 _ps256_exp_hi = _mm256_set1_ps(88.3762626647949f);
-__m256 _ps256_exp_lo = _mm256_set1_ps(-88.3762626647949f);
+static __m256 _ps256_exp_hi = _mm256_set1_ps(88.3762626647949f);
+static __m256 _ps256_exp_lo = _mm256_set1_ps(-88.3762626647949f);
 
-__m256 _ps256_cephes_LOG2EF = _mm256_set1_ps(1.44269504088896341);
-__m256 _ps256_cephes_exp_C1 = _mm256_set1_ps(0.693359375);
-__m256 _ps256_cephes_exp_C2 = _mm256_set1_ps(-2.12194440e-4);
+static __m256 _ps256_cephes_LOG2EF = _mm256_set1_ps(1.44269504088896341);
+static __m256 _ps256_cephes_exp_C1 = _mm256_set1_ps(0.693359375);
+static __m256 _ps256_cephes_exp_C2 = _mm256_set1_ps(-2.12194440e-4);
 
-__m256 _ps256_cephes_exp_p0 = _mm256_set1_ps(1.9875691500E-4);
-__m256 _ps256_cephes_exp_p1 = _mm256_set1_ps(1.3981999507E-3);
-__m256 _ps256_cephes_exp_p2 = _mm256_set1_ps(8.3334519073E-3);
-__m256 _ps256_cephes_exp_p3 = _mm256_set1_ps(4.1665795894E-2);
-__m256 _ps256_cephes_exp_p4 = _mm256_set1_ps(1.6666665459E-1);
-__m256 _ps256_cephes_exp_p5 = _mm256_set1_ps(5.0000001201E-1);
+static __m256 _ps256_cephes_exp_p0 = _mm256_set1_ps(1.9875691500E-4);
+static __m256 _ps256_cephes_exp_p1 = _mm256_set1_ps(1.3981999507E-3);
+static __m256 _ps256_cephes_exp_p2 = _mm256_set1_ps(8.3334519073E-3);
+static __m256 _ps256_cephes_exp_p3 = _mm256_set1_ps(4.1665795894E-2);
+static __m256 _ps256_cephes_exp_p4 = _mm256_set1_ps(1.6666665459E-1);
+static __m256 _ps256_cephes_exp_p5 = _mm256_set1_ps(5.0000001201E-1);
 
-__m256 _ps256_0p5 = _mm256_set1_ps(0.5f);
+static __m256 _ps256_0p5 = _mm256_set1_ps(0.5f);
 
 
-__m256i _pi32_256_0x7f = _mm256_set1_epi32(0x7f);
-__m128i _pi32_0x7f = _mm_set1_epi32(0x7f);
+static __m256i _pi32_256_0x7f = _mm256_set1_epi32(0x7f);
+static __m128i _pi32_0x7f = _mm_set1_epi32(0x7f);
 
 __m256 exp256_ps(__m256 x) {
   __m256 tmp = _mm256_setzero_ps(), fx;  

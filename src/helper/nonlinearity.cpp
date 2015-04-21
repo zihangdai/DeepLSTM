@@ -4,7 +4,7 @@
 * Single-thread version
 ****************************************************************/
 void sigm (float *sigm_res, float *input, int dim) {
-	if (SIMD) {
+	if (!SIMD) {
 		for (int i=0; i<dim; i++) {
 			sigm_res[i] = 1 / (1 + exp(-input[i]));
 		}
@@ -20,7 +20,7 @@ void sigm (float *sigm_res, float *input, int dim) {
 			// vec_res = _mm256_loadu_ps(sigm_res + i);
 
 			// vec_input = _mm256_exp_ps(_mm256_sub_ps(vec_zero, vec_input));
-			vec_input = exp256_ps(_mm256_sub_ps(vec_zero, vec_input));			
+			vec_input = exp256_ps(_mm256_sub_ps(vec_zero, vec_input));
 			vec_res = _mm256_div_ps(vec_one, _mm256_add_ps(vec_one, vec_input));
 			_mm256_storeu_ps(sigm_res + i, vec_res);
 		}
@@ -57,7 +57,7 @@ void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
 }
 
 void tanh (float *tanh_res, float *input, int dim) {
-	if (SIMD) {
+	if (!SIMD) {
 		for (int i=0; i<dim; i++) {
 			tanh_res[i] = tanh(input[i]);
 		}
