@@ -1,6 +1,7 @@
 #ifndef __SGD_H__
 #define __SGD_H__
 
+#include <glog/logging.h>
 #include <stdio.h>
 #include <map>
 #include <string.h>
