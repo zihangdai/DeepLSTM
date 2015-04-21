@@ -2,8 +2,8 @@
 
 __m256 exp256_ps(__m256 x) {
   __m256 tmp = _mm256_setzero_ps(), fx;
-  v8si imm0;
-  __m256 one = *(__m256*)_ps256_1;
+  __m256i imm0;
+  __m256 one = _mm256_set1_ps(1.f);
 
   x = _mm256_min_ps(x, *(__m256*)_ps256_exp_hi);
   x = _mm256_max_ps(x, *(__m256*)_ps256_exp_lo);
@@ -49,7 +49,7 @@ __m256 exp256_ps(__m256 x) {
   /* build 2^n */
   imm0 = _mm256_cvttps_epi32(fx);
   // another two AVX2 instructions
-  imm0 = _mm256_add_epi32(imm0, *(v8si*)_pi32_256_0x7f);
+  imm0 = _mm256_add_epi32(imm0, *(__m256i*)_pi32_256_0x7f);
   imm0 = _mm256_slli_epi32(imm0, 23);
   __m256 pow2n = _mm256_castsi256_ps(imm0);
   y = _mm256_mul_ps(y, pow2n);
