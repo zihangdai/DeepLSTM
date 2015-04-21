@@ -2,7 +2,7 @@
 #include "lstm_rnn.h"
 #include "confreader.h"
 
-int main() {
+int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
     openblas_set_num_threads(1);    
 
