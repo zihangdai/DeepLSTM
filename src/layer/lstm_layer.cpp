@@ -478,7 +478,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		elem_mul(gradW_i_c, m_inGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
 		printf("gradW_i_x %d\n", seqIdx);
 		for (int i=0; i<m_numNeuron; ++i) {
-			printf("%f\t", gradW_i_x[seqIdx][i]);
+			printf("%f\t", gradW_i_x[i]);
 		}
 		printf("\n");
 
