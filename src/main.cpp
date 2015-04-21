@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     int max_openmp_threads = confReader->get<int>(section + "max_threads");
 
     omp_set_num_threads(max_openmp_threads);
-    RecurrentNN *net = new LSTM_RNN(confReader);
+    RecurrentNN *net = new LSTM_RNN(confReader, section);
     int paramSize = net->m_nParamSize;
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];
