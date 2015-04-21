@@ -347,6 +347,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
 		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
 		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
+		vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + i);
 
 		vec_res = _mm256_add_ps(vec_res, vec_0);
 		vec_res = _mm256_add_ps(vec_res, vec_1);
