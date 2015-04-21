@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     openblas_set_num_threads(1);    
 
     boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
-    boost::property_tree::ini_parser::read_ini("translator.conf" *confReader);
+    boost::property_tree::ini_parser::read_ini("translator.conf", *confReader);
     string section = "Translator.";
 
     int max_openmp_threads = confReader->get<int>(section + "max_threads");
