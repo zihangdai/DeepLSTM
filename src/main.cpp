@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     int numlayer = confReader->get<int>(section + "num_layer");
     stringstream ss;
     ss << (numlayer-1);
-    int dimOut = confReader->get<int>(section + "num_neuron_layer_" + ss);
+    int dimOut = confReader->get<int>(section + "num_neuron_layer_" + ss.str());
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
