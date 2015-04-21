@@ -23,6 +23,10 @@ RNNTranslator::RNNTranslator(ConfReader *confReader) {
 	m_nParamSize += m_decoder->m_nParamSize;
 	m_nParamSize += m_decoder->m_dataSize * m_encoder->m_targetSize;
 
+	// delete conf of no further use
+	delete encoderConf;
+	delete decoderConf;
+
 	#ifdef DEBUG_RNN_TRANSLATOR
 	printf("RNNTranslator constructor finished.\n");
 	#endif
