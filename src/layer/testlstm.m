@@ -1,7 +1,7 @@
 %%
 clear; clc;
 
-num_neurons = [1024, 1024, 1024, 1024];
+num_neurons = [32, 32, 32, 32];
 numlayer = numel(num_neurons);
 
 Wix = cell(2,1);
@@ -20,20 +20,20 @@ Woh = cell(2,1);
 Woc = cell(2,1);
 
 for i = 1:2
-    Wix{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
-    Wih{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
-    Wic{i} = 0.6 * ones(num_neurons(i+1), 1);
+    Wix{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
+    Wih{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
+    Wic{i} = 0.0006 * ones(num_neurons(i+1), 1);
     
-    Wfx{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
-    Wfh{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
-    Wfc{i} = 0.6 * ones(num_neurons(i+1), 1);
+    Wfx{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
+    Wfh{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
+    Wfc{i} = 0.0006 * ones(num_neurons(i+1), 1);
     
-    Wcx{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
-    Wch{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Wcx{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
+    Wch{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
     
-    Wox{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
-    Woh{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
-    Woc{i} = 0.6 * ones(num_neurons(i+1), 1);
+    Wox{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
+    Woh{i} = 0.0006 * ones(num_neurons(i), num_neurons(i+1));
+    Woc{i} = 0.0006 * ones(num_neurons(i+1), 1);
 
     GWix{i} = zeros(num_neurons(i), num_neurons(i+1));
     GWih{i} = zeros(num_neurons(i), num_neurons(i+1));
@@ -51,13 +51,13 @@ for i = 1:2
     GWoc{i} = zeros(num_neurons(i+1), 1);
 end
 
-W = 0.3 * ones(num_neurons(numlayer), num_neurons(numlayer-1)+1);
+W = 0.0003 * ones(num_neurons(numlayer), num_neurons(numlayer-1)+1);
 GW = zeros(num_neurons(numlayer), num_neurons(numlayer-1)+1);
 
-% [2x1]
+%% input and output
 max_seq = 20;
-inputs = repmat((0:max_seq-1), num_neurons(1), 1);
-outputs = 2 * repmat((0:max_seq-1), num_neurons(numlayer), 1);
+inputs = reshape((0:max_seq*num_neurons(1)-1), num_neurons(1), max_seq) ./ max_seq*num_neurons(1);
+outputs = (max_seq*num_neurons(1) - reshape((0:max_seq*num_neurons(1)-1), num_neurons(1), max_seq)) ./ max_seq*num_neurons(1);
 
 %%
 lstmnum = 2;
@@ -115,7 +115,7 @@ end
 
 error_sig = (softmaxRes(:,2:max_seq+1) - outputs);
 
-GW += error_sig * [lstms{lstmnum}.outputs(:,2:max_seq+1); ones(1, max_seq)]';
+GW = GW + error_sig * [lstms{lstmnum}.outputs(:,2:max_seq+1); ones(1, max_seq)]';
 
 spatialoutErrs = W' * error_sig;
 spatialoutErrs = spatialoutErrs(1:end-1,:);
@@ -147,20 +147,20 @@ for i=max_seq+1:-1:2
         lstms{j}.inErrs(:,i) = Wix{j}' * lstms{j}.inGateDelta(:,i)    + Wfx{j}' * lstms{j}.foGateDelta(:,i) ...
                              + Wcx{j}' * lstms{j}.preStatesDelta(:,i) + Wox{j}' * lstms{j}.ouGateDelta(:,i);
 
-        GWix{j} += lstms{j}.inGateDelta(:,i) * lstms{j}.inputs(:,i)';
-        GWih{j} += lstms{j}.inGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
-        GWic{j} += lstms{j}.inGateDelta(:,i) .* lstms{j}.states(:,i-1);
+        GWix{j} = GWix{j} + lstms{j}.inGateDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWih{j} = GWih{j} + lstms{j}.inGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
+        GWic{j} = GWic{j} + lstms{j}.inGateDelta(:,i) .* lstms{j}.states(:,i-1);
                
-        GWfx{j} += lstms{j}.foGateDelta(:,i) * lstms{j}.inputs(:,i)';
-        GWfh{j} += lstms{j}.foGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
-        GWfc{j} += lstms{j}.foGateDelta(:,i) .* lstms{j}.states(:,i-1);
+        GWfx{j} = GWfx{j} + lstms{j}.foGateDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWfh{j} = GWfh{j} + lstms{j}.foGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
+        GWfc{j} = GWfc{j} + lstms{j}.foGateDelta(:,i) .* lstms{j}.states(:,i-1);
 
-        GWcx{j} += lstms{j}.preStatesDelta(:,i) * lstms{j}.inputs(:,i)';
-        GWch{j} += lstms{j}.preStatesDelta(:,i) * lstms{j}.outputs(:,i-1)';       
+        GWcx{j} = GWcx{j} + lstms{j}.preStatesDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWch{j} = GWch{j} + lstms{j}.preStatesDelta(:,i) * lstms{j}.outputs(:,i-1)';       
         
-        GWox{j} += lstms{j}.ouGateDelta(:,i) * lstms{j}.inputs(:,i)';
-        GWoh{j} += lstms{j}.ouGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
-        GWoc{j} += lstms{j}.ouGateDelta(:,i) .* lstms{j}.states(:,i-1);
+        GWox{j} = GWox{j} + lstms{j}.ouGateDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWoh{j} = GWoh{j} + lstms{j}.ouGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
+        GWoc{j} = GWoc{j} + lstms{j}.ouGateDelta(:,i) .* lstms{j}.states(:,i-1);
     end
 end
 

@@ -31,10 +31,10 @@ int main(int argc, char* argv[]) {
     float *label = new float[dimOut * inputSeqLen];
     for (int i=0; i<inputSeqLen; ++i) {
         for (int j=0; j<dimIn; ++j) {
-            data[i*dimIn+j] = i;
+            data[i*dimIn+j] = i*dimIn+j;
         }
         for (int j=0; j<dimOut; ++j) {
-            label[i*dimOut+j] = 2 * i;
+            label[i*dimOut+j] = dimOut * inputSeqLen - i*dimIn+j;
         }
     }   
     
