@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     }   
     
     double startTime = CycleTimer::currentSeconds();
-    int maxiter = confReader->get<int>("max_iteration");
+    int maxiter = confReader->get<int>(section + "max_iteration");
     for (int i=0; i<maxiter; i++) {
         double gradBegTime = CycleTimer::currentSeconds();
         float error = translator->computeGrad(grad, params, data, label, 1);
