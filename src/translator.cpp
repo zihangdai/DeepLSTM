@@ -43,12 +43,12 @@ int main(int argc, char* argv[]) {
     float *label = new float[dimOut * targetSeqLen];
     for (int i=0; i<dataSeqLen; ++i) {
         for (int j=0; j<dimIn; ++j) {
-            data[i*dimIn+j] = dataSeqLen;
+            data[i*dimIn+j] = i;
         }
     }
     for (int i=0; i<targetSeqLen; ++i) {
         for (int j=0; j<dimOut; ++j) {
-            label[i*dimOut+j] = 2 * targetSeqLen;
+            label[i*dimOut+j] = 2 * i;
         }
     }   
     
