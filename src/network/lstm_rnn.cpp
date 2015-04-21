@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#define DEBUG_LSTM_RNN 1
+#define DEBUG_LSTM_RNN 0
 
 LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 	/* read conf and allocate memory */	
@@ -45,6 +45,8 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 		m_nParamSize += conn->m_nParamSize;
 		m_vecConnections.push_back(conn);
 	}
+	
+	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "LSTM_RNN deconstructor." << endl;
 }
 
 LSTM_RNN::~LSTM_RNN() {

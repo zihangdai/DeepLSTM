@@ -43,7 +43,7 @@ LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLay
 }
 
 LSTMLayer::~LSTMLayer() {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer deconstructor." << endl;	
+	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer deconstructor." << endl;
 
 	for (int seqIdx=0; seqIdx<m_maxSeqLen+2; ++seqIdx) {
 		releaseMem(seqIdx);

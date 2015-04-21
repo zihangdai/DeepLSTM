@@ -51,13 +51,9 @@ int main(int argc, char* argv[]) {
     DLOG(ERROR) << "Error: " << error << endl;
 
     delete confReader;
-    DLOG(ERROR) << "delete confReader" << endl;
     delete net;
-    DLOG(ERROR) << "delete net" << endl;
     delete [] params;
     delete [] grad;
-    DLOG(ERROR) << "delete [] params and delete [] grad" << endl;
     delete [] data;
     delete [] label;
-    DLOG(ERROR) << "delete [] data and delete [] label" << endl;
 }
