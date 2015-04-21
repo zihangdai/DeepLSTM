@@ -4,7 +4,7 @@ using namespace std;
 
 #define DEBUG_LSTM_LAYER 1
 
-LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLayer(numNeuron, maxSeqLen, inputSize) {	
+LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLayer(numNeuron, maxSeqLen, inputSize) {
 	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer constructor." << endl;
 
 	// resize all vectors
@@ -313,52 +313,52 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 		}
 	}
 
-	int blockNum = m_numNeuron / 4;
-	#pragma omp parallel for
-	for (int idx=0; idx<4; ++idx) {
-		int start = idx * blockNum;
-		int end = start + blockNum;
-		for (int neuronIdx=start; neuronIdx<end; neuronIdx+=SIMD_WIDTH) {
-			__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
-			vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + neuronIdx);
-			vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + neuronIdx);
-			vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + neuronIdx);
-			vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + neuronIdx);
-			vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + neuronIdx);
+	// int blockNum = m_numNeuron / 4;
+	// #pragma omp parallel for
+	// for (int idx=0; idx<4; ++idx) {
+	// 	int start = idx * blockNum;
+	// 	int end = start + blockNum;
+	// 	for (int neuronIdx=start; neuronIdx<end; neuronIdx+=SIMD_WIDTH) {
+	// 		__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
+	// 		vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + neuronIdx);
+	// 		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + neuronIdx);
+	// 		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + neuronIdx);
+	// 		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + neuronIdx);
+	// 		vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + neuronIdx);
 
-			vec_res = _mm256_add_ps(vec_res, vec_0);
-			vec_res = _mm256_add_ps(vec_res, vec_1);
-			vec_res = _mm256_add_ps(vec_res, vec_2);
-			vec_res = _mm256_add_ps(vec_res, vec_3);
-			_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
-		}
+	// 		vec_res = _mm256_add_ps(vec_res, vec_0);
+	// 		vec_res = _mm256_add_ps(vec_res, vec_1);
+	// 		vec_res = _mm256_add_ps(vec_res, vec_2);
+	// 		vec_res = _mm256_add_ps(vec_res, vec_3);
+	// 		_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
+	// 	}
+	// }
+
+	int residual = m_numNeuron % SIMD_WIDTH;
+	int stopSIMD = m_numNeuron - residual;
+
+	#pragma omp parallel for
+	for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
+		__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
+		vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + i);
+		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
+		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
+		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
+		vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + i);
+
+		vec_res = _mm256_add_ps(vec_res, vec_0);
+		vec_res = _mm256_add_ps(vec_res, vec_1);
+		vec_res = _mm256_add_ps(vec_res, vec_2);
+		vec_res = _mm256_add_ps(vec_res, vec_3);
+		_mm256_storeu_ps(m_outputErrs[seqIdx] + i, vec_res);
 	}
 
-	// int residual = m_numNeuron % SIMD_WIDTH;
-	// int stopSIMD = m_numNeuron - residual;
-
-	// #pragma omp parallel for
-	// for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
-	// 	__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
-	// 	vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + i);
-	// 	vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
-	// 	vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
-	// 	vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
-	// 	vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + i);
-
-	// 	vec_res = _mm256_add_ps(vec_res, vec_0);
-	// 	vec_res = _mm256_add_ps(vec_res, vec_1);
-	// 	vec_res = _mm256_add_ps(vec_res, vec_2);
-	// 	vec_res = _mm256_add_ps(vec_res, vec_3);
-	// 	_mm256_storeu_ps(m_outputErrs[seqIdx] + i, vec_res);
-	// }
-
-	// for (int i=stopSIMD; i<m_numNeuron; ++i) {
-	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
-	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
-	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
-	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
-	// }
+	for (int i=stopSIMD; i<m_numNeuron; ++i) {
+		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
+		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
+		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
+		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
+	}
 }
 
 void LSTMLayer::feedbackSequential (int seqIdx) {
@@ -446,13 +446,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		sigm_deriv(m_derivBuf, m_inGateActs[seqIdx], m_numNeuron);
 		elem_mul_triple(m_inGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], m_derivBuf, m_numNeuron);
 		seqEndTime = CycleTimer::currentSeconds();
-		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward feedbackSequential time: " << seqEndTime - seqBegTime << endl;
-
-		printf("m_outputErrs %d\n", seqIdx);
-		for (int i=0; i<m_numNeuron; ++i) {
-			printf("%f\t", m_outputErrs[seqIdx][i]);
-		}
-		printf("\n");
+		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward feedbackSequential time: " << seqEndTime - seqBegTime << endl;		
 	}
 
 	double endTime = CycleTimer::currentSeconds();
@@ -472,12 +466,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		// grad
 		outer(gradW_i_x, m_inGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_i_h, m_inGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
-		elem_mul(gradW_i_c, m_inGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
-		printf("gradW_i_x %d\n", seqIdx);
-		for (int i=0; i<m_numNeuron; ++i) {
-			printf("%f\t", gradW_i_x[i]);
-		}
-		printf("\n");
+		elem_mul(gradW_i_c, m_inGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);		
 
 		outer(gradW_f_x, m_forgetGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_f_h, m_forgetGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);

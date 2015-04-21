@@ -7,7 +7,7 @@ LIBDIR=lib
 CXX=g++
 
 # compile flags
-CXXFLAGS+=-O3 -m64 -mavx #-Wa,-q
+CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
@@ -16,7 +16,7 @@ INCFLAGS+=-I$(LIBDIR)/glog/include
 INCFLAGS+=-I$(HOME)/tool/openmpi/include
 
 # link flags
-LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -fopenmp -lglog -lboost_system #-lmpi -lmpi_cxx
+LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -lglog  #-lmpi -lmpi_cxx
 LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 
@@ -24,7 +24,6 @@ LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 VPATH = $(SRCDIR) \
 	$(SRCDIR)/config \
 	$(SRCDIR)/helper \
-	$(SRCDIR)/sgd \
 	$(SRCDIR)/layer \
 	$(SRCDIR)/connection \
 	$(SRCDIR)/network \
@@ -37,18 +36,13 @@ SRCS=\
 	$(SRCDIR)/config/confreader.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
-	$(SRCDIR)/sgd/sgd.cpp \
-	$(SRCDIR)/sgd/adagrad.cpp \
-	$(SRCDIR)/sgd/adadelta.cpp \
-	$(SRCDIR)/sgd/rmsprop.cpp \
 	$(SRCDIR)/layer/layer.cpp \
 	$(SRCDIR)/layer/input_layer.cpp \
 	$(SRCDIR)/layer/lstm_layer.cpp \
 	$(SRCDIR)/layer/softmax_layer.cpp \
 	$(SRCDIR)/layer/mse_layer.cpp \
 	$(SRCDIR)/connection/connection.cpp \
-	$(SRCDIR)/network/lstm_rnn.cpp \
-	$(SRCDIR)/network/rnn_translator.cpp
+	$(SRCDIR)/network/lstm_rnn.cpp
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)
