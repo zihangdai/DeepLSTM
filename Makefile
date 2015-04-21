@@ -47,7 +47,8 @@ SRCS=\
 	$(SRCDIR)/layer/softmax_layer.cpp \
 	$(SRCDIR)/layer/mse_layer.cpp \
 	$(SRCDIR)/connection/connection.cpp \
-	$(SRCDIR)/network/lstm_rnn.cpp
+	$(SRCDIR)/network/lstm_rnn.cpp \
+	$(SRCDIR)/network/rnn_translator.cpp
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)
