@@ -19,7 +19,7 @@ void sigm (float *sigm_res, float *input, int dim) {
 			vec_input = _mm256_loadu_ps(input + i);			
 			// vec_res = _mm256_loadu_ps(sigm_res + i);
 
-			vec_input = _mm256_exp_ps(_mm256_sub_ps(vec_zero, vec_a));
+			vec_input = _mm256_exp_ps(_mm256_sub_ps(vec_zero, vec_input));
 			vec_res = _mm256_div_ps(vec_one, _mm256_add_ps(vec_one, vec_input));
 			_mm256_storeu_ps(sigm_res + i, vec_res);
 		}
@@ -69,7 +69,7 @@ void tanh (float *tanh_res, float *input, int dim) {
 			vec_input = _mm256_loadu_ps(input + i);
 			// vec_res = _mm256_loadu_ps(tanh_res + i);
 			
-			vec_res = __mm256_tanh_ps(vec_input);
+			vec_res = _mm256_tanh_ps(vec_input);
 			_mm256_storeu_ps(tanh_res + i, vec_res);
 		}
 
