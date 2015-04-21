@@ -60,7 +60,6 @@ LSTMLayer::~LSTMLayer() {
 void LSTMLayer::initParams(float *params) {
 	float multiplier = 0.08; // follow sequence to sequence translation
 	for (int i=0; i<m_nParamSize; i++) {
-		printf("%d\t", i);
 		params[i] = 0.0006; //multiplier * SYM_UNIFORM_RAND;
 	}
 }
