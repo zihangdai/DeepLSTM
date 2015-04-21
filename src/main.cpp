@@ -21,16 +21,16 @@ int main(int argc, char* argv[]) {
 
     int inputSeqLen = confReader->getInt("max_sequence_length");
     int dimIn = confReader->getInt("num_neuron_layer_0");
-    int dimOut = confReader->getInt("num_neuron_layer_4");
+    int dimOut = confReader->getInt("num_neuron_layer_3");
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
     for (int i=0; i<inputSeqLen; ++i) {
         for (int j=0; j<dimIn; ++j) {
-            data[i*dimIn+j] = 1.f * (float(rand()) / float(RAND_MAX) + 0.5);
+            data[i*dimIn+j] = i;
         }
         for (int j=0; j<dimOut; ++j) {
-            label[i*dimOut+j] = 5.f * (float(rand()) / float(RAND_MAX) + 0.5);
+            label[i*dimOut+j] = 2 * i;
         }
     }   
     
