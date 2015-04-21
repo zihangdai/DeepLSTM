@@ -25,7 +25,10 @@ int main(int argc, char* argv[]) {
 
     int inputSeqLen = confReader->get<int>(section + "max_sequence_length");
     int dimIn = confReader->get<int>(section + "num_neuron_layer_0");
-    int dimOut = confReader->get<int>(section + "num_neuron_layer_2");
+    int numlayer = confReader->get<int>(section + "num_layer");
+    stringstream ss;
+    ss << (numlayer-1);
+    int dimOut = confReader->get<int>(section + "num_neuron_layer_" + ss);
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
