@@ -7,15 +7,10 @@ int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
     
     openblas_set_num_threads(1);
-    
-    boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
-    boost::property_tree::ini_parser::read_ini("./config.conf", *confReader);
-    
-    string section = "LSTM.";
-    int max_openmp_threads = confReader->get<int>(section + "max_threads");
-    omp_set_num_threads(max_openmp_threads);
+        
+    omp_set_num_threads(1);
 
-    RecurrentNN *net = new LSTM_RNN(confReader, section);
+    RecurrentNN *net = new LSTM_RNN();
     
     int paramSize = net->m_nParamSize;
     printf("paramSize:%d\n", paramSize);
@@ -26,9 +21,9 @@ int main(int argc, char* argv[]) {
     // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};    
 
-    int inputSeqLen = confReader->get<int>(section + "max_sequence_length");
-    int dimIn = confReader->get<int>(section + "num_neuron_layer_0");
-    int dimOut = confReader->get<int>(section + "num_neuron_layer_3");
+    int inputSeqLen = 2;
+    int dimIn = 32;
+    int dimOut = 32;
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];

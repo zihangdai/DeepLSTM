@@ -5,30 +5,43 @@ using namespace std;
 
 #define DEBUG_LSTM_RNN 1
 
-LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
+LSTM_RNN::LSTM_RNN() {
 	/* read conf and allocate memory */	
-	m_numLayer = confReader->get<int>(section + "num_layer");
+	// m_numLayer = confReader->get<int>(section + "num_layer");
+	m_numLayer = 3;
 	m_numNeuronList = new int[m_numLayer];
 	m_layerTypeList = new string[m_numLayer];
 	m_connTypeList = new string[m_numLayer-1];
 
+	m_numNeuronList[0] = 32;
+	m_numNeuronList[1] = 32;
+	m_numNeuronList[2] = 32;
+
+	m_layerTypeList[0] = "input_layer";
+	m_layerTypeList[1] = "lstm_layer";
+	m_layerTypeList[2] = "mse_layer";
+
+	m_connTypeList[0] = "lstm_connection";
+	m_connTypeList[1] = "full_connection";
+
 	// type and number of neurons of each layer
-	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
-		stringstream ss;
-  		ss << layerIdx;
-		m_numNeuronList[layerIdx] = confReader->get<int>(section + "num_neuron_layer_" + ss.str());
-		m_layerTypeList[layerIdx] = confReader->get<string>(section + "type_layer_" + ss.str());
-	}
+	// for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
+	// 	stringstream ss;
+ //  		ss << layerIdx;
+	// 	m_numNeuronList[layerIdx] = confReader->get<int>(section + "num_neuron_layer_" + ss.str());
+	// 	m_layerTypeList[layerIdx] = confReader->get<string>(section + "type_layer_" + ss.str());
+	// }
 	
 	// type of each conectection
-	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
-		stringstream ss;
-  		ss << connIdx;
-		m_connTypeList[connIdx] = confReader->get<string>(section + "type_connection_" + ss.str());
-	}
+	// for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
+	// 	stringstream ss;
+ //  		ss << connIdx;
+	// 	m_connTypeList[connIdx] = confReader->get<string>(section + "type_connection_" + ss.str());
+	// }
 	
 	m_nParamSize = 0;
-	m_maxSeqLen = confReader->get<int>(section + "max_sequence_length");
+	// m_maxSeqLen = confReader->get<int>(section + "max_sequence_length");
+	m_maxSeqLen = 2;
 
 	/* initialize layers */
 	for (int layerIdx=0; layerIdx<m_numLayer; layerIdx++) {
