@@ -7,7 +7,4 @@
 #define SIMD 1
 #define BLOCK_SIZE 64
 
-__m256 exp256_ps(__m256 x);
-
-
 #endif

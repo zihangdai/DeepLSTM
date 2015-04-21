@@ -21,7 +21,7 @@ void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
 		__m256 vec_deriv, vec_sigm;
 		__m256 vec_one  = _mm256_set1_ps(1.f);
 		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
-			vec_sigm  = _mm256_loadu_ps(sigm_res + i);			
+			vec_sigm  = _mm256_loadu_ps(sigm_res + i);
 			// vec_deriv = _mm256_loadu_ps(deriv_res + i);
 			
 			vec_deriv = _mm256_mul_ps(vec_sigm, _mm256_sub_ps(vec_one, vec_sigm));
