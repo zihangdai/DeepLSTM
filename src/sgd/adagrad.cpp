@@ -16,9 +16,8 @@ adagrad::adagrad (ConfReader *confReader, int paramSize) : sgdBase(confReader, p
 	}
 
 	m_residual = m_nParamSize % SIMD_WIDTH;
-	m_stopSIMD = m_nParamSize - m_residual;	
+	m_stopSIMD = m_nParamSize - m_residual;
 
-	printf("adagrad constructor.\n");
 }
 
 adagrad::~adagrad () {
@@ -38,10 +37,12 @@ void adagrad::updateParams (float *params, float *grad, int rank) {
 	// }
 	// elem_accum(params, m_velocity, m_nParamSize);
 
-	__m256 vec_grad, vec_vel, vec_param, vec_hist;
 	__m256 vecLearnRate = _mm256_set1_ps(m_learningRate);
 	__m256 vecMomentum  = _mm256_set1_ps(m_momentumFactor);
+	
+	#pragma omp parallel for
 	for (int i=0; i<m_stopSIMD; i+=SIMD_WIDTH) {
+		__m256 vec_grad, vec_vel, vec_param, vec_hist;
 		vec_grad = _mm256_loadu_ps(grad + i);
 		vec_param = _mm256_loadu_ps(params + i);
 		vec_vel = _mm256_loadu_ps(m_velocity + i);
