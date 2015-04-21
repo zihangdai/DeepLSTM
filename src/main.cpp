@@ -2,6 +2,8 @@
 #include "lstm_rnn.h"
 #include "confreader.h"
 
+using namespace std;
+
 int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
     
@@ -38,7 +40,7 @@ int main(int argc, char* argv[]) {
     
     float error = net->computeGrad(grad, params, data, label, 1);
 
-    printf("Error: %f\n", error);
+    DLOG(ERROR) << "Error: " << error << endl;
 
     // printf("LSTM output\n");
     // for (int i=1; i<inputSeqLen+1; ++i) {
@@ -79,4 +81,6 @@ int main(int argc, char* argv[]) {
 
     delete [] data;
     delete [] label;
+
+    DLOG(ERROR) << "FINISH" << endl;
 }

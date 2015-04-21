@@ -223,16 +223,16 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 	}
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
-	float normFactor = 1.f / (float) minibatchSize;
-	for (int dim=0; dim<m_nParamSize; ++dim) {
-		grad[dim] *= normFactor;
-		if (grad[dim] < -1.f) {
-			grad[dim] = -1.f;
-		} else if (grad[dim] > 1.f) {
-			grad[dim] = 1.f;
-		}
-	}
-	error *= normFactor;
+	// float normFactor = 1.f / (float) minibatchSize;
+	// for (int dim=0; dim<m_nParamSize; ++dim) {
+	// 	grad[dim] *= normFactor;
+	// 	if (grad[dim] < -1.f) {
+	// 		grad[dim] = -1.f;
+	// 	} else if (grad[dim] > 1.f) {
+	// 		grad[dim] = 1.f;
+	// 	}
+	// }
+	// error *= normFactor;
 
 	return error;
 }
