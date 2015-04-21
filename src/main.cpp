@@ -4,10 +4,12 @@
 
 int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
-    openblas_set_num_threads(1);    
+    
+    openblas_set_num_threads(1);
 
     ConfReader *confReader = new ConfReader("config.conf", "LSTM");
     int max_openmp_threads = confReader->getInt("max_threads");
+
     omp_set_num_threads(max_openmp_threads);
     RecurrentNN *net = new LSTM_RNN(confReader);
     int paramSize = net->m_nParamSize;
