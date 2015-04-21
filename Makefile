@@ -7,7 +7,7 @@ LIBDIR=lib
 CXX=g++
 
 # compile flags
-CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q
+CXXFLAGS+=-O3 -m64 -mavx -fopenmp #Wa,-q
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
