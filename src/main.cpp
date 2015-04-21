@@ -40,6 +40,11 @@ int main(int argc, char* argv[]) {
     
     float error = net->computeGrad(grad, params, data, label, 1);
 
+    for (int i=0; i<20; ++i) {
+        printf("%f\t", grad[i]);
+    }
+    printf("\n");
+
     DLOG(ERROR) << "Error: " << error << endl;
 
     // printf("LSTM output\n");

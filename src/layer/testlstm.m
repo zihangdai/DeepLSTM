@@ -1,88 +1,166 @@
-Wix = [-0.079999,-0.058954; 
-        0.040897,-0.006616];
-Wih = [0.005243,-0.044967;
-      -0.072473,0.028618];
-Wic = [0.028687;
-       0.069551];
+%%
+clear; clc;
 
-Wfx = [-0.018640,0.003107;
-        0.052954,-0.074468];
-Wfh = [-0.071446,0.004752;
-        0.027384,-0.078768];
-Wfc = [-0.018653;
-       -0.069305];
+num_neurons = [1024, 1024, 1024, 1024];
+numlayer = numel(num_neurons);
 
-Wcx = [-0.013202,0.029884;
-        0.014236,0.068870];
-Wch = [0.055387,0.004309;
-      -0.065286,0.024627];
+Wix = cell(2,1);
+Wih = cell(2,1);
+Wic = cell(2,1);
 
-Wox = [-0.013440,0.032190;
-        0.065651,0.041952];
-Woh = [-0.038008,-0.072406;
-        0.037773,-0.027483];
-Woc = [0.021222;
-       0.041026];
-   
-W = [0.078566,-0.021546,0.035626;
-    -0.040474,0.077208,0.040537];
+Wfx = cell(2,1);
+Wfh = cell(2,1);
+Wfc = cell(2,1);
+
+Wcx = cell(2,1);
+Wch = cell(2,1);
+
+Wox = cell(2,1);
+Woh = cell(2,1);
+Woc = cell(2,1);
+
+for i = 1:2
+    Wix{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Wih{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Wic{i} = 0.6 * ones(num_neurons(i+1), 1);
+    
+    Wfx{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Wfh{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Wfc{i} = 0.6 * ones(num_neurons(i+1), 1);
+    
+    Wcx{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Wch{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    
+    Wox{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Woh{i} = 0.6 * ones(num_neurons(i), num_neurons(i+1));
+    Woc{i} = 0.6 * ones(num_neurons(i+1), 1);
+
+    GWix{i} = zeros(num_neurons(i), num_neurons(i+1));
+    GWih{i} = zeros(num_neurons(i), num_neurons(i+1));
+    GWic{i} = zeros(num_neurons(i+1), 1);
+    
+    GWfx{i} = zeros(num_neurons(i), num_neurons(i+1));
+    GWfh{i} = zeros(num_neurons(i), num_neurons(i+1));
+    GWfc{i} = zeros(num_neurons(i+1), 1);
+    
+    GWcx{i} = zeros(num_neurons(i), num_neurons(i+1));
+    GWch{i} = zeros(num_neurons(i), num_neurons(i+1));
+    
+    GWox{i} = zeros(num_neurons(i), num_neurons(i+1));
+    GWoh{i} = zeros(num_neurons(i), num_neurons(i+1));
+    GWoc{i} = zeros(num_neurons(i+1), 1);
+end
+
+W = 0.3 * ones(num_neurons(numlayer), num_neurons(numlayer-1)+1);
+GW = zeros(num_neurons(numlayer), num_neurons(numlayer-1)+1);
 
 % [2x1]
-inputs = [0, 1, 2, 3, 4, 5, 0; 
-          0, 2, 4, 6, 8, 10, 0];
+max_seq = 20;
+inputs = repmat((0:max_seq-1), num_neurons(1), 1);
+outputs = 2 * repmat((0:max_seq-1), num_neurons(numlayer), 1);
 
-states = zeros(2,7);
-outputs = zeros(2,7);      
-inGate = zeros(2,7);       
-foGate = zeros(2,7);       
-preStates = zeros(2,7);       
-ouGate = zeros(2,7);       
-preOutActs = zeros(2,7);
-softmaxRes = zeros(2,7);
-       
+%%
+lstmnum = 2;
+lstms = cell(lstmnum, 1);
+
+for i=1:lstmnum
+    lstm.states         = zeros(num_neurons(i+1), max_seq+2);
+    lstm.inputs         = zeros(num_neurons(i+1), max_seq+2);
+    lstm.outputs        = zeros(num_neurons(i+1), max_seq+2);
+    lstm.inGate         = zeros(num_neurons(i+1), max_seq+2);
+    lstm.foGate         = zeros(num_neurons(i+1), max_seq+2);
+    lstm.preStates      = zeros(num_neurons(i+1), max_seq+2);
+    lstm.ouGate         = zeros(num_neurons(i+1), max_seq+2);
+    lstm.preOutActs     = zeros(num_neurons(i+1), max_seq+2);
+    
+    lstm.inErrs         = zeros(num_neurons(i+1), max_seq+2);
+    lstm.outErrs        = zeros(num_neurons(i+1), max_seq+2);
+    lstm.spatialoutErrs = zeros(num_neurons(i+1), max_seq+2);
+    lstm.statesErrs     = zeros(num_neurons(i+1), max_seq+2);
+    lstm.inGateDelta    = zeros(num_neurons(i+1), max_seq+2);
+    lstm.foGateDelta    = zeros(num_neurons(i+1), max_seq+2);
+    lstm.ouGateDelta    = zeros(num_neurons(i+1), max_seq+2);
+    lstm.preStatesDelta = zeros(num_neurons(i+1), max_seq+2);
+
+    lstms{i} = lstm;
+end
+
+softmaxRes = zeros(num_neurons(numlayer), max_seq+2);
+
 sigmoid = @(x) 1 ./ (1 + exp(-x));
 sigmDeriv = @(x) (1-x) .* x;
 tanhDeriv = @(x) (1 - x .^ 2);
 
-for i=2:6
-    inGate(:,i) = sigmoid (Wix * inputs(:,i) + Wih * outputs(:,i-1) + Wic .* states(:,i-1));
-    foGate(:,i) = sigmoid (Wfx * inputs(:,i) + Wfh * outputs(:,i-1) + Wfc .* states(:,i-1));
-    preStates(:,i) = tanh(Wcx * inputs(:,i) + Wch * outputs(:,i-1));
-    states(:,i) = foGate(:,i) .* states(:,i-1) + inGate(:,i) .* preStates(:,i);
-    ouGate(:,i) = sigmoid (Wox * inputs(:,i) + Woh * outputs(:,i-1) + Woc .* states(:,i));
-    preOutActs(:,i) = tanh(states(:,i));
-    outputs(:,i) = ouGate(:,i) .* preOutActs(:,i);
-    softmaxRes(:,i) = W * [outputs(:,i); 1];
+%%
+for i=2:max_seq+1
+    disp(int2str(i))    
+    for j=1:lstmnum
+        lstms{j}.inputs(:,i) = inputs(:,i-1);
+        lstms{j}.inGate(:,i)     = sigmoid (Wix{j} * lstms{j}.inputs(:,i) + Wih{j} * lstms{j}.outputs(:,i-1) + Wic{j} .* lstms{j}.states(:,i-1));
+        lstms{j}.foGate(:,i)     = sigmoid (Wfx{j} * lstms{j}.inputs(:,i) + Wfh{j} * lstms{j}.outputs(:,i-1) + Wfc{j} .* lstms{j}.states(:,i-1));
+        lstms{j}.preStates(:,i)  = tanh(Wcx{j} * lstms{j}.inputs(:,i) + Wch{j} * lstms{j}.outputs(:,i-1));
+        lstms{j}.states(:,i)     = lstms{j}.foGate(:,i) .* lstms{j}.states(:,i-1) + lstms{j}.inGate(:,i) .* lstms{j}.preStates(:,i);
+        lstms{j}.ouGate(:,i)     = sigmoid (Wox{j} * lstms{j}.inputs(:,i) + Woh{j} * lstms{j}.outputs(:,i-1) + Woc{j} .* lstms{j}.states(:,i));
+        lstms{j}.preOutActs(:,i) = tanh(lstms{j}.states(:,i));
+        lstms{j}.outputs(:,i)    = lstms{j}.ouGate(:,i) .* lstms{j}.preOutActs(:,i);
+        if j < lstmnum
+            lstms{j+1}.inputs(:,i) = lstms{j}.outputs(:,i);
+        end
+    end
+    softmaxRes(:,i) = W * [lstms{lstmnum}.outputs(:,i); 1];
     softmaxRes(:,i) = exp(softmaxRes(:,i)) / sum(exp(softmaxRes(:,i)));
 end
 
-labels = [0, 18, 16, 14, 12, 10, 0; 
-           0, 9, 8, 7, 6, 5, 0];
-spatialoutErrs = W' * (softmaxRes - labels);
-spatialoutErrs = spatialoutErrs(1:2,:);
+%%
 
-inErrs = zeros(2,7);
-outErrs = zeros(2,7);
-statesErrs = zeros(2,7);
-inGateDelta = zeros(2,7);
-foGateDelta = zeros(2,7);
-ouGateDelta = zeros(2,7);
-preStatesDelta = zeros(2,7);
+error_sig = (softmaxRes(:,2:max_seq+1) - outputs);
 
-for i=6:-1:2
-    outErrs(:,i) = spatialoutErrs(:,i) ...
-                   + Wih' * inGateDelta(:,i+1)    + Wfh' * foGateDelta(:,i+1) ...
-                   + Wch' * preStatesDelta(:,i+1) + Woh' * ouGateDelta(:,i+1);
-    ouGateDelta(:,i) = outErrs(:,i) .* sigmDeriv(ouGate(:,i)) .* preOutActs(:,i);
-    statesErrs(:,i) = outErrs(:,i) .* ouGate(:,i) .* tanhDeriv(preOutActs(:,i)) ...
-                    + statesErrs(:,i+1) .* foGate(:,i+1) ...
-                    + Wic .* inGateDelta(:,i+1) ...
-                    + Wfc .* foGateDelta(:,i+1) ...
-                    + Woc .* ouGateDelta(:,i);
-    preStatesDelta(:,i) = statesErrs(:,i) .* inGate(:,i)    .* tanhDeriv(preStates(:,i));
-    foGateDelta(:,i)    = statesErrs(:,i) .* states(:,i-1)  .* sigmDeriv(foGate(:,i));
-    inGateDelta(:,i)    = statesErrs(:,i) .* preStates(:,i) .* sigmDeriv(inGate(:,i));
-    inErrs(:,i) = Wix' * inGateDelta(:,i)    + Wfx' * foGateDelta(:,i) ...
-                + Wcx' * preStatesDelta(:,i) + Wox' * ouGateDelta(:,i);
+GW += error_sig * [lstms{lstmnum}.outputs(:,2:max_seq+1); ones(1, max_seq)]';
+
+spatialoutErrs = W' * error_sig;
+spatialoutErrs = spatialoutErrs(1:end-1,:);
+
+%%
+for i=max_seq+1:-1:2
+    disp(int2str(i))
+    lstms{lstmnum}.spatialoutErrs(:,i) = spatialoutErrs(:,i-1);
+    for j=lstmnum:-1:1
+        if j < lstmnum
+            lstms{j}.spatialoutErrs(:,i) = lstms{j+1}.inErrs(:,i);
+        end
+        lstms{j}.outErrs(:,i) = lstms{j}.spatialoutErrs(:,i) ...
+                       + Wih{j}' * lstms{j}.inGateDelta(:,i+1)    + Wfh{j}' * lstms{j}.foGateDelta(:,i+1) ...
+                       + Wch{j}' * lstms{j}.preStatesDelta(:,i+1) + Woh{j}' * lstms{j}.ouGateDelta(:,i+1);
+
+        lstms{j}.ouGateDelta(:,i) = lstms{j}.outErrs(:,i) .* sigmDeriv(lstms{j}.ouGate(:,i)) .* lstms{j}.preOutActs(:,i);
+
+        lstms{j}.statesErrs(:,i) = lstms{j}.outErrs(:,i) .* lstms{j}.ouGate(:,i) .* tanhDeriv(lstms{j}.preOutActs(:,i)) ...
+                                 + lstms{j}.statesErrs(:,i+1) .* lstms{j}.foGate(:,i+1) ...
+                                 + Wic{j} .* lstms{j}.inGateDelta(:,i+1) ...
+                                 + Wfc{j} .* lstms{j}.foGateDelta(:,i+1) ...
+                                 + Woc{j} .* lstms{j}.ouGateDelta(:,i);
+
+        lstms{j}.preStatesDelta(:,i) = lstms{j}.statesErrs(:,i) .* lstms{j}.inGate(:,i)    .* tanhDeriv(lstms{j}.preStates(:,i));
+        lstms{j}.foGateDelta(:,i)    = lstms{j}.statesErrs(:,i) .* lstms{j}.states(:,i-1)  .* sigmDeriv(lstms{j}.foGate(:,i));
+        lstms{j}.inGateDelta(:,i)    = lstms{j}.statesErrs(:,i) .* lstms{j}.preStates(:,i) .* sigmDeriv(lstms{j}.inGate(:,i));
+        
+        lstms{j}.inErrs(:,i) = Wix{j}' * lstms{j}.inGateDelta(:,i)    + Wfx{j}' * lstms{j}.foGateDelta(:,i) ...
+                             + Wcx{j}' * lstms{j}.preStatesDelta(:,i) + Wox{j}' * lstms{j}.ouGateDelta(:,i);
+
+        GWix{j} += lstms{j}.inGateDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWih{j} += lstms{j}.inGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
+        GWic{j} += lstms{j}.inGateDelta(:,i) .* lstms{j}.states(:,i-1);
+               
+        GWfx{j} += lstms{j}.foGateDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWfh{j} += lstms{j}.foGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
+        GWfc{j} += lstms{j}.foGateDelta(:,i) .* lstms{j}.states(:,i-1);
+
+        GWcx{j} += lstms{j}.preStatesDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWch{j} += lstms{j}.preStatesDelta(:,i) * lstms{j}.outputs(:,i-1)';       
+        
+        GWox{j} += lstms{j}.ouGateDelta(:,i) * lstms{j}.inputs(:,i)';
+        GWoh{j} += lstms{j}.ouGateDelta(:,i) * lstms{j}.outputs(:,i-1)';
+        GWoc{j} += lstms{j}.ouGateDelta(:,i) .* lstms{j}.states(:,i-1);
+    end
 end
 

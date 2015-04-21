@@ -34,7 +34,7 @@ FullConnection::FullConnection(RecurrentLayer *preLayer, RecurrentLayer *postLay
 void FullConnection::initParams(float *params) {	
 	float multiplier = 0.08;
 	for (int i=0; i<m_nParamSize; ++i) {
-		params[i] = multiplier * SYM_UNIFORM_RAND;
+		params[i] = 0.3; //multiplier * SYM_UNIFORM_RAND;
 	}
 }
 
