@@ -69,8 +69,6 @@ public:
     /* data */
     int m_residual;
     int m_stopSIMD;
-    __m256 m_vecLearnRate;
-    __m256 m_vecMomentum;
 
     /* method */
     void updateParams (float *params, float *grad, int rank=0);
