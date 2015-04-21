@@ -316,52 +316,52 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 		}
 	}
 
-	// int blockNum = m_numNeuron / 4;
-	// #pragma omp parallel for
-	// for (int idx=0; idx<4; ++idx) {
-	// 	int start = idx * blockNum;
-	// 	int end = start + blockNum;
-	// 	for (int neuronIdx=start; neuronIdx<end; neuronIdx+=SIMD_WIDTH) {
-	// 		__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
-	// 		vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + neuronIdx);
-	// 		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + neuronIdx);
-	// 		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + neuronIdx);
-	// 		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + neuronIdx);
-	// 		vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + neuronIdx);
+	int blockNum = m_numNeuron / 4;
+	#pragma omp parallel for
+	for (int idx=0; idx<4; ++idx) {
+		int start = idx * blockNum;
+		int end = start + blockNum;
+		for (int neuronIdx=start; neuronIdx<end; neuronIdx+=SIMD_WIDTH) {
+			__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
+			vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + neuronIdx);
+			vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + neuronIdx);
+			vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + neuronIdx);
+			vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + neuronIdx);
+			vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + neuronIdx);
 
-	// 		vec_res = _mm256_add_ps(vec_res, vec_0);
-	// 		vec_res = _mm256_add_ps(vec_res, vec_1);
-	// 		vec_res = _mm256_add_ps(vec_res, vec_2);
-	// 		vec_res = _mm256_add_ps(vec_res, vec_3);
-	// 		_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
-	// 	}
+			vec_res = _mm256_add_ps(vec_res, vec_0);
+			vec_res = _mm256_add_ps(vec_res, vec_1);
+			vec_res = _mm256_add_ps(vec_res, vec_2);
+			vec_res = _mm256_add_ps(vec_res, vec_3);
+			_mm256_storeu_ps(m_outputErrs[seqIdx] + neuronIdx, vec_res);
+		}
+	}
+
+	// int residual = m_numNeuron % SIMD_WIDTH;
+	// int stopSIMD = m_numNeuron - residual;
+
+	// #pragma omp parallel for
+	// for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
+	// 	__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
+	// 	vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + i);
+	// 	vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
+	// 	vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
+	// 	vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
+	// 	vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + i);
+
+	// 	vec_res = _mm256_add_ps(vec_res, vec_0);
+	// 	vec_res = _mm256_add_ps(vec_res, vec_1);
+	// 	vec_res = _mm256_add_ps(vec_res, vec_2);
+	// 	vec_res = _mm256_add_ps(vec_res, vec_3);
+	// 	_mm256_storeu_ps(m_outputErrs[seqIdx] + i, vec_res);
 	// }
 
-	int residual = m_numNeuron % SIMD_WIDTH;
-	int stopSIMD = m_numNeuron - residual;
-
-	#pragma omp parallel for
-	for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
-		__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
-		vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + i);
-		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
-		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
-		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
-		vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + i);
-
-		vec_res = _mm256_add_ps(vec_res, vec_0);
-		vec_res = _mm256_add_ps(vec_res, vec_1);
-		vec_res = _mm256_add_ps(vec_res, vec_2);
-		vec_res = _mm256_add_ps(vec_res, vec_3);
-		_mm256_storeu_ps(m_outputErrs[seqIdx] + i, vec_res);
-	}
-
-	for (int i=stopSIMD; i<m_numNeuron; ++i) {
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
-	}
+	// for (int i=stopSIMD; i<m_numNeuron; ++i) {
+	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
+	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
+	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
+	// 	m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
+	// }
 }
 
 void LSTMLayer::feedbackSequential (int seqIdx) {
