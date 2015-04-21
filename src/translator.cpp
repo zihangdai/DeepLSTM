@@ -4,7 +4,6 @@
 #include "rnn_translator.h"
 #include "sgd.h"
 
-
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -15,7 +14,7 @@ int main(int argc, char* argv[]) {
 
     boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
     boost::property_tree::ini_parser::read_ini("translator.conf" *confReader);
-    sting section = "Translator.";
+    string section = "Translator.";
 
     int max_openmp_threads = confReader->get<int>(section + "max_threads");
     omp_set_num_threads(max_openmp_threads);
