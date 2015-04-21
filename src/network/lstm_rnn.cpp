@@ -119,7 +119,7 @@ void LSTM_RNN::initParams(float *params) {
 	// layer part
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
 		#ifdef DEBUG_LSTM_RNN
-		printf("m_vecLayers[%d] init parameters.\n", layerIdx);
+		printf("m_vecLayers[%d] init parameters with size %d.\n", layerIdx, m_vecLayers[layerIdx]->m_nParamSize);
 		#endif
 		m_vecLayers[layerIdx]->initParams(cursor);
 		cursor += m_vecLayers[layerIdx]->m_nParamSize;
@@ -127,7 +127,7 @@ void LSTM_RNN::initParams(float *params) {
 	// connection part
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
 		#ifdef DEBUG_LSTM_RNN
-		printf("m_vecConnections[%d] init parameters.\n", connIdx);
+		printf("m_vecConnections[%d] init parameters with size %d.\n ", connIdx, m_vecConnections[connIdx]->m_nParamSize);
 		#endif
 		m_vecConnections[connIdx]->initParams(cursor);
 		cursor += m_vecConnections[connIdx]->m_nParamSize;
