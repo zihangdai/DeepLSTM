@@ -31,7 +31,7 @@ VPATH = $(SRCDIR) \
 
 # src files
 SRCS=\
-	$(SRCDIR)/main.cpp \
+	$(SRCDIR)/translator.cpp \
 	$(SRCDIR)/config/chameleon.cpp \
 	$(SRCDIR)/config/configfile.cpp \
 	$(SRCDIR)/config/confreader.cpp \
