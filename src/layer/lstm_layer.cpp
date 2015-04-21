@@ -422,12 +422,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		// computations are independent but use the same m_derivBuf
 		// output gate delta (Time t = seqIdx): m_outGateDelta[seqIdx]
 		sigm_deriv(m_derivBuf, m_outGateActs[seqIdx], m_numNeuron);
-		elem_mul_triple(m_outGateDelta[seqIdx], m_outputErrs[seqIdx], m_derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
-		printf("%d\n", seqIdx);
-		for (int i=0; i<m_numNeuron; ++i) {
-			printf("%f\t", m_outGateDelta[seqIdx][i]);
-		}
-		printf("\n");
+		elem_mul_triple(m_outGateDelta[seqIdx], m_outputErrs[seqIdx], m_derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);		
 
 		// computations are independent but write to the same memory and depend on the seqIdx+1 time step
 		// cell state error
@@ -487,6 +482,12 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		outer(gradW_o_h, m_outGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
 		elem_mul(gradW_o_c, m_outGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
 	}
+
+	printf("%d\n", seqIdx);
+	for (int i=0; i<m_numNeuron; ++i) {
+		printf("%f\t", m_cellStateErrs[seqIdx][i]);
+	}
+	printf("\n");
 
 	endTime = CycleTimer::currentSeconds();
 	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward paralleled time: " << endTime - startTime << endl;	
