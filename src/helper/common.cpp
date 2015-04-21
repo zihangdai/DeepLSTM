@@ -14,11 +14,12 @@ __m256 _ps256_cephes_exp_p3 = _mm256_set1_ps(4.1665795894E-2);
 __m256 _ps256_cephes_exp_p4 = _mm256_set1_ps(1.6666665459E-1);
 __m256 _ps256_cephes_exp_p5 = _mm256_set1_ps(5.0000001201E-1);
 
-__m256i _pi32_256_0x7f = _mm_set1_epi32(0x7f);
+__m256 _ps256_0p5 = _mm256_set1_ps(0.5f);
+
+__m256i _pi32_256_0x7f = _mm256_set1_epi32(0x7f);
 
 __m256 exp256_ps(__m256 x) {
-  __m256 tmp = _mm256_setzero_ps(), fx;
-  __m256i imm0;
+  __m256 tmp = _mm256_setzero_ps(), fx;  
   __m256 one = _mm256_set1_ps(1.f);
 
   x = _mm256_min_ps(x, _ps256_exp_hi);
@@ -63,6 +64,7 @@ __m256 exp256_ps(__m256 x) {
   y = _mm256_add_ps(y, one);
 
   /* build 2^n */
+  __m256i imm0;
   imm0 = _mm256_cvttps_epi32(fx);
   // another two AVX2 instructions
   imm0 = _mm256_add_epi32(imm0, _pi32_256_0x7f);
