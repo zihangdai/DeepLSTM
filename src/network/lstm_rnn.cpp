@@ -11,7 +11,6 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 	m_numNeuronList = new int[m_numLayer];
 	m_layerTypeList = new string[m_numLayer];
 	m_connTypeList = new string[m_numLayer-1];
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "Finish reading conf and allocating memory." << endl;
 
 	// type and number of neurons of each layer
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
@@ -20,7 +19,6 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 		m_numNeuronList[layerIdx] = confReader->get<int>(section + "num_neuron_layer_" + ss.str());
 		m_layerTypeList[layerIdx] = confReader->get<string>(section + "type_layer_" + ss.str());
 	}
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "Finish reading type and number of neurons of each layer." << endl;
 	
 	// type of each conectection
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
@@ -28,11 +26,9 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
   		ss << connIdx;
 		m_connTypeList[connIdx] = confReader->get<string>(section + "type_connection_" + ss.str());
 	}
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "Finish reading type of each conectection." << endl;	
 	
 	m_nParamSize = 0;
 	m_maxSeqLen = confReader->get<int>(section + "max_sequence_length");
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "Finish reading max_sequence_length." << endl;	
 
 	/* initialize layers */
 	for (int layerIdx=0; layerIdx<m_numLayer; layerIdx++) {
@@ -42,7 +38,6 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 	}
 	m_dataSize = m_vecLayers[0]->m_inputSize;
 	m_targetSize = m_vecLayers[m_numLayer-1]->m_numNeuron;
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "inish initializine layers." << endl;	
 
 	/* initialize connections */
 	for (int connIdx=0; connIdx<m_numLayer-1; connIdx++) {
@@ -50,7 +45,6 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 		m_nParamSize += conn->m_nParamSize;
 		m_vecConnections.push_back(conn);
 	}
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "LSTM_RNN Constructor finished." << endl;
 }
 
 LSTM_RNN::~LSTM_RNN() {
