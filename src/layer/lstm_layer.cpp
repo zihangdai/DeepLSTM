@@ -2,7 +2,7 @@
 
 using namespace std;
 
-#define DEBUG_LSTM_LAYER 0
+#define DEBUG_LSTM_LAYER 1
 
 LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLayer(numNeuron, maxSeqLen, inputSize) {	
 	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer constructor." << endl;
@@ -60,6 +60,7 @@ LSTMLayer::~LSTMLayer() {
 void LSTMLayer::initParams(float *params) {
 	float multiplier = 0.08; // follow sequence to sequence translation
 	for (int i=0; i<m_nParamSize; i++) {
+		printf("%d\t", i);
 		params[i] = 0.0006; //multiplier * SYM_UNIFORM_RAND;
 	}
 }

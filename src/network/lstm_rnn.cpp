@@ -87,11 +87,11 @@ RecConnection *LSTM_RNN::initConnection(int connIdx) {
 }
 
 RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
-	string layerType = m_layerTypeList[layerIdx];
-	#ifdef DEBUG_LSTM_RNN
-	printf("layerType[%d]:%s\n",layerIdx,layerType.c_str());
-	#endif
+	string layerType = m_layerTypeList[layerIdx];	
 	int numNeuron = m_numNeuronList[layerIdx];
+	#ifdef DEBUG_LSTM_RNN
+	printf("layerType[%d]:%s, numNeuron:%d\n",layerIdx,layerType.c_str(),numNeuron);
+	#endif
 	RecurrentLayer *layer;
 	if (layerType == "input_layer") {
 		layer = new InputLayer(numNeuron, m_maxSeqLen);
