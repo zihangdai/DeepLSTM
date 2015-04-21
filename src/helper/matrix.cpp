@@ -7,10 +7,6 @@
 
 using namespace std;
 
-#define SIMD_WIDTH 8
-#define SIMD 1
-#define BLOCK_SIZE 64
-
 void outer (float *result, float *a, int dim_a, float *b, int dim_b) {
 	if (!SIMD) {
 		for (int i=0; i<dim_a; ++i) {

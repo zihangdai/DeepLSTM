@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <omp.h>
+#include "common.h"
 
 /****************************************************************
 * NOTE: It's not always good to use the multi-thread version of 

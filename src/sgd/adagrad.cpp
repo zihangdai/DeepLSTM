@@ -1,5 +1,7 @@
 #include <math.h>
 #include <string.h>
+#include <immintrin.h>
+#include <omp.h>
 #include "sgd.h"
 
 using namespace std;
@@ -23,6 +25,7 @@ void adagrad::updateParams (float *params, float *grad, int rank) {
 	m_stepCount += 1;
 
 	elem_mul(m_histSquareGrad, grad, grad, m_nParamSize);
+	#pragma omp parallel for
 	for (int i=0; i<m_nParamSize; i++) {
 		// m_histSquareGrad[i] += grad[i] * grad[i];
 		m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
