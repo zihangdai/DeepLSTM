@@ -8,12 +8,11 @@ int main(int argc, char* argv[]) {
     
     openblas_set_num_threads(1);
     
-    boost::property_tree::ptree pt;
-    boost::property_tree::ini_parser::read_ini("config.conf", pt);
-    printf("%d", pt.get<std::float>("LSTM.max_threads"));
-
-    ConfReader *confReader = new ConfReader("config.conf", "LSTM");
-    int max_openmp_threads = confReader->getInt("max_threads");
+    boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
+    boost::property_tree::ini_parser::read_ini("./config.conf", *confReader);
+    
+    string section = "LSTM.";
+    int max_openmp_threads = confReader->get<int>(section + "max_threads");
 
     omp_set_num_threads(max_openmp_threads);
     RecurrentNN *net = new LSTM_RNN(confReader);
@@ -26,9 +25,9 @@ int main(int argc, char* argv[]) {
     // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};    
 
-    int inputSeqLen = confReader->getInt("max_sequence_length");
-    int dimIn = confReader->getInt("num_neuron_layer_0");
-    int dimOut = confReader->getInt("num_neuron_layer_3");
+    int inputSeqLen = confReader->get<int>(section + "max_sequence_length");
+    int dimIn = confReader->get<int>(section + "num_neuron_layer_0");
+    int dimOut = confReader->get<int>(section + "num_neuron_layer_3");
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];

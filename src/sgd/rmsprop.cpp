@@ -2,9 +2,9 @@
 #include <string.h>
 #include "sgd.h"
 
-rmsprop::rmsprop (ConfReader *confReader, int paramSize) : sgdBase(confReader, paramSize){	
-	m_decayFactor = confReader->getFloat("rmsprop decay factor");
-	m_useMomentum  = confReader->getInt("use momentum");
+rmsprop::rmsprop (boost::property_tree::ptree *confReader, string section, int paramSize) : sgdBase(confReader, section, paramSize){	
+	m_decayFactor = confReader->get<float>(section + "rmsprop_decay_factor");
+	m_useMomentum  = confReader->get<int>(section + "use_momentum");
 
 	m_meanSquareGrad  = new float [m_nParamSize];
 

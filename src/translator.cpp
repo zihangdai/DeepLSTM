@@ -13,11 +13,14 @@ int main(int argc, char* argv[]) {
     // srand (time(NULL));
     openblas_set_num_threads(1);    
 
-    ConfReader *confReader = new ConfReader("translator.conf", "Translator");
-    int max_openmp_threads = confReader->getInt("max_threads");
+    boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
+    boost::property_tree::ini_parser::read_ini("translator.conf" *confReader);
+    sting section = "Translator.";
+
+    int max_openmp_threads = confReader->get<int>(section + "max_threads");
     omp_set_num_threads(max_openmp_threads);
 
-    RNNTranslator *translator = new RNNTranslator(confReader);
+    RNNTranslator *translator = new RNNTranslator(confReader, section);
 
     int paramSize = translator->m_nParamSize;
     printf("paramSize:%d\n", paramSize);
@@ -26,16 +29,16 @@ int main(int argc, char* argv[]) {
     translator->initParams(params);
 
     // init sgd optimizer 
-    sgdBase *optimizer = new adagrad(confReader, paramSize);
+    sgdBase *optimizer = new adagrad(confReader, section, paramSize);
     // sgdBase *optimizer = new adadelta(confReader, paramSize);    
 
     // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
     // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};
 
-    int dataSeqLen = confReader->getInt("data_sequence_length");
-    int targetSeqLen = confReader->getInt("target_sequence_length");
-    int dimIn = confReader->getInt("data_size");
-    int dimOut = confReader->getInt("target_size");
+    int dataSeqLen = confReader->get<int>(section + "data_sequence_length");
+    int targetSeqLen = confReader->get<int>(section + "target_sequence_length");
+    int dimIn = confReader->get<int>(section + "data_size");
+    int dimOut = confReader->get<int>(section + "target_size");
 
     float *data = new float[dimIn * dataSeqLen];
     float *label = new float[dimOut * targetSeqLen];
@@ -51,7 +54,7 @@ int main(int argc, char* argv[]) {
     }   
     
     double startTime = CycleTimer::currentSeconds();
-    int maxiter = confReader->getInt("max_iteration");
+    int maxiter = confReader->get<int>("max_iteration");
     for (int i=0; i<maxiter; i++) {
         double gradBegTime = CycleTimer::currentSeconds();
         float error = translator->computeGrad(grad, params, data, label, 1);

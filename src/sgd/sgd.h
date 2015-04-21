@@ -6,10 +6,12 @@
 #include "matrix.h"
 #include "common.h"
 
+using namespace std;
+
 class sgdBase
 {
 public:
-    sgdBase(ConfReader *confReader, int paramSize);
+    sgdBase(boost::property_tree::ptree *confReader, string section, int paramSize);
     virtual ~sgdBase();
 
     /* data */
@@ -45,7 +47,7 @@ protected:
 class sgdBasic: public sgdBase
 {
 public:
-    sgdBasic(ConfReader *confReader, int paramSize);
+    sgdBasic(boost::property_tree::ptree *confReader, string section, int paramSize);
     ~sgdBasic();
 
     /* data */
@@ -60,7 +62,7 @@ public:
 class adagrad: public sgdBase
 {
 public:
-    adagrad(ConfReader *confReader, int paramSize);
+    adagrad(boost::property_tree::ptree *confReader, string section, int paramSize);
     ~adagrad();
 
     /* data */
@@ -81,7 +83,7 @@ private:
 class adadelta: public sgdBase
 {
 public:
-    adadelta(ConfReader *confReader, int paramSize);
+    adadelta(boost::property_tree::ptree *confReader, string section, int paramSize);
     ~adadelta();
 
     /* data */
@@ -104,7 +106,7 @@ private:
 class rmsprop: public sgdBase
 {
 public:
-    rmsprop(ConfReader *confReader, int paramSize);
+    rmsprop(boost::property_tree::ptree *confReader, string section, int paramSize);
     ~rmsprop();
 
     /* data */

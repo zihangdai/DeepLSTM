@@ -6,7 +6,7 @@
 class LSTM_RNN: public RecurrentNN
 {
 public:
-	LSTM_RNN(ConfReader *confReader);
+	LSTM_RNN(boost::property_tree::ptree *confReader, string section);
 	~LSTM_RNN();
 
 	/* data */

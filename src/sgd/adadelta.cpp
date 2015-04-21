@@ -2,9 +2,9 @@
 #include <string.h>
 #include "sgd.h"
 
-adadelta::adadelta (ConfReader *confReader, int paramSize) : sgdBase(confReader, paramSize){
-	m_decayFactor = confReader->getFloat("adadelta_decay_factor");
-	m_stableConst = confReader->getFloat("adadelta_stable_const");		
+adadelta::adadelta (boost::property_tree::ptree *confReader, string section, int paramSize) : sgdBase(confReader, section, paramSize){
+	m_decayFactor = confReader->get<float>(section + "adadelta_decay_factor");
+	m_stableConst = confReader->get<float>(section + "adadelta_stable_const");
 
 	m_ESquareGrad  = new float [m_nParamSize];
 	m_ESquareDelta = new float [m_nParamSize];

@@ -5,9 +5,9 @@ using namespace std;
 
 #define DEBUG_LSTM_RNN 0
 
-LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
+LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 	/* read conf and allocate memory */	
-	m_numLayer = confReader->getInt("num_layer");	
+	m_numLayer = confReader->get<int>(section + "num_layer");
 	m_numNeuronList = new int[m_numLayer];
 	m_layerTypeList = new string[m_numLayer];
 	m_connTypeList = new string[m_numLayer-1];
@@ -15,23 +15,23 @@ LSTM_RNN::LSTM_RNN(ConfReader *confReader) {
 
 	// type and number of neurons of each layer
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
-		std::stringstream ss;
+		stringstream ss;
   		ss << layerIdx;
-		m_numNeuronList[layerIdx] = confReader->getInt("num_neuron_layer_" + ss.str());
-		m_layerTypeList[layerIdx] = confReader->getString("type_layer_" + ss.str());
+		m_numNeuronList[layerIdx] = confReader->get<int>(section + "num_neuron_layer_" + ss.str());
+		m_layerTypeList[layerIdx] = confReader->get<string>(section + "type_layer_" + ss.str());
 	}
 	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "Finish reading type and number of neurons of each layer." << endl;
 	
 	// type of each conectection
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
-		std::stringstream ss;
+		stringstream ss;
   		ss << connIdx;
-		m_connTypeList[connIdx] = confReader->getString("type_connection_" + ss.str());
+		m_connTypeList[connIdx] = confReader->get<string>(section + "type_connection_" + ss.str());
 	}
 	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "Finish reading type of each conectection." << endl;	
 	
 	m_nParamSize = 0;
-	m_maxSeqLen = confReader->getInt("max_sequence_length");
+	m_maxSeqLen = confReader->get<int>(section + "max_sequence_length");
 	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "Finish reading max_sequence_length." << endl;	
 
 	/* initialize layers */

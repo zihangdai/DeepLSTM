@@ -1,11 +1,11 @@
 #include "sgd.h"
 
-sgdBase::sgdBase(ConfReader *confReader, int paramSize) {
+sgdBase::sgdBase(boost::property_tree::ptree *confReader, string section, int paramSize) {
 	m_nParamSize = paramSize;
 	m_stepCount = 0;
-	m_useMomentum = confReader->getInt("use_momentum");
+	m_useMomentum = confReader->get<int>(section + "use_momentum");
 	if (m_useMomentum) {
-		m_momentumFactor = confReader->getFloat("momentum_factor");		
+		m_momentumFactor = confReader->get<float>(section + "momentum_factor");		
 	} else {
 		m_momentumFactor = 0.f;
 	}
@@ -19,8 +19,8 @@ sgdBase::~sgdBase() {
 	}
 }
 
-sgdBasic::sgdBasic (ConfReader *confReader, int paramSize) : sgdBase(confReader, paramSize) {
-	m_learningRate = confReader->getFloat("learning rate");
+sgdBasic::sgdBasic (boost::property_tree::ptree *confReader, string section, int paramSize) : sgdBase(confReader, section, paramSize) {
+	m_learningRate = confReader->get<float>(section + "learning rate");
 }
 
 sgdBasic::~sgdBasic () {

@@ -4,28 +4,21 @@
 
 using namespace std;
 
-RNNTranslator::RNNTranslator(ConfReader *confReader) {
+RNNTranslator::RNNTranslator(boost::property_tree::ptree *confReader, string section) {
 	// init encoder and decoder
-	m_reverseEncoder = confReader->getInt("reverse_encoder");
+	m_reverseEncoder = confReader->get<int>(section + "reverse_encoder");
 	#ifdef DEBUG_RNN_TRANSLATOR
 	printf("m_reverseEncoder %d.\n", m_reverseEncoder);
 	#endif
-	
-	ConfReader *encoderConf = new ConfReader("translator.conf", "Encoder");	
-	ConfReader *decoderConf = new ConfReader("translator.conf", "Decoder");	
 
-	m_encoder = new LSTM_RNN(encoderConf);	
-	m_decoder = new LSTM_RNN(decoderConf);
+	m_encoder = new LSTM_RNN(confReader, "Encoder.");
+	m_decoder = new LSTM_RNN(confReader, "Decoder.");
 	
 	// compute paramSize
 	m_nParamSize = 0;
 	m_nParamSize += m_encoder->m_nParamSize;
 	m_nParamSize += m_decoder->m_nParamSize;
 	m_nParamSize += m_decoder->m_dataSize * m_encoder->m_targetSize;
-
-	// delete conf of no further use
-	delete encoderConf;
-	delete decoderConf;
 
 	#ifdef DEBUG_RNN_TRANSLATOR
 	printf("RNNTranslator constructor finished.\n");

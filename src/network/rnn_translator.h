@@ -7,7 +7,7 @@
 class RNNTranslator
 {
 public:
-	RNNTranslator(ConfReader *confReader);
+	RNNTranslator(boost::property_tree::ptree *confReader, string section);
 	~RNNTranslator();
 
 	/* data */

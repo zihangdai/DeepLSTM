@@ -7,8 +7,8 @@ using namespace std;
 
 #define DEBUG_ADAGRAD 1
 
-adagrad::adagrad (ConfReader *confReader, int paramSize) : sgdBase(confReader, paramSize) {
-	m_learningRate = confReader->getFloat("learning_rate");		
+adagrad::adagrad (boost::property_tree::ptree *confReader, string section, int paramSize) : sgdBase(confReader, section, paramSize) {
+	m_learningRate = confReader->get<float>(section + "learning_rate");
 
 	m_histSquareGrad = new float [m_nParamSize];
 	for (int i=0; i<m_nParamSize; i++) {
