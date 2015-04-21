@@ -7,7 +7,7 @@ LIBDIR=lib
 CXX=g++
 
 # compile flags
-CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q
+CXXFLAGS+=-O3 -m64 -fopenmp#Wa,-q
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
@@ -24,7 +24,6 @@ LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 VPATH = $(SRCDIR) \
 	$(SRCDIR)/config \
 	$(SRCDIR)/helper \
-	$(SRCDIR)/sgd \
 	$(SRCDIR)/layer \
 	$(SRCDIR)/connection \
 	$(SRCDIR)/network \
@@ -37,10 +36,6 @@ SRCS=\
 	$(SRCDIR)/config/confreader.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
-	$(SRCDIR)/sgd/sgd.cpp \
-	$(SRCDIR)/sgd/adagrad.cpp \
-	$(SRCDIR)/sgd/adadelta.cpp \
-	$(SRCDIR)/sgd/rmsprop.cpp \
 	$(SRCDIR)/layer/layer.cpp \
 	$(SRCDIR)/layer/input_layer.cpp \
 	$(SRCDIR)/layer/lstm_layer.cpp \
@@ -56,10 +51,12 @@ OBJS=$(SRCS:%.cpp=%.o)
 # .PHONY: 
 
 # all comes first in the file, so it is the default 
-all : RNNTranslator
+all : lstmRNN
+# all : RNNTranslator
 
 # compile main program parallelSGD from all objs 
-RNNTranslator: $(OBJS)
+lstmRNN: $(OBJS)
+# RNNTranslator: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) $(LDFLAGS) $^ -o $@
 
 # order-only prerequisites for OBJDIR
