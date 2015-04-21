@@ -31,11 +31,10 @@ VPATH = $(SRCDIR) \
 
 # src files
 SRCS=\
-	$(SRCDIR)/translator.cpp \
+	$(SRCDIR)/main.cpp \
 	$(SRCDIR)/config/chameleon.cpp \
 	$(SRCDIR)/config/configfile.cpp \
 	$(SRCDIR)/config/confreader.cpp \
-	$(SRCDIR)/helper/common.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \
@@ -58,12 +57,12 @@ OBJS=$(SRCS:%.cpp=%.o)
 # .PHONY: 
 
 # all comes first in the file, so it is the default 
-# all : lstmRNN
-all : RNNTranslator
+all : lstmRNN
+# all : RNNTranslator
 
 # compile main program parallelSGD from all objs 
-# lstmRNN: $(OBJS)
-RNNTranslator: $(OBJS)
+lstmRNN: $(OBJS)
+# RNNTranslator: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) $(LDFLAGS) $^ -o $@
 
 # order-only prerequisites for OBJDIR
