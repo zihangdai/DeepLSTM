@@ -47,6 +47,10 @@ int main(int argc, char* argv[]) {
         printf("%f\t", grad[i]);
     }
     printf("\n");
+    for (int i=0; i<20; ++i) {
+        printf("%f\t", grad[paramSize-1-i]);
+    }
+    printf("\n");
 
     DLOG(ERROR) << "Error: " << error << endl;
 

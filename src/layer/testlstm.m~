@@ -57,7 +57,7 @@ GW = zeros(num_neurons(numlayer), num_neurons(numlayer-1)+1);
 %% input and output
 max_seq = 2;
 inputs = reshape((0:max_seq*num_neurons(1)-1), num_neurons(1), max_seq); %./ max_seq*num_neurons(1);
-outputs = (max_seq*num_neurons(1) - reshape((0:max_seq*num_neurons(1)-1), num_neurons(1), max_seq)); %./ max_seq*num_neurons(1);
+outputs = (max_seq*num_neurons(1) - reshape((0:max_seq*num_neurons(1)-1), num_neurons(1), max_seq)) %./ max_seq*num_neurons(1);
 
 %%
 lstmnum = 2;
