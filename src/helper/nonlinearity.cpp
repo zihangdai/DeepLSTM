@@ -3,31 +3,9 @@
 /****************************************************************
 * Single-thread version
 ****************************************************************/
-void sigm (float *sigm_res, float *input, int dim) {
-	if (!SIMD) {
-		for (int i=0; i<dim; i++) {
-			sigm_res[i] = 1 / (1 + exp(-input[i]));
-		}
-	} else {
-		int residual = dim % SIMD_WIDTH;
-		int stopSIMD = dim - residual;
-
-		__m256 vec_input, vec_res;
-		__m256 vec_zero = _mm256_set1_ps(0.f);
-		__m256 vec_one  = _mm256_set1_ps(1.f);
-		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
-			vec_input = _mm256_loadu_ps(input + i);			
-			// vec_res = _mm256_loadu_ps(sigm_res + i);
-
-			// vec_input = _mm256_exp_ps(_mm256_sub_ps(vec_zero, vec_input));
-			vec_input = exp256_ps(_mm256_sub_ps(vec_zero, vec_input));
-			vec_res = _mm256_div_ps(vec_one, _mm256_add_ps(vec_one, vec_input));
-			_mm256_storeu_ps(sigm_res + i, vec_res);
-		}
-
-		for (int i=stopSIMD; i<dim; ++i) {
-			sigm_res[i] = 1 / (1 + exp(-input[i]));
-		}
+void sigm (float *sigm_res, float *input, int dim) {	
+	for (int i=0; i<dim; i++) {
+		sigm_res[i] = 1 / (1 + exp(-input[i]));
 	}
 }
 
@@ -56,33 +34,10 @@ void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
 	}
 }
 
-void tanh (float *tanh_res, float *input, int dim) {
-	if (!SIMD) {
-		for (int i=0; i<dim; i++) {
-			tanh_res[i] = tanh(input[i]);
-		}
-	} else {
-		int residual = dim % SIMD_WIDTH;
-		int stopSIMD = dim - residual;
-
-		__m256 vec_input, vec_minput, vec_res;
-		__m256 vec_zero = _mm256_set1_ps(0.f);
-		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
-			vec_input = _mm256_loadu_ps(input + i);
-			vec_minput = _mm256_sub_ps(vec_zero, vec_input);
-			// vec_res = _mm256_loadu_ps(tanh_res + i);
-			
-			// vec_res = _mm256_tanh_ps(vec_input);			
-			vec_minput = exp256_ps(vec_minput);
-			vec_input = exp256_ps(vec_input);
-			vec_res = _mm256_div_ps(_mm256_sub_ps(vec_input, vec_minput), _mm256_add_ps(vec_input, vec_minput));
-			_mm256_storeu_ps(tanh_res + i, vec_res);
-		}
-
-		for (int i=stopSIMD; i<dim; ++i) {
-			tanh_res[i] = tanh(input[i]);
-		}
-	}
+void tanh (float *tanh_res, float *input, int dim) {	
+	for (int i=0; i<dim; i++) {
+		tanh_res[i] = tanh(input[i]);
+	}	
 }
 
 void tanh_deriv (float *deriv_res, float *tanh_res, int dim) {
