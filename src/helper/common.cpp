@@ -84,7 +84,6 @@ __m256 exp256_ps(__m256 x) {
   emm0 = _mm_add_epi32(emm0, _pi32_0x7f);
   emm0 = _mm_slli_epi32(emm0, 23);
   __m128 pow2n0 = _mm_castsi128_ps(emm0);
-  y0 = 
   // second 4
   emm1 = _mm_cvttps_epi32(fx1);
   emm1 = _mm_add_epi32(emm1, _pi32_0x7f);
