@@ -4,6 +4,8 @@
 #include "lstm_rnn.h"
 #include "common.h"
 
+using namespace std;
+
 class RNNTranslator
 {
 public:

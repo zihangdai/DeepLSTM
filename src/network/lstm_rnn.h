@@ -3,6 +3,8 @@
 
 #include "neural_net.h"
 
+using namespace std;
+
 class LSTM_RNN: public RecurrentNN
 {
 public:
