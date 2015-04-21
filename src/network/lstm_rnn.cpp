@@ -71,11 +71,11 @@ LSTM_RNN::~LSTM_RNN() {
 	if (m_connTypeList != NULL) {delete [] m_connTypeList;}
 	
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
-		if (m_vecLayers[layerIdx] != NULL) {delete [] m_vecLayers[layerIdx];}
+		if (m_vecLayers[layerIdx] != NULL) {delete m_vecLayers[layerIdx];}
 	}
 
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
-		if (m_vecConnections[connIdx] != NULL) {delete [] m_vecConnections[connIdx];}
+		if (m_vecConnections[connIdx] != NULL) {delete m_vecConnections[connIdx];}
 	}
 }
 
