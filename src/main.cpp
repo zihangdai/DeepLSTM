@@ -16,19 +16,16 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(max_openmp_threads);
 
     RecurrentNN *net = new LSTM_RNN(confReader, section);
-    
+
     int paramSize = net->m_nParamSize;
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];
     float *grad = new float[paramSize];
-    net->initParams(params);
-
-    // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
-    // float label[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};    
+    net->initParams(params);    
 
     int inputSeqLen = confReader->get<int>(section + "max_sequence_length");
     int dimIn = confReader->get<int>(section + "num_neuron_layer_0");
-    int dimOut = confReader->get<int>(section + "num_neuron_layer_3");
+    int dimOut = confReader->get<int>(section + "num_neuron_layer_2");
 
     float *data = new float[dimIn * inputSeqLen];
     float *label = new float[dimOut * inputSeqLen];
@@ -49,38 +46,6 @@ int main(int argc, char* argv[]) {
     printf("\n");
 
     DLOG(ERROR) << "Error: " << error << endl;
-
-    // printf("LSTM output\n");
-    // for (int i=1; i<inputSeqLen+1; ++i) {
-    // 	int numNeuron = net->m_vecLayers[1]->m_numNeuron;
-    // 	for (int j=0; j<numNeuron; ++j) {
-    // 		printf("(%d,%d):%f\n", i, j, net->m_vecLayers[1]->m_outputActs[i][j]);
-    // 	}
-    // }
-
-    // printf("Softmax output\n");
-    // for (int i=1; i<inputSeqLen+1; ++i) {
-    // 	int numNeuron = net->m_vecLayers[2]->m_numNeuron;
-    // 	for (int j=0; j<numNeuron; ++j) {
-    // 		printf("(%d,%d):%f\n", i, j, net->m_vecLayers[2]->m_outputActs[i][j]);
-    // 	}
-    // }
-
-    // printf("LSTM outputError\n");
-    // for (int i=1; i<inputSeqLen+1; ++i) {
-    // 	int numNeuron = net->m_vecLayers[1]->m_numNeuron;
-    // 	for (int j=0; j<numNeuron; ++j) {
-    // 		printf("(%d,%d):%f\n", i, j, net->m_vecLayers[1]->m_outputErrs[i][j]);
-    // 	}
-    // }
-
-    // printf("LSTM inputError\n");
-    // for (int i=1; i<inputSeqLen+1; ++i) {
-    // 	int numNeuron = net->m_vecLayers[1]->m_numNeuron;
-    // 	for (int j=0; j<numNeuron; ++j) {
-    // 		printf("(%d,%d):%f\n", i, j, net->m_vecLayers[1]->m_inputErrs[i][j]);
-    // 	}
-    // }
 
     delete confReader;
     DLOG(ERROR) << "delete confReader" << endl;
