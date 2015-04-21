@@ -35,6 +35,7 @@ SRCS=\
 	$(SRCDIR)/config/chameleon.cpp \
 	$(SRCDIR)/config/configfile.cpp \
 	$(SRCDIR)/config/confreader.cpp \
+	$(SRCDIR)/helper/common.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \
