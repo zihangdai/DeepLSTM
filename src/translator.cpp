@@ -64,6 +64,8 @@ int main(int argc, char* argv[]) {
         optimizer->updateParams(params, grad);
         double optEndTime = CycleTimer::currentSeconds();
         DLOG(ERROR) << "optimizer updateParams time: " << optBegTime - optEndTime << endl; 
+
+        DLOG(ERROR) << "Error: " << error << endl;
     }
     double endTime = CycleTimer::currentSeconds();
     printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);
