@@ -4,7 +4,7 @@
 * Single-thread version
 ****************************************************************/
 void sigm (float *sigm_res, float *input, int dim) {
-	if (!SIMD) {
+	if (SIMD) {
 		for (int i=0; i<dim; i++) {
 			sigm_res[i] = 1 / (1 + exp(-input[i]));
 		}
@@ -57,7 +57,7 @@ void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
 }
 
 void tanh (float *tanh_res, float *input, int dim) {
-	if (!SIMD) {
+	if (SIMD) {
 		for (int i=0; i<dim; i++) {
 			tanh_res[i] = tanh(input[i]);
 		}
