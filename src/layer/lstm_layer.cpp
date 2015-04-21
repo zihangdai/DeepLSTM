@@ -451,9 +451,9 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		seqEndTime = CycleTimer::currentSeconds();
 		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward feedbackSequential time: " << seqEndTime - seqBegTime << endl;
 
-		printf("%d\n", seqIdx);
+		printf("m_forgetGateDelta %d\n", seqIdx);
 		for (int i=0; i<m_numNeuron; ++i) {
-			printf("%f\t", m_cellStateErrs[seqIdx][i]);
+			printf("%f\t", m_forgetGateDelta[seqIdx][i]);
 		}
 		printf("\n");
 	}
@@ -476,6 +476,11 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		outer(gradW_i_x, m_inGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_i_h, m_inGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
 		elem_mul(gradW_i_c, m_inGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
+		printf("gradW_i_c %d\n", seqIdx);
+		for (int i=0; i<m_numNeuron; ++i) {
+			printf("%f\t", gradW_i_c[i]);
+		}
+		printf("\n");
 
 		outer(gradW_f_x, m_forgetGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_f_h, m_forgetGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
