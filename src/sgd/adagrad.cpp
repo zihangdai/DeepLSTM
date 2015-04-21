@@ -5,6 +5,8 @@
 
 using namespace std;
 
+#define DEBUG_ADAGRAD 1
+
 adagrad::adagrad (ConfReader *confReader, int paramSize) : sgdBase(confReader, paramSize) {
 	m_learningRate = confReader->getFloat("learning_rate");		
 
@@ -17,6 +19,8 @@ adagrad::adagrad (ConfReader *confReader, int paramSize) : sgdBase(confReader, p
 	m_stopSIMD = m_nParamSize - m_residual;
 	m_vecLearnRate = _mm256_set1_ps(m_learningRate);
 	m_vecMomentum  = _mm256_set1_ps(m_momentumFactor);
+
+	DLOG_IF(INFO, DEBUG_ADAGRAD) << "adagrad constructor." << endl;
 }
 
 adagrad::~adagrad () {
