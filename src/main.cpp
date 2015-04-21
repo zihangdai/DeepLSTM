@@ -7,6 +7,10 @@ int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
     
     openblas_set_num_threads(1);
+    
+    boost::property_tree::ptree pt;
+    boost::property_tree::ini_parser::read_ini("config.conf", pt);
+    printf("%d", pt.get<std::float>("LSTM.max_threads"));
 
     ConfReader *confReader = new ConfReader("config.conf", "LSTM");
     int max_openmp_threads = confReader->getInt("max_threads");

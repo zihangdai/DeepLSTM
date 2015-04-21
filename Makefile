@@ -16,7 +16,7 @@ INCFLAGS+=-I$(LIBDIR)/glog/include
 INCFLAGS+=-I$(HOME)/tool/openmpi/include
 
 # link flags
-LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -fopenmp -lglog -lboost #-lmpi -lmpi_cxx
+LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -fopenmp -lglog -lboost_system #-lmpi -lmpi_cxx
 LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 
