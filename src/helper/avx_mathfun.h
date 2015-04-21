@@ -28,6 +28,8 @@
 
   (this is the zlib license)
 */
+#ifndef __AVX_MATHFUN_H__
+#define __AVX_MATHFUN_H__
 
 #include <immintrin.h>
 
@@ -710,3 +712,4 @@ void sincos256_ps(v8sf x, v8sf *s, v8sf *c) {
   *c = _mm256_xor_ps(xmm2, sign_bit_cos);
 }
 
+#endif
