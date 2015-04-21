@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#define DEBUG_LSTM_RNN 0
+#define DEBUG_LSTM_RNN 1
 
 LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 	/* read conf and allocate memory */	
