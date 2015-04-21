@@ -6,7 +6,7 @@ using namespace std;
 #define DEBUG_LSTM_RNN 0
 
 LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
-	/* read conf and allocate memory */	
+	/* read conf and allocate memory */
 	m_numLayer = confReader->get<int>(section + "num_layer");
 	m_numNeuronList = new int[m_numLayer];
 	m_layerTypeList = new string[m_numLayer];
@@ -45,7 +45,7 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 		m_nParamSize += conn->m_nParamSize;
 		m_vecConnections.push_back(conn);
 	}
-	
+
 	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "LSTM_RNN deconstructor." << endl;
 }
 
@@ -65,9 +65,8 @@ LSTM_RNN::~LSTM_RNN() {
 
 RecConnection *LSTM_RNN::initConnection(int connIdx) {
 	string connType = m_connTypeList[connIdx];
-	#ifdef DEBUG_LSTM_RNN
-	printf("connType[%d]:%s\n",connIdx,connType.c_str());
-	#endif
+	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "connType[" << connIdx << "]:"<< connType << endl;
+	
 	RecurrentLayer *preLayer = m_vecLayers[connIdx];
 	RecurrentLayer *postLayer = m_vecLayers[connIdx+1];
 	RecConnection *conn;
@@ -76,24 +75,22 @@ RecConnection *LSTM_RNN::initConnection(int connIdx) {
 	} else if (connType == "lstm_connection") {
 		conn = new LSTMConnection(preLayer, postLayer);
 	} else {
-		printf("Error in initConnection.\n");
+		LOG(ERROR) << "Error in initConnection." << endl;
 		exit(-1);
 	}
 	return conn;
 }
 
 RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
-	string layerType = m_layerTypeList[layerIdx];	
+	string layerType = m_layerTypeList[layerIdx];
 	int numNeuron = m_numNeuronList[layerIdx];
-	#ifdef DEBUG_LSTM_RNN
-	printf("layerType[%d]:%s, numNeuron:%d\n",layerIdx,layerType.c_str(),numNeuron);
-	#endif
+	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "layerType[" << layerIdx << "]:"<< layerType << ", numNeuron:" << numNeuron << endl;
 	RecurrentLayer *layer;
 	if (layerType == "input_layer") {
 		layer = new InputLayer(numNeuron, m_maxSeqLen);
 	} else if (layerType == "lstm_layer") {
 		int inputSize = m_numNeuronList[layerIdx-1];
-		layer = new LSTMLayer(numNeuron, m_maxSeqLen, inputSize);		
+		layer = new LSTMLayer(numNeuron, m_maxSeqLen, inputSize);
 	} else if (layerType == "softmax_layer") {
 		m_errorType = "cross_entropy_error";
 		layer = new SoftmaxLayer(numNeuron, m_maxSeqLen);
@@ -101,36 +98,27 @@ RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
 		m_errorType = "mean_squared_error";
 		layer = new MSELayer(numNeuron, m_maxSeqLen);
 	} else {
-		printf("Error in initLayer.\n");
+		LOG(ERROR) << "Error in initLayer." << endl;
 		exit(-1);
 	}
 	return layer;
 }
 
 void LSTM_RNN::initParams(float *params) {
-	#ifdef DEBUG_LSTM_RNN
-	printf("LSTM_RNN init parameters.\n");
-	#endif
 	float *cursor = params;
 	// layer part
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
-		#ifdef DEBUG_LSTM_RNN
-		printf("m_vecLayers[%d] init parameters with size %d.\n", layerIdx, m_vecLayers[layerIdx]->m_nParamSize);
-		#endif
 		m_vecLayers[layerIdx]->initParams(cursor);
 		cursor += m_vecLayers[layerIdx]->m_nParamSize;
 	}
 	// connection part
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
-		#ifdef DEBUG_LSTM_RNN
-		printf("m_vecConnections[%d] init parameters with size %d.\n ", connIdx, m_vecConnections[connIdx]->m_nParamSize);
-		#endif
 		m_vecConnections[connIdx]->initParams(cursor);
 		cursor += m_vecConnections[connIdx]->m_nParamSize;
 	}
 }
 
-void LSTM_RNN::feedForward(int inputSeqLen) {	
+void LSTM_RNN::feedForward(int inputSeqLen) {
 	/* feed forward through connections and layers */
 	m_vecLayers[0]->feedForward(inputSeqLen);
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
@@ -206,7 +194,7 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 			targetCursor += m_targetSize;
 		}
 		// feedback through connections and layers
-		feedBackward(inputSeqLen);		
+		feedBackward(inputSeqLen);
 
 		sampleData += m_dataSize * inputSeqLen;
 		sampleTarget += m_targetSize * inputSeqLen;
@@ -227,7 +215,7 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 	return error;
 }
 
-void LSTM_RNN::resetStates(int inputSeqLen) {	
+void LSTM_RNN::resetStates(int inputSeqLen) {
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
 		m_vecLayers[layerIdx]->resetStates(inputSeqLen);
 	}
