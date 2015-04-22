@@ -9,7 +9,7 @@ using namespace std;
 int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
 
-    // srand (time(NULL));
+    srand (time(NULL));
     openblas_set_num_threads(1);    
 
     boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
