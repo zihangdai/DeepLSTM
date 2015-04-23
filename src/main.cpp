@@ -6,7 +6,8 @@ using namespace std;
 int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
     
-    openblas_set_num_threads(1);
+    // openblas_set_num_threads(1);
+    // omp_set_nested(0);
     
     boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
     boost::property_tree::ini_parser::read_ini("./config.conf", *confReader);
@@ -21,7 +22,7 @@ int main(int argc, char* argv[]) {
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];
     float *grad = new float[paramSize];
-    net->initParams(params);    
+    net->initParams(params);
 
     int inputSeqLen = confReader->get<int>(section + "max_sequence_length");
     int dimIn = confReader->get<int>(section + "num_neuron_layer_0");
@@ -39,7 +40,7 @@ int main(int argc, char* argv[]) {
         for (int j=0; j<dimOut; ++j) {
             label[i*dimOut+j] = dimOut * inputSeqLen - (i*dimIn+j);
         }
-    }       
+    }
 
     float error = net->computeGrad(grad, params, data, label, 1);
 

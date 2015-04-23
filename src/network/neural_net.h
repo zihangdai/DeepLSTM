@@ -26,8 +26,8 @@ public:
 	int m_maxSeqLen;
 	int m_nParamSize;
 
-	int m_dataSize;
-	int m_targetSize;
+	int m_inputSize;
+	int m_outputSize;
 
 	string m_errorType;
 

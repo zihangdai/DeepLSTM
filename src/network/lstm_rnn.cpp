@@ -6,13 +6,19 @@ using namespace std;
 #define DEBUG_LSTM_RNN 0
 
 LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
-	/* read conf and allocate memory */
+	// read basic conf 
 	m_numLayer = confReader->get<int>(section + "num_layer");
+	m_maxSeqLen = confReader->get<int>(section + "max_sequence_length");
+	
+	m_inputSize = confReader->get<int>(section + "input_size");
+	m_outputSize = confReader->get<int>(section + "output_size");
+
+	// allocate memory
 	m_numNeuronList = new int[m_numLayer];
 	m_layerTypeList = new string[m_numLayer];
 	m_connTypeList = new string[m_numLayer-1];
 
-	// type and number of neurons of each layer
+	// read type and number of neurons of each layer from conf
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
 		stringstream ss;
   		ss << layerIdx;
@@ -20,26 +26,24 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 		m_layerTypeList[layerIdx] = confReader->get<string>(section + "type_layer_" + ss.str());
 	}
 	
-	// type of each conectection
+	// read type of each conectection from conf
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
 		stringstream ss;
   		ss << connIdx;
 		m_connTypeList[connIdx] = confReader->get<string>(section + "type_connection_" + ss.str());
 	}
 	
+	// m_nParamSize based on the m_nParamSize of layers and connections
 	m_nParamSize = 0;
-	m_maxSeqLen = confReader->get<int>(section + "max_sequence_length");
 
-	/* initialize layers */
+	// initialize layers
 	for (int layerIdx=0; layerIdx<m_numLayer; layerIdx++) {
 		RecurrentLayer *layer = initLayer(layerIdx);
 		m_nParamSize += layer->m_nParamSize;
 		m_vecLayers.push_back(layer);
-	}
-	m_dataSize = m_vecLayers[0]->m_inputSize;
-	m_targetSize = m_vecLayers[m_numLayer-1]->m_numNeuron;
+	}	
 
-	/* initialize connections */
+	// initialize connections
 	for (int connIdx=0; connIdx<m_numLayer-1; connIdx++) {
 		RecConnection *conn = initConnection(connIdx);
 		m_nParamSize += conn->m_nParamSize;
@@ -89,7 +93,12 @@ RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
 	if (layerType == "input_layer") {
 		layer = new InputLayer(numNeuron, m_maxSeqLen);
 	} else if (layerType == "lstm_layer") {
-		int inputSize = m_numNeuronList[layerIdx-1];
+		int inputSize;
+		if (layerIdx == 0) {
+			inputSize = m_numNeuronList[layerIdx-1];
+		} else {
+			inputSize = m_numNeuronList[layerIdx-1];
+		}
 		layer = new LSTMLayer(numNeuron, m_maxSeqLen, inputSize);
 	} else if (layerType == "softmax_layer") {
 		m_errorType = "cross_entropy_error";
@@ -141,7 +150,7 @@ float LSTM_RNN::computeError(float *sampleTarget, int inputSeqLen) {
 	float *targetCursor = sampleTarget;
 	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-		for (int i=0; i<m_targetSize; ++i) {
+		for (int i=0; i<m_outputSize; ++i) {
 			if (m_errorType == "cross_entropy_error") {
 				sampleError += targetCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
 			} else if (m_errorType == "mean_squared_error") {
@@ -149,7 +158,7 @@ float LSTM_RNN::computeError(float *sampleTarget, int inputSeqLen) {
 				sampleError += diff * diff;
 			}
 		}
-		targetCursor += m_targetSize;
+		targetCursor += m_outputSize;
 	}
 	return sampleError;
 }
@@ -176,8 +185,8 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 		// bind input sequence to m_inputActs of the input layer 
 		RecurrentLayer *inputLayer = m_vecLayers[0];
 		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-			memcpy(inputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_dataSize);
-			dataCursor += m_dataSize;
+			memcpy(inputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_inputSize);
+			dataCursor += m_inputSize;
 		}
 		// feedForward through connections and layers
 		feedForward(inputSeqLen);
@@ -190,14 +199,14 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 		// bind target sequence to m_outputErrs of the output layer
 		RecurrentLayer *outputLayer = m_vecLayers[m_numLayer-1];
 		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-			memcpy(outputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_targetSize);
-			targetCursor += m_targetSize;
+			memcpy(outputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_outputSize);
+			targetCursor += m_outputSize;
 		}
 		// feedback through connections and layers
 		feedBackward(inputSeqLen);
 
-		sampleData += m_dataSize * inputSeqLen;
-		sampleTarget += m_targetSize * inputSeqLen;
+		sampleData += m_inputSize * inputSeqLen;
+		sampleTarget += m_outputSize * inputSeqLen;
 	}
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]

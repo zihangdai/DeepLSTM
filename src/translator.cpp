@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
 
     srand (time(NULL));
-    openblas_set_num_threads(1);    
+    openblas_set_num_threads(1);
 
     boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
     boost::property_tree::ini_parser::read_ini("translator.conf", *confReader);

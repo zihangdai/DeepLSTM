@@ -45,7 +45,7 @@ void trans_dot (float *result, float *A, int dim1_A, int dim2_A, float *B, int d
 			}
 		}
 	} else {
-		cblas_sgemv(CblasRowMajor, CblasTrans, dim1_A, dim2_A, 1.0, A, dim2_A, B, 1, 1.0, result, 1);		
+		cblas_sgemv(CblasRowMajor, CblasTrans, dim1_A, dim2_A, 1.0, A, dim2_A, B, 1, 1.0, result, 1);
 	}
 }
 
