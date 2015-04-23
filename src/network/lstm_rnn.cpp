@@ -95,7 +95,7 @@ RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
 	} else if (layerType == "lstm_layer") {
 		int inputSize;
 		if (layerIdx == 0) {
-			inputSize = m_numNeuronList[layerIdx-1];
+			inputSize = m_inputSize;
 		} else {
 			inputSize = m_numNeuronList[layerIdx-1];
 		}
