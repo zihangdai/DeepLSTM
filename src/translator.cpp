@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
     int maxiter = confReader->get<int>(section + "max_iteration");
     int iter = 0, index;
     while (iter < maxiter) {
-        random_shuffle(indices, indices+sampleNum)
+        random_shuffle(indices, indices+sampleNum);
         for (int i=0; i<sampleNum; ++i) {
             index = indices[i];
             double gradBegTime = CycleTimer::currentSeconds();
@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
             double optEndTime = CycleTimer::currentSeconds();
             cout << "optimizer updateParams time: " << optBegTime - optEndTime << endl; 
 
-            cout << "Iteration: " << i << ", Error: " << error << endl;
+            cout << "Iteration: " << iter << ", Error: " << error << endl;
             iter ++;
         }
     }

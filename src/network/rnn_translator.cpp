@@ -77,9 +77,6 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 
 	/*** feed forward and feed backward ***/
 	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
-		if (dataIdx % 10 == 0) {
-			cout << "Processing data: " << dataIdx << endl;
-		}
 		// TODO
 		int encoderSeqLen = m_encoder->m_maxSeqLen;
 		int decoderSeqLen = m_decoder->m_maxSeqLen;
