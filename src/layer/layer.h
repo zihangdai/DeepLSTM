@@ -10,8 +10,6 @@
 
 using namespace std;
 
-#define SYM_UNIFORM_RAND (2 * ((float) rand() / (RAND_MAX)) - 1)   // rand float in [-1, 1]
-
 /****************************************************************
 * Recurrent Layer
 ****************************************************************/

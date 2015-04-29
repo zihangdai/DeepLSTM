@@ -16,7 +16,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
-#include "confreader.h" // TODO
 
 #include <omp.h>
 
@@ -25,7 +24,9 @@
 #include "cycle_timer.h"
 
 #define SIMD_WIDTH 8
-#define SIMD 0
+#define SIMD 1
 #define BLOCK_SIZE 64
+
+#define SYM_UNIFORM_RAND (2 * ((float) rand() / (RAND_MAX)) - 1)   // rand float in [-1, 1]
 
 #endif
