@@ -95,16 +95,16 @@ int main(int argc, char* argv[]) {
     int maxiter = confReader->get<int>(section + "max_iteration");
     for (int i=0; i<maxiter; i++) {
         double gradBegTime = CycleTimer::currentSeconds();
-        float error = translator->computeGrad(grad, params, data, target, 1);
+        float error = translator->computeGrad(grad, params, data, target, sampleNum);
         double gradEndTime = CycleTimer::currentSeconds();
-        DLOG(ERROR) << "translator computeGrad time: " << gradBegTime - gradEndTime << endl;
+        cout << "translator computeGrad time: " << gradBegTime - gradEndTime << endl;
 
         double optBegTime = CycleTimer::currentSeconds();
         optimizer->updateParams(params, grad);
         double optEndTime = CycleTimer::currentSeconds();
-        DLOG(ERROR) << "optimizer updateParams time: " << optBegTime - optEndTime << endl; 
+        cout << "optimizer updateParams time: " << optBegTime - optEndTime << endl; 
 
-        DLOG(ERROR) << "Error: " << error << endl;
+        cout << "Iteration: " << i << ", Error: " << error << endl;
     }
     double endTime = CycleTimer::currentSeconds();
     printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);

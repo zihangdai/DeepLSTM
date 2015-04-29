@@ -76,6 +76,9 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 
 	/*** feed forward and feed backward ***/
 	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
+		if (dataIdx % 10 == 0) {
+			cout << "Processing data: " << dataIdx << endl;
+		}
 		// TODO
 		int encoderSeqLen = m_encoder->m_maxSeqLen;
 		int decoderSeqLen = m_decoder->m_maxSeqLen;
@@ -170,16 +173,16 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 	}
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
-	// float normFactor = 1.f / (float) minibatchSize;
-	// for (int dim=0; dim<m_nParamSize; ++dim) {
-	// 	grad[dim] *= normFactor;
-	// 	if (grad[dim] < -1.f) {
-	// 		grad[dim] = -1.f;
-	// 	} else if (grad[dim] > 1.f) {
-	// 		grad[dim] = 1.f;
-	// 	}
-	// }
-	// error *= normFactor;
+	float normFactor = 1.f / (float) minibatchSize;
+	for (int dim=0; dim<m_nParamSize; ++dim) {
+		grad[dim] *= normFactor;
+		if (grad[dim] < -1.f) {
+			grad[dim] = -1.f;
+		} else if (grad[dim] > 1.f) {
+			grad[dim] = 1.f;
+		}
+	}
+	error *= normFactor;
 
 	return error;
 }

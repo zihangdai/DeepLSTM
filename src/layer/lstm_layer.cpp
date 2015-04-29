@@ -1,8 +1,9 @@
+#define NDEBUG
 #include "lstm_layer.h"
 
 using namespace std;
 
-#define DEBUG_LSTM_LAYER 1
+#define DEBUG_LSTM_LAYER 0
 
 LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLayer(numNeuron, maxSeqLen, inputSize) {
 	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer constructor." << endl;
