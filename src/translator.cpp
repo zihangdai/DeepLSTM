@@ -43,8 +43,8 @@ int main(int argc, char* argv[]) {
     int dimOut = confReader->get<int>(section + "target_size");
     int sampleNum = confReader->get<int>(section + "sample_num");
 
-    float *data = new float[dimIn * dataSeqLen];
-    float *target = new float[dimOut * targetSeqLen];
+    float *data = new float[dimIn * dataSeqLen * sampleNum];
+    float *target = new float[dimOut * targetSeqLen * sampleNum];
 
     ifstream datafile ("data.bin", ios::in|ios::binary);
     if (datafile.is_open()) {
