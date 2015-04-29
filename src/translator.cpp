@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
     int targetSeqLen = confReader->get<int>(section + "target_sequence_length");
     int dimIn = confReader->get<int>(section + "data_size");
     int dimOut = confReader->get<int>(section + "target_size");
+    int sampleNum = confReader->get<int>(section + "sample_num");
 
     float *data = new float[dimIn * dataSeqLen];
     float *target = new float[dimOut * targetSeqLen];
@@ -49,13 +50,13 @@ int main(int argc, char* argv[]) {
     if (datafile.is_open()) {
         datafile.seekg (0, ios::end);
         int size = datafile.tellg();
-        if (size != sizeof(float) * dimIn * dataSeqLen) {
+        if (size != sizeof(float) * dimIn * dataSeqLen * sampleNum) {
             printf("Wrong memory size for data\n");
             datafile.close();
             exit(1);
         }
         datafile.seekg (0, ios::beg);
-        datafile.read (data, size);
+        datafile.read ((char *)data, size);
         datafile.close();
     } else {
         printf("Failed to open datafile\n");
@@ -66,19 +67,19 @@ int main(int argc, char* argv[]) {
     if (targetfile.is_open()) {
         targetfile.seekg (0, ios::end);
         int size = targetfile.tellg();
-        if (size != sizeof(float) * dimIn * dataSeqLen) {
+        if (size != sizeof(float) * dimOut * targetSeqLen * sampleNum) {
             printf("Wrong memory size for target\n");
             targetfile.close();
             exit(1);
         }
         targetfile.seekg (0, ios::beg);
-        targetfile.read (target, size);
+        targetfile.read ((char *)target, size);
         targetfile.close();
     } else {
         printf("Failed to open targetfile\n");
         exit(1);
     }
-    
+
     // for (int i=0; i<dataSeqLen; ++i) {
     //     for (int j=0; j<dimIn; ++j) {
     //         data[i*dimIn+j] = i;
