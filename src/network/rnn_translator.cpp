@@ -1,3 +1,4 @@
+#include <iostream>
 #include "rnn_translator.h"
 
 // #define DEBUG_RNN_TRANSLATOR 1
