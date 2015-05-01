@@ -37,6 +37,7 @@ void adagrad::updateParams (float *params, float *grad, int rank) {
 			params[i] += m_velocity[i];
 		}
 	} else {
+		#ifdef linux
 		__m256 vecLearnRate = _mm256_set1_ps(m_learningRate);
 		__m256 vecMomentum  = _mm256_set1_ps(m_momentumFactor);
 		
@@ -65,5 +66,6 @@ void adagrad::updateParams (float *params, float *grad, int rank) {
 			m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
 			params[i] += m_velocity[i];
 		}
+		#endif
 	}
 }

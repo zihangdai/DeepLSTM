@@ -3,8 +3,6 @@
 
 #include "common.h"
 
-#include "confreader.h"
-
 #include "layer.h"
 #include "input_layer.h"
 #include "lstm_layer.h"

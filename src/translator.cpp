@@ -33,10 +33,7 @@ int main(int argc, char* argv[]) {
 
     // init sgd optimizer 
     sgdBase *optimizer = new adagrad(confReader, section, paramSize);
-    // sgdBase *optimizer = new adadelta(confReader, paramSize);    
-
-    // float data[10] = {1.f, 2.f, 2.f, 4.f, 3.f, 6.f, 4.f, 8.f, 5.f, 10.f};
-    // float target[10] = {18.f, 9.f, 16.f, 8.f, 14.f, 7.f, 12.f, 6.f, 10.f, 5.f};
+    // sgdBase *optimizer = new adadelta(confReader, paramSize);
 
     int dataSeqLen = confReader->get<int>(section + "data_sequence_length");
     int targetSeqLen = confReader->get<int>(section + "target_sequence_length");

@@ -49,7 +49,8 @@ void trans_dot (float *result, float *A, int dim1_A, int dim2_A, float *B, int d
 	}
 }
 
-void elem_mul (float *result, float *a, float *b, int dim) {	
+void elem_mul (float *result, float *a, float *b, int dim) {
+	#ifdef __linux
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i * b_i
@@ -74,9 +75,11 @@ void elem_mul (float *result, float *a, float *b, int dim) {
 			result[i] += a[i] * b[i];
 		}
 	}
+	#endif
 }
 
 void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
+	#ifdef __linux
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i * b_i * c_i
@@ -103,9 +106,11 @@ void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
 			result[i] += a[i] * b[i] * c[i];
 		}
 	}
+	#endif
 }
 
 void elem_sub (float *result, float *a, float *b, int dim) {
+	#ifdef __linux
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i - b_i
@@ -130,9 +135,11 @@ void elem_sub (float *result, float *a, float *b, int dim) {
 			result[i] += a[i] - b[i];
 		}
 	}
+	#endif
 }
 
 void elem_accum (float *result, float *a, int dim) {
+	#ifdef __linux
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i
@@ -155,6 +162,7 @@ void elem_accum (float *result, float *a, int dim) {
 			result[i] += a[i];
 		}
 	}
+	#endif
 }
 
 void dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B) {
@@ -172,5 +180,5 @@ void elem_mul_threads (float *result, float *a, float *b, int dim) {
 	for (int i=0; i<dim; i+=BLOCK_SIZE) {
 		int actualSize = min(BLOCK_SIZE, dim-i);
 		elem_mul(result+i, a+i, b+i, actualSize);
-	}	
+	}
 }

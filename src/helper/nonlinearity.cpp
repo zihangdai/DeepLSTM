@@ -10,6 +10,7 @@ void sigm (float *sigm_res, float *input, int dim) {
 }
 
 void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
+	#ifdef __linux
 	if (!SIMD) {
 		for (int i=0; i<dim; i++) {
 			deriv_res[i] = sigm_res[i] * (1 - sigm_res[i]);
@@ -32,6 +33,7 @@ void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
 			deriv_res[i] = sigm_res[i] * (1 - sigm_res[i]);
 		}
 	}
+	#endif
 }
 
 void tanh (float *tanh_res, float *input, int dim) {	
@@ -41,6 +43,7 @@ void tanh (float *tanh_res, float *input, int dim) {
 }
 
 void tanh_deriv (float *deriv_res, float *tanh_res, int dim) {
+	#ifdef __linux
 	if (!SIMD) {
 		for (int i=0; i<dim; i++) {
 			deriv_res[i] = 1 - tanh_res[i] * tanh_res[i];
@@ -63,6 +66,7 @@ void tanh_deriv (float *deriv_res, float *tanh_res, int dim) {
 			deriv_res[i] = 1 - tanh_res[i] * tanh_res[i];
 		}
 	}
+	#endif
 }
 
 void softmax (float *result, float *input, int dim) {

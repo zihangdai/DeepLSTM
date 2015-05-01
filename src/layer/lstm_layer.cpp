@@ -336,6 +336,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 	// 	}
 	// }
 
+	#ifdef linux
 	int residual = m_numNeuron % SIMD_WIDTH;
 	int stopSIMD = m_numNeuron - residual;
 
@@ -361,6 +362,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
 		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
 	}
+	#endif
 }
 
 void LSTMLayer::feedbackSequential (int seqIdx) {
