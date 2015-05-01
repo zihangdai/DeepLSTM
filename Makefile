@@ -2,12 +2,17 @@
 OBJDIR=objs
 SRCDIR=src
 LIBDIR=lib
+UNAME=$(shell uname)
 
 # compiler
-CXX=g++
+CXX=mpic++
 
 # compile flags
-CXXFLAGS+=-O3 -m64 -mavx -fopenmp #Wa,-q
+CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q
+ifeq ($(UNAME), Linux)
+	CXXFLAGS+=mavx
+endif
+
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
@@ -16,7 +21,7 @@ INCFLAGS+=-I$(LIBDIR)/glog/include
 INCFLAGS+=-I$(HOME)/tool/openmpi/include
 
 # link flags
-LDFLAGS+=-lgfortran -lpthread -lopenblas -lglog  #-lmpi -lmpi_cxx
+LDFLAGS+=-lmpi -lmpi_cxx -lgfortran -lpthread -lopenblas -lglog
 LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 
@@ -28,13 +33,13 @@ VPATH = $(SRCDIR) \
 	$(SRCDIR)/layer \
 	$(SRCDIR)/connection \
 	$(SRCDIR)/network \
+	$(SRCDIR)/master \
+	$(SRCDIR)/slave \
+	$(SRCDIR)/data \
 
 # src files
 SRCS=\
-	$(SRCDIR)/translator.cpp \
-	$(SRCDIR)/config/chameleon.cpp \
-	$(SRCDIR)/config/configfile.cpp \
-	$(SRCDIR)/config/confreader.cpp \
+	$(SRCDIR)/mpi_translator.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \
@@ -48,7 +53,10 @@ SRCS=\
 	$(SRCDIR)/layer/mse_layer.cpp \
 	$(SRCDIR)/connection/connection.cpp \
 	$(SRCDIR)/network/lstm_rnn.cpp \
-	$(SRCDIR)/network/rnn_translator.cpp
+	$(SRCDIR)/network/rnn_translator.cpp \
+	$(SRCDIR)/master/master.cpp \
+	$(SRCDIR)/slave/slave.cpp \
+	$(SRCDIR)/data/sequence_data.cpp
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)
