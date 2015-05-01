@@ -23,8 +23,6 @@
 
 #include "cycle_timer.h"
 
-#include "cblas.h"
-
 #define SIMD_WIDTH 8
 #define SIMD 1
 #define BLOCK_SIZE 64

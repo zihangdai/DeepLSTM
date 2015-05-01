@@ -4,7 +4,7 @@
 
 #include <math.h>
 #include <algorithm>
-
+#include "cblas.h"
 #include "common.h"
 
 void outer (float *result, float *a, int dim_a, float *b, int dim_b);
