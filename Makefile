@@ -10,7 +10,7 @@ CXX=mpic++
 # compile flags
 CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q
 ifeq ($(UNAME), Linux)
-	CXXFLAGS+=mavx
+	CXXFLAGS+=-mavx
 endif
 
 
