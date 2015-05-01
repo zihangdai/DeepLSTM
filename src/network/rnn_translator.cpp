@@ -67,6 +67,7 @@ void RNNTranslator::bindWeights(float *params, float *grad) {
 }
 
 float RNNTranslator::computeGrad (float *grad, float *params, float *data, float *target, int minibatchSize) {
+	int maxThreads = omp_get_max_threads();
 	float error = 0.f;
 	
 	memset(grad, 0x00, sizeof(float)*m_nParamSize);
@@ -180,8 +181,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			grad[dim] = 1.f;
 		}
 	}
-	error *= normFactor;
-	printf("Error: %f\n", error);
+	error *= normFactor;	
 
 	return error;
 }

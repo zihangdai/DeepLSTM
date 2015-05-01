@@ -70,12 +70,12 @@ void slaveFunc(){
     std::random_shuffle(indices, indices + numSample);
     
     // step 3: Begin Training taks
-    int index = 0;
+    int index = 0, taskCount=0;
     MPI_Status status;
     printf("Slave[%d] go into training loop\n", rank);
     while (1) {
 		/*step 3.1:receive from master*/
-		MPI_Recv(param,paramSize,MPI_FLOAT,ROOT,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
+		MPI_Recv(param, paramSize, MPI_FLOAT, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         
 		/*step 3.2: check whether ends*/
 		if(status.MPI_TAG == STOPTAG){
@@ -93,9 +93,11 @@ void slaveFunc(){
         }        
         dataset->getDataBatch(label, data, pickIndices, batchSize);
 
-        /*step 3.4: calculate the grad*/        
-        float cost = translator->computeGrad(grad, param, data, label, batchSize);
-        // printf("Slave[%d] cost: %f\n", rank, cost);
+        /*step 3.4: calculate the grad*/
+        double begTime = CycleTimer::currentSeconds();
+        float error = translator->computeGrad(grad, param, data, label, batchSize);
+        double endTime = CycleTimer::currentSeconds();        
+        printf("Slave[%d] finished task %d: error %f, time %f\n", rank, ++taskCount, error, endTime - begTime);
         
         /*step 3.5: return to master*/
         MPI_Send(grad, paramSize, MPI_FLOAT, ROOT, rank, MPI_COMM_WORLD);
