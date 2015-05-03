@@ -27,20 +27,24 @@ RNNLSTMLayer::RNNLSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : Recurr
 	// compute m_paramSize
 	m_paramSize = 0;
 
-	m_paramSize += m_numNeuron * m_inputSize;	// W_i_x : [m_numNeuron x m_inputSize]
-	m_paramSize += m_numNeuron * m_numNeuron;	// W_i_h : [m_numNeuron x m_numNeuron]
-	m_paramSize += m_numNeuron;					// W_i_c : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron * m_inputSize;	// W_i_x  : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_i_h  : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron;					// W_i_c  : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron;					// Bias_i : [m_numNeuron x 1]
 
-	m_paramSize += m_numNeuron * m_inputSize;	// W_f_x : [m_numNeuron x m_inputSize]
-	m_paramSize += m_numNeuron * m_numNeuron;	// W_f_c : [m_numNeuron x m_numNeuron]
-	m_paramSize += m_numNeuron;					// W_f_c : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron * m_inputSize;	// W_f_x  : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_f_c  : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron;					// W_f_c  : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron;					// Bias_f : [m_numNeuron x 1]
 
-	m_paramSize += m_numNeuron * m_inputSize;	// W_c_x : [m_numNeuron x m_inputSize]
-	m_paramSize += m_numNeuron * m_numNeuron;	// W_c_h : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron * m_inputSize;	// W_c_x  : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_c_h  : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron;					// Bias_c : [m_numNeuron x 1]
 
-	m_paramSize += m_numNeuron * m_inputSize;	// W_o_x : [m_numNeuron x m_inputSize]
-	m_paramSize += m_numNeuron * m_numNeuron;	// W_o_h : [m_numNeuron x m_numNeuron]
-	m_paramSize += m_numNeuron;					// W_o_c : [m_numNeuron x 1]	
+	m_paramSize += m_numNeuron * m_inputSize;	// W_o_x  : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_o_h  : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron;					// W_o_c  : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron;					// Bias_o : [m_numNeuron x 1]	
 }
 
 RNNLSTMLayer::~RNNLSTMLayer() {
@@ -203,6 +207,7 @@ void RNNLSTMLayer::computeGatesActs(int seqIdx) {
 				// compute input gate activation
 				dot(m_inGateActs[seqIdx]+startIdx, W_i_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 				elem_mul(m_inGateActs[seqIdx]+startIdx, W_i_c+startIdx, m_states[seqIdx-1]+startIdx, actualSize);
+				elem_accum(m_inGateActs[seqIdx]+startIdx, Bias_i+startIdx, actualSize);
 				sigm(m_inGateActs[seqIdx]+startIdx, m_inGateActs[seqIdx]+startIdx, actualSize);
 				break;
 			}
@@ -210,18 +215,21 @@ void RNNLSTMLayer::computeGatesActs(int seqIdx) {
 				// compute forget gate activation
 				dot(m_forgetGateActs[seqIdx]+startIdx, W_f_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 				elem_mul(m_forgetGateActs[seqIdx]+startIdx, W_f_c+startIdx, m_states[seqIdx-1]+startIdx, actualSize);
+				elem_accum(m_forgetGateActs[seqIdx]+startIdx, Bias_f+startIdx, actualSize);
 				sigm(m_forgetGateActs[seqIdx]+startIdx, m_forgetGateActs[seqIdx]+startIdx, actualSize);
 				break;
 			}
 			case 2: {
 				// compute pre-gate states
 				dot(m_preGateStates[seqIdx]+startIdx, W_c_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-				tanh(m_preGateStates[seqIdx]+startIdx, m_preGateStates[seqIdx]+startIdx, actualSize);
+				elem_accum(m_preGateStates[seqIdx]+startIdx, Bias_c+startIdx, actualSize);
+				tanh(m_preGateStates[seqIdx]+startIdx, m_preGateStates[seqIdx]+startIdx, actualSize);				
 				break;
 			}
 			case 3: {
 				// compute output gate activation
 				dot(m_outGateActs[seqIdx]+startIdx, W_o_h+startIdx*m_numNeuron, actualSize, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+				elem_accum(m_outGateActs[seqIdx]+startIdx, Bias_o+startIdx, actualSize);
 				break;
 			}
 		}
@@ -256,17 +264,20 @@ void RNNLSTMLayer::feedForward(int inputSeqLen) {
 		// dot(m_inGateActs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		// dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 		// elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
+		// elem_accum(m_inGateActs[seqIdx], Bias_i, m_numNeuron);
 		// sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
 		
 		// compute forget gate activation
 		// dot(m_forgetGateActs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		// dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
 		// elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
+		// elem_accum(m_forgetGateActs[seqIdx], Bias_f, m_numNeuron);
 		// sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
 
 		// compute pre-gate states
 		// dot(m_preGateStates[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		// dot(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+		// elem_accum(m_preGateStates[seqIdx], Bias_c, m_numNeuron);
 		// tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
 
 		computeGatesActs(seqIdx);
@@ -278,6 +289,7 @@ void RNNLSTMLayer::feedForward(int inputSeqLen) {
 		// compute output gate activation
 		// dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 		// dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+		// elem_accum(m_outGateActs[seqIdx], Bias_o, m_numNeuron);
 		elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
 		sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
 
@@ -471,17 +483,21 @@ void RNNLSTMLayer::feedBackward(int inputSeqLen) {
 		outer(gradW_i_x, m_inGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_i_h, m_inGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
 		elem_mul(gradW_i_c, m_inGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
+		elem_accum(gradBias_i, m_inGateDelta[seqIdx], m_numNeuron);
 
 		outer(gradW_f_x, m_forgetGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_f_h, m_forgetGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
 		elem_mul(gradW_f_c, m_forgetGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
+		elem_accum(gradBias_f, m_forgetGateDelta[seqIdx], m_numNeuron);
 
 		outer(gradW_c_x, m_preGateStateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_c_h, m_preGateStateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
+		elem_accum(gradBias_c, m_preGateStateDelta[seqIdx], m_numNeuron);
 
 		outer(gradW_o_x, m_outGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_o_h, m_outGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
 		elem_mul(gradW_o_c, m_outGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
+		elem_accum(gradBias_o, m_outGateDelta[seqIdx], m_numNeuron);
 	}	
 
 	endTime = CycleTimer::currentSeconds();
@@ -498,6 +514,8 @@ void RNNLSTMLayer::bindWeights(float *params, float *grad) {
 	paramCursor += m_numNeuron * m_numNeuron;
 	W_i_c = paramCursor; 						// [m_numNeuron x 1]
 	paramCursor += m_numNeuron;
+	Bias_i = paramCursor; 						// [m_numNeuron x 1]
+	paramCursor += m_numNeuron;
 
 	W_f_x = paramCursor; 						// [m_numNeuron x m_inputSize]
 	paramCursor += m_numNeuron * m_inputSize;
@@ -505,17 +523,23 @@ void RNNLSTMLayer::bindWeights(float *params, float *grad) {
 	paramCursor += m_numNeuron * m_numNeuron;
 	W_f_c = paramCursor; 						// [m_numNeuron x 1]
 	paramCursor += m_numNeuron;
+	Bias_f = paramCursor; 						// [m_numNeuron x 1]
+	paramCursor += m_numNeuron;
 
 	W_c_x = paramCursor; 						// [m_numNeuron x m_inputSize]
 	paramCursor += m_numNeuron * m_inputSize;
 	W_c_h = paramCursor; 						// [m_numNeuron x m_numNeuron]
 	paramCursor += m_numNeuron * m_numNeuron;						
+	Bias_c = paramCursor; 						// [m_numNeuron x 1]
+	paramCursor += m_numNeuron;
 
 	W_o_x = paramCursor; 						// [m_numNeuron x m_inputSize]
 	paramCursor += m_numNeuron * m_inputSize;
 	W_o_h = paramCursor; 						// [m_numNeuron x m_numNeuron]
 	paramCursor += m_numNeuron * m_numNeuron;
 	W_o_c = paramCursor; 						// [m_numNeuron x 1]
+	paramCursor += m_numNeuron;
+	Bias_o = paramCursor; 						// [m_numNeuron x 1]	
 
 	// grad
 	float *gradCursor = grad;
@@ -525,6 +549,8 @@ void RNNLSTMLayer::bindWeights(float *params, float *grad) {
 	gradCursor += m_numNeuron * m_numNeuron;
 	gradW_i_c = gradCursor; 					// [m_numNeuron x 1]
 	gradCursor += m_numNeuron;
+	gradBias_i = gradCursor; 					// [m_numNeuron x 1]
+	gradCursor += m_numNeuron;
 
 	gradW_f_x = gradCursor; 					// [m_numNeuron x m_inputSize]
 	gradCursor += m_numNeuron * m_inputSize;
@@ -532,15 +558,22 @@ void RNNLSTMLayer::bindWeights(float *params, float *grad) {
 	gradCursor += m_numNeuron * m_numNeuron;
 	gradW_f_c = gradCursor; 					// [m_numNeuron x 1]
 	gradCursor += m_numNeuron;
+	gradBias_f = gradCursor; 					// [m_numNeuron x 1]
+	gradCursor += m_numNeuron;
 
 	gradW_c_x = gradCursor; 					// [m_numNeuron x m_inputSize]
 	gradCursor += m_numNeuron * m_inputSize;
 	gradW_c_h = gradCursor; 					// [m_numNeuron x m_numNeuron]
-	gradCursor += m_numNeuron * m_numNeuron;						
+	gradCursor += m_numNeuron * m_numNeuron;	
+	gradBias_c = gradCursor; 					// [m_numNeuron x 1]
+	gradCursor += m_numNeuron;					
 
 	gradW_o_x = gradCursor; 					// [m_numNeuron x m_inputSize]
 	gradCursor += m_numNeuron * m_inputSize;
 	gradW_o_h = gradCursor; 					// [m_numNeuron x m_numNeuron]
 	gradCursor += m_numNeuron * m_numNeuron;
 	gradW_o_c = gradCursor; 					// [m_numNeuron x 1]
+	gradCursor += m_numNeuron;
+	gradBias_o = gradCursor; 					// [m_numNeuron x 1]
+
 }

@@ -26,6 +26,11 @@ public:
 	float *W_o_h;
 	float *W_o_c;
 
+	float *Bias_i;
+	float *Bias_f;
+	float *Bias_c;
+	float *Bias_o;
+
 	// grad matrices
 	float *gradW_i_x;
 	float *gradW_i_h;
@@ -38,6 +43,11 @@ public:
 	float *gradW_o_x;
 	float *gradW_o_h;
 	float *gradW_o_c;
+
+	float *gradBias_i;
+	float *gradBias_f;
+	float *gradBias_c;
+	float *gradBias_o;
 
 	// forward pass
 	vector<float *> m_inGateActs;
