@@ -33,14 +33,11 @@ VPATH = $(SRCDIR) \
 	$(SRCDIR)/sgd \
 	$(SRCDIR)/layer \
 	$(SRCDIR)/connection \
-	$(SRCDIR)/network \
-	$(SRCDIR)/master \
-	$(SRCDIR)/slave \
-	$(SRCDIR)/data \
+	$(SRCDIR)/network \	
 
 # src files
 SRCS=\
-	$(SRCDIR)/mpi_translator.cpp \
+	$(SRCDIR)/translator.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \
@@ -54,11 +51,7 @@ SRCS=\
 	$(SRCDIR)/layer/rnn_mse_layer.cpp \
 	$(SRCDIR)/connection/rnn_connection.cpp \
 	$(SRCDIR)/network/rnn_lstm.cpp \
-	$(SRCDIR)/network/rnn_translator.cpp \
-	$(SRCDIR)/master/master.cpp \
-	$(SRCDIR)/slave/slave.cpp \
-	$(SRCDIR)/data/mnist.cpp \
-	$(SRCDIR)/data/sequence_data.cpp
+	$(SRCDIR)/network/rnn_translator.cpp	
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)
@@ -67,7 +60,7 @@ OBJS=$(SRCS:%.cpp=%.o)
 # .PHONY: 
 
 # all comes first in the file, so it is the default 
-all : RNNTranslator_MPI
+all : RNNTranslator
 
 # compile main program parallelSGD from all objs 
 RNNTranslator: $(OBJS)
@@ -84,4 +77,4 @@ $(OBJDIR):
 
 # clean
 clean:
-	rm -rf $(OBJS) RNNTranslator_MPI
+	rm -rf $(OBJS) RNNTranslator
