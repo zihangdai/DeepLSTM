@@ -58,11 +58,11 @@ int main(int argc, char const *argv[]) {
 	float *params = new float[paramSize];
 	float *grad   = new float[paramSize];
 	
+    openblas_set_num_threads(1);
 	int batchSize = confReader->get<int>(section + "training_batch_size");
 	int maxiter = confReader->get<int>(section + "max_iteration");
 	int max_openmp_threads = confReader->get<int>(section + "max_threads");
-	omp_set_num_threads(max_openmp_threads);
-	openblas_set_num_threads(1);
+	omp_set_num_threads(max_openmp_threads);	
 
     printf("openmp threads: %d, %d\n", omp_get_max_threads(), max_openmp_threads);
 
