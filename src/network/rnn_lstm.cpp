@@ -1,11 +1,11 @@
 #include <sstream> 
-#include "lstm_rnn.h"
+#include "rnn_lstm.h"
 
 using namespace std;
 
-#define DEBUG_LSTM_RNN 0
+#define DEBUG_RNNLSTM 0
 
-LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
+RNNLSTM::RNNLSTM(boost::property_tree::ptree *confReader, string section) {
 	// read basic conf 
 	m_numLayer = confReader->get<int>(section + "num_layer");
 	m_maxSeqLen = confReader->get<int>(section + "max_sequence_length");
@@ -33,27 +33,27 @@ LSTM_RNN::LSTM_RNN(boost::property_tree::ptree *confReader, string section) {
 		m_connTypeList[connIdx] = confReader->get<string>(section + "type_connection_" + ss.str());
 	}
 	
-	// m_nParamSize based on the m_nParamSize of layers and connections
-	m_nParamSize = 0;
+	// m_paramSize based on the m_paramSize of layers and connections
+	m_paramSize = 0;
 
 	// initialize layers
 	for (int layerIdx=0; layerIdx<m_numLayer; layerIdx++) {
 		RecurrentLayer *layer = initLayer(layerIdx);
-		m_nParamSize += layer->m_nParamSize;
+		m_paramSize += layer->m_paramSize;
 		m_vecLayers.push_back(layer);
 	}	
 
 	// initialize connections
 	for (int connIdx=0; connIdx<m_numLayer-1; connIdx++) {
-		RecConnection *conn = initConnection(connIdx);
-		m_nParamSize += conn->m_nParamSize;
+		RecurrentConnection *conn = initConnection(connIdx);
+		m_paramSize += conn->m_paramSize;
 		m_vecConnections.push_back(conn);
 	}
 
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "LSTM_RNN deconstructor." << endl;
+	DLOG_IF(INFO, DEBUG_RNNLSTM) << "RNNLSTM deconstructor." << endl;
 }
 
-LSTM_RNN::~LSTM_RNN() {
+RNNLSTM::~RNNLSTM() {
 	if (m_numNeuronList != NULL) {delete [] m_numNeuronList;}
 	if (m_layerTypeList != NULL) {delete [] m_layerTypeList;}
 	if (m_connTypeList != NULL) {delete [] m_connTypeList;}
@@ -67,17 +67,17 @@ LSTM_RNN::~LSTM_RNN() {
 	}
 }
 
-RecConnection *LSTM_RNN::initConnection(int connIdx) {
+RecurrentConnection *RNNLSTM::initConnection(int connIdx) {
 	string connType = m_connTypeList[connIdx];
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "connType[" << connIdx << "]:"<< connType << endl;
+	DLOG_IF(INFO, DEBUG_RNNLSTM) << "connType[" << connIdx << "]:"<< connType << endl;
 	
 	RecurrentLayer *preLayer = m_vecLayers[connIdx];
 	RecurrentLayer *postLayer = m_vecLayers[connIdx+1];
-	RecConnection *conn;
+	RecurrentConnection *conn;
 	if (connType == "full_connection") {
-		conn = new FullConnection(preLayer, postLayer);
+		conn = new RNNFullConnection(preLayer, postLayer);
 	} else if (connType == "lstm_connection") {
-		conn = new LSTMConnection(preLayer, postLayer);
+		conn = new RNNLSTMConnection(preLayer, postLayer);
 	} else {
 		LOG(ERROR) << "Error in initConnection." << endl;
 		exit(-1);
@@ -85,13 +85,13 @@ RecConnection *LSTM_RNN::initConnection(int connIdx) {
 	return conn;
 }
 
-RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
+RecurrentLayer *RNNLSTM::initLayer(int layerIdx) {
 	string layerType = m_layerTypeList[layerIdx];
 	int numNeuron = m_numNeuronList[layerIdx];
-	DLOG_IF(INFO, DEBUG_LSTM_RNN) << "layerType[" << layerIdx << "]:"<< layerType << ", numNeuron:" << numNeuron << endl;
+	DLOG_IF(INFO, DEBUG_RNNLSTM) << "layerType[" << layerIdx << "]:"<< layerType << ", numNeuron:" << numNeuron << endl;
 	RecurrentLayer *layer;
 	if (layerType == "input_layer") {
-		layer = new InputLayer(numNeuron, m_maxSeqLen);
+		layer = new RNNInputLayer(numNeuron, m_maxSeqLen);
 	} else if (layerType == "lstm_layer") {
 		int inputSize;
 		if (layerIdx == 0) {
@@ -99,13 +99,13 @@ RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
 		} else {
 			inputSize = m_numNeuronList[layerIdx-1];
 		}
-		layer = new LSTMLayer(numNeuron, m_maxSeqLen, inputSize);
+		layer = new RNNLSTMLayer(numNeuron, m_maxSeqLen, inputSize);
 	} else if (layerType == "softmax_layer") {
 		m_errorType = "cross_entropy_error";
-		layer = new SoftmaxLayer(numNeuron, m_maxSeqLen);
+		layer = new RNNSoftmaxLayer(numNeuron, m_maxSeqLen);
 	} else if (layerType == "mse_layer") {
 		m_errorType = "mean_squared_error";
-		layer = new MSELayer(numNeuron, m_maxSeqLen);
+		layer = new RNNMSELayer(numNeuron, m_maxSeqLen);
 	} else {
 		LOG(ERROR) << "Error in initLayer." << endl;
 		exit(-1);
@@ -113,21 +113,21 @@ RecurrentLayer *LSTM_RNN::initLayer(int layerIdx) {
 	return layer;
 }
 
-void LSTM_RNN::initParams(float *params) {
+void RNNLSTM::initParams(float *params) {
 	float *cursor = params;
 	// layer part
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
 		m_vecLayers[layerIdx]->initParams(cursor);
-		cursor += m_vecLayers[layerIdx]->m_nParamSize;
+		cursor += m_vecLayers[layerIdx]->m_paramSize;
 	}
 	// connection part
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
 		m_vecConnections[connIdx]->initParams(cursor);
-		cursor += m_vecConnections[connIdx]->m_nParamSize;
+		cursor += m_vecConnections[connIdx]->m_paramSize;
 	}
 }
 
-void LSTM_RNN::feedForward(int inputSeqLen) {
+void RNNLSTM::feedForward(int inputSeqLen) {
 	/* feed forward through connections and layers */
 	m_vecLayers[0]->feedForward(inputSeqLen);
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
@@ -136,7 +136,7 @@ void LSTM_RNN::feedForward(int inputSeqLen) {
 	}
 }
 
-void LSTM_RNN::feedBackward(int inputSeqLen) {
+void RNNLSTM::feedBackward(int inputSeqLen) {
 	/* feed backward through connections and layers */
 	m_vecLayers[m_numLayer-1]->feedBackward(inputSeqLen);
 	for (int connIdx=m_numLayer-2; connIdx>=0; --connIdx) {
@@ -145,7 +145,7 @@ void LSTM_RNN::feedBackward(int inputSeqLen) {
 	}
 }
 
-float LSTM_RNN::computeError(float *sampleTarget, int inputSeqLen) {
+float RNNLSTM::computeError(float *sampleTarget, int inputSeqLen) {
 	float sampleError = 0.f;
 	float *targetCursor = sampleTarget;
 	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
@@ -163,10 +163,10 @@ float LSTM_RNN::computeError(float *sampleTarget, int inputSeqLen) {
 	return sampleError;
 }
 
-float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *target, int minibatchSize) {
+float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *target, int minibatchSize) {
 	float error = 0.f;
 	
-	memset(grad, 0x00, sizeof(float)*m_nParamSize);
+	memset(grad, 0x00, sizeof(float)*m_paramSize);
 	bindWeights(params, grad);
 	
 	float *sampleData = data;
@@ -183,9 +183,9 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 		/* feedforward */
 		float *dataCursor = sampleData;
 		// bind input sequence to m_inputActs of the input layer 
-		RecurrentLayer *inputLayer = m_vecLayers[0];
+		RecurrentLayer *RNNInputLayer = m_vecLayers[0];
 		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-			memcpy(inputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_inputSize);
+			memcpy(RNNInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_inputSize);
 			dataCursor += m_inputSize;
 		}
 		// feedForward through connections and layers
@@ -211,7 +211,7 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
 	// float normFactor = 1.f / (float) minibatchSize;
-	// for (int dim=0; dim<m_nParamSize; ++dim) {
+	// for (int dim=0; dim<m_paramSize; ++dim) {
 	// 	grad[dim] *= normFactor;
 	// 	if (grad[dim] < -1.f) {
 	// 		grad[dim] = -1.f;
@@ -224,27 +224,27 @@ float LSTM_RNN::computeGrad(float *grad, float *params, float *data, float *targ
 	return error;
 }
 
-void LSTM_RNN::resetStates(int inputSeqLen) {
+void RNNLSTM::resetStates(int inputSeqLen) {
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
 		m_vecLayers[layerIdx]->resetStates(inputSeqLen);
 	}
 }
 
 // Sequential Part
-void LSTM_RNN::bindWeights(float *params, float *grad) {
+void RNNLSTM::bindWeights(float *params, float *grad) {
 	// define cursors
 	float *paramsCursor = params;
 	float *gradCursor = grad;
 	// layer part
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
 		m_vecLayers[layerIdx]->bindWeights(paramsCursor, gradCursor);
-		paramsCursor += m_vecLayers[layerIdx]->m_nParamSize;
-		gradCursor += m_vecLayers[layerIdx]->m_nParamSize;
+		paramsCursor += m_vecLayers[layerIdx]->m_paramSize;
+		gradCursor += m_vecLayers[layerIdx]->m_paramSize;
 	}
 	// connection part
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
 		m_vecConnections[connIdx]->bindWeights(paramsCursor, gradCursor);
-		paramsCursor += m_vecConnections[connIdx]->m_nParamSize;
-		gradCursor += m_vecConnections[connIdx]->m_nParamSize;
+		paramsCursor += m_vecConnections[connIdx]->m_paramSize;
+		gradCursor += m_vecConnections[connIdx]->m_paramSize;
 	}
 }

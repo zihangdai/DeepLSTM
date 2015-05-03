@@ -1,15 +1,15 @@
-#ifndef __LSTM_RNN_H__
-#define __LSTM_RNN_H__
+#ifndef __RNNLSTM_H__
+#define __RNNLSTM_H__
 
-#include "neural_net.h"
+#include "recurrent_nn.h"
 
 using namespace std;
 
-class LSTM_RNN: public RecurrentNN
+class RNNLSTM: public RecurrentNN
 {
 public:
-	LSTM_RNN(boost::property_tree::ptree *confReader, string section);
-	~LSTM_RNN();
+	RNNLSTM(boost::property_tree::ptree *confReader, string section);
+	~RNNLSTM();
 
 	/* data */
 
@@ -27,7 +27,7 @@ public:
 	
 private:
 	RecurrentLayer *initLayer (int layerIdx);
-	RecConnection *initConnection(int connIdx);	
+	RecurrentConnection *initConnection(int connIdx);	
 };
 
 #endif

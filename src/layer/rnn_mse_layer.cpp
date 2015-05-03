@@ -1,6 +1,6 @@
-#include "mse_layer.h"
+#include "rnn_mse_layer.h"
 
-void MSELayer::feedForward(int inputSeqLen) {
+void RNNMSELayer::feedForward(int inputSeqLen) {
 	double startTime = CycleTimer::currentSeconds();
 	#pragma omp parallel for
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {		
@@ -8,11 +8,11 @@ void MSELayer::feedForward(int inputSeqLen) {
 	}
 	double endTime = CycleTimer::currentSeconds();
 	#ifdef TIME_SPEED
-	printf("MSELayer feedForward time: %f\n", endTime - startTime);
+	printf("RNNMSELayer feedForward time: %f\n", endTime - startTime);
 	#endif
 }
 
-void MSELayer::feedBackward(int inputSeqLen) {
+void RNNMSELayer::feedBackward(int inputSeqLen) {
 	double startTime = CycleTimer::currentSeconds();
 	#pragma omp parallel for
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
@@ -20,7 +20,7 @@ void MSELayer::feedBackward(int inputSeqLen) {
 	}
 	double endTime = CycleTimer::currentSeconds();
 	#ifdef TIME_SPEED
-	printf("MSELayer feedBackward time: %f\n", endTime - startTime);
+	printf("RNNMSELayer feedBackward time: %f\n", endTime - startTime);
 	#endif
 }
 

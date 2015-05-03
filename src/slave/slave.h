@@ -1,12 +1,13 @@
 #ifndef __SLAVE_H__
 #define __SLAVE_H__
 
-#define WORKTAG 1
-#define STOPTAG 2
-#define ROOT 0
+#include "common.h"
 
+#include "rnn_translator.h"
 #include "data_factory.h"
 #include "sequence_data.h"
+
+using namespace std;
 
 void slaveFunc();
 

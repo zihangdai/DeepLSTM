@@ -1,5 +1,5 @@
 #include "common.h"
-#include "lstm_rnn.h"
+#include "RNNLSTM.h"
 
 using namespace std;
 
@@ -16,9 +16,9 @@ int main(int argc, char* argv[]) {
     int max_openmp_threads = confReader->get<int>(section + "max_threads");
     omp_set_num_threads(max_openmp_threads);
 
-    RecurrentNN *net = new LSTM_RNN(confReader, section);
+    RecurrentNN *net = new RNNLSTM(confReader, section);
 
-    int paramSize = net->m_nParamSize;
+    int paramSize = net->m_paramSize;
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];
     float *grad = new float[paramSize];

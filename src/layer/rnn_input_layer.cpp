@@ -1,10 +1,10 @@
-#include "input_layer.h"
+#include "rnn_input_layer.h"
 
 using namespace std;
 
 // #define DEBUG_INPUT_LAYER
 
-void InputLayer::feedForward(int inputSeqLen) {
+void RNNInputLayer::feedForward(int inputSeqLen) {
 	double startTime = CycleTimer::currentSeconds();
 	#pragma omp parallel for
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {		
@@ -12,12 +12,12 @@ void InputLayer::feedForward(int inputSeqLen) {
 	}
 	double endTime = CycleTimer::currentSeconds();
 	#ifdef TIME_SPEED
-	printf("InputLayer feedForward time: %f\n", endTime - startTime);
+	printf("RNNInputLayer feedForward time: %f\n", endTime - startTime);
 	#endif
 }
 
-void InputLayer::feedBackward(int inputSeqLen) {
+void RNNInputLayer::feedBackward(int inputSeqLen) {
 	#ifdef DEBUG_INPUT_LAYER
-	printf("InputLayer feedBackward.\n");
+	printf("RNNInputLayer feedBackward.\n");
 	#endif
 }

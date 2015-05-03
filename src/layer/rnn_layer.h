@@ -16,7 +16,13 @@ using namespace std;
 class RecurrentLayer
 {
 public:
+	// empty constructor 
+	RecurrentLayer() {printf("WARNING: calling the empty RecurrentLayer Constructor.\n");};
+
+	// memory allocation constructor
 	RecurrentLayer(int numNeuron, int maxSeqLen, int inputSize);
+
+	// destructor should handle both cases
 	virtual ~RecurrentLayer();
 
 	/* data */
@@ -24,7 +30,7 @@ public:
 	int m_inputSize;
 	int m_maxSeqLen;
 
-	int m_nParamSize;
+	int m_paramSize;
 
 	vector<float *> m_inputActs;
 	vector<float *> m_outputActs;

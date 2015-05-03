@@ -1,7 +1,7 @@
 #include "sgd.h"
 
 sgdBase::sgdBase(boost::property_tree::ptree *confReader, string section, int paramSize) {
-	m_nParamSize = paramSize;
+	m_paramSize = paramSize;
 	m_stepCount = 0;
 	m_useMomentum = confReader->get<int>(section + "use_momentum");
 	if (m_useMomentum) {
@@ -9,8 +9,8 @@ sgdBase::sgdBase(boost::property_tree::ptree *confReader, string section, int pa
 	} else {
 		m_momentumFactor = 0.f;
 	}
-	m_velocity = new float [m_nParamSize];
-	memset(m_velocity, 0x00, sizeof(float)*m_nParamSize);
+	m_velocity = new float [m_paramSize];
+	memset(m_velocity, 0x00, sizeof(float)*m_paramSize);
 }
 
 sgdBase::~sgdBase() {
@@ -28,7 +28,7 @@ sgdBasic::~sgdBasic () {
 }
 
 void sgdBasic::updateParams (float *params, float *grad, int rank) {
-	for (int i=0; i<m_nParamSize; i++) {
+	for (int i=0; i<m_paramSize; i++) {
 		params[i] -= m_learningRate * grad[i];
 	}
 }

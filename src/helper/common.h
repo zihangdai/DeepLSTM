@@ -18,9 +18,11 @@
 #include <boost/property_tree/ini_parser.hpp>
 
 #include <omp.h>
+#include <mpi.h>
 
 #include <glog/logging.h>
 
+#include <time.h>
 #include "cycle_timer.h"
 
 #define SIMD_WIDTH 8
@@ -28,5 +30,9 @@
 #define BLOCK_SIZE 64
 
 #define SYM_UNIFORM_RAND (2 * ((float) rand() / (RAND_MAX)) - 1)   // rand float in [-1, 1]
+
+#define WORKTAG 1
+#define STOPTAG 2
+#define ROOT 0
 
 #endif

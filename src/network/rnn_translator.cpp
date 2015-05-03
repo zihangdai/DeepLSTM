@@ -8,18 +8,15 @@ using namespace std;
 RNNTranslator::RNNTranslator(boost::property_tree::ptree *confReader, string section) {
 	// init encoder and decoder
 	m_reverseEncoder = confReader->get<int>(section + "reverse_encoder");
-	#ifdef DEBUG_RNN_TRANSLATOR
-	printf("m_reverseEncoder %d.\n", m_reverseEncoder);
-	#endif
 
-	m_encoder = new LSTM_RNN(confReader, "Encoder.");
-	m_decoder = new LSTM_RNN(confReader, "Decoder.");
+	m_encoder = new RNNLSTM(confReader, "Encoder.");
+	m_decoder = new RNNLSTM(confReader, "Decoder.");
 	
 	// compute paramSize
-	m_nParamSize = 0;
-	m_nParamSize += m_encoder->m_nParamSize;
-	m_nParamSize += m_decoder->m_nParamSize;
-	m_nParamSize += m_decoder->m_inputSize * m_encoder->m_outputSize;
+	m_paramSize = 0;
+	m_paramSize += m_encoder->m_paramSize;
+	m_paramSize += m_decoder->m_paramSize;
+	m_paramSize += m_decoder->m_inputSize * m_encoder->m_outputSize;
 
 	#ifdef DEBUG_RNN_TRANSLATOR
 	printf("RNNTranslator constructor finished.\n");
@@ -39,10 +36,10 @@ void RNNTranslator::initParams (float *params) {
 	float *paramsCursor = params;
 	
 	m_encoder->initParams(paramsCursor);
-	paramsCursor += m_encoder->m_nParamSize;
+	paramsCursor += m_encoder->m_paramSize;
 
 	m_decoder->initParams(paramsCursor);
-	paramsCursor += m_decoder->m_nParamSize;
+	paramsCursor += m_decoder->m_paramSize;
 
 	float multiplier = 0.08;
 	for (int i=0; i<m_decoder->m_inputSize * m_encoder->m_outputSize; i++) {
@@ -55,12 +52,12 @@ void RNNTranslator::bindWeights(float *params, float *grad) {
 	float *gradCursor = grad;
 	
 	m_encoder->bindWeights(paramsCursor, gradCursor);
-	paramsCursor += m_encoder->m_nParamSize;
-	gradCursor += m_encoder->m_nParamSize;
+	paramsCursor += m_encoder->m_paramSize;
+	gradCursor += m_encoder->m_paramSize;
 
 	m_decoder->bindWeights(paramsCursor, gradCursor);
-	paramsCursor += m_decoder->m_nParamSize;
-	gradCursor += m_decoder->m_nParamSize;
+	paramsCursor += m_decoder->m_paramSize;
+	gradCursor += m_decoder->m_paramSize;
 
 	m_encodingW = paramsCursor;
 	m_gradEncodingW = gradCursor;
@@ -70,7 +67,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 	int maxThreads = omp_get_max_threads();
 	float error = 0.f;
 	
-	memset(grad, 0x00, sizeof(float)*m_nParamSize);
+	memset(grad, 0x00, sizeof(float)*m_paramSize);
 	bindWeights(params, grad);
 
 	float *sampleData = data;
@@ -121,8 +118,8 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		// set the internal states of the decoder at t = 0 to the internal states of encoder at the last step
 		#pragma omp parallel for
 		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
-			LSTMLayer *enLayer = dynamic_cast<LSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
-			LSTMLayer *deLayer = dynamic_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
+			RNNLSTMLayer *enLayer = dynamic_cast<RNNLSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
+			RNNLSTMLayer *deLayer = dynamic_cast<RNNLSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
 			memcpy(deLayer->m_states[0], enLayer->m_states[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(deLayer->m_outputActs[0], enLayer->m_outputActs[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 		}
@@ -151,8 +148,8 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			deInputLayer->m_inputErrs[0], m_decoder->m_inputSize, 1);
 		#pragma omp parallel for
 		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
-			LSTMLayer *enLayer = dynamic_cast<LSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
-			LSTMLayer *deLayer = dynamic_cast<LSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
+			RNNLSTMLayer *enLayer = dynamic_cast<RNNLSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
+			RNNLSTMLayer *deLayer = dynamic_cast<RNNLSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
 			memcpy(enLayer->m_inGateDelta[encoderSeqLen+1], deLayer->m_inGateDelta[1], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(enLayer->m_forgetGateDelta[encoderSeqLen+1], deLayer->m_forgetGateDelta[1], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(enLayer->m_outGateDelta[encoderSeqLen+1], deLayer->m_outGateDelta[1], sizeof(float) * deLayer->m_numNeuron);
@@ -173,7 +170,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
 	float normFactor = 1.f / (float) minibatchSize;
-	for (int dim=0; dim<m_nParamSize; ++dim) {
+	for (int dim=0; dim<m_paramSize; ++dim) {
 		grad[dim] *= normFactor;
 		if (grad[dim] < -1.f) {
 			grad[dim] = -1.f;

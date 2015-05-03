@@ -1,7 +1,7 @@
-#ifndef __EMBEDDING_LAYER_H__
-#define __EMBEDDING_LAYER_H__
+#ifndef __RNN_EMBEDDING_LAYER_H__
+#define __RNN_EMBEDDING_LAYER_H__
 
-#include "layer.h"
+#include "rnn_layer.h"
 
 using namespace std;
 

@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "matrix.h"
-#include "layer.h"
+#include "rnn_layer.h"
 
 using namespace std;
 
@@ -11,14 +11,14 @@ using namespace std;
 * Recurrent Connection
 ****************************************************************/
 
-class RecConnection
+class RecurrentConnection
 {
 public:
-	RecConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer);
-	virtual ~RecConnection() {};
+	RecurrentConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer);
+	virtual ~RecurrentConnection() {};
 
 	/* data */
-	int m_nParamSize;
+	int m_paramSize;
 
 	float *m_weights;
 	float *m_bias;
@@ -41,11 +41,11 @@ public:
 * Recurrent Full-Connection
 ****************************************************************/
 
-class FullConnection: public RecConnection
+class RNNFullConnection: public RecurrentConnection
 {
 public:
-	FullConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer);
-	~FullConnection() {};
+	RNNFullConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer);
+	~RNNFullConnection() {};
 
 	/* data */
 
@@ -61,11 +61,11 @@ public:
 * Recurrent LSTM-Connection
 ****************************************************************/
 
-class LSTMConnection: public RecConnection
+class RNNLSTMConnection: public RecurrentConnection
 {
 public:
-	LSTMConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer);
-	~LSTMConnection() {};
+	RNNLSTMConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer);
+	~RNNLSTMConnection() {};
 
 	/* data */
 

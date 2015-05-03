@@ -1,12 +1,12 @@
 #define NDEBUG
-#include "lstm_layer.h"
+#include "rnn_lstm_layer.h"
 
 using namespace std;
 
 #define DEBUG_LSTM_LAYER 0
 
-LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLayer(numNeuron, maxSeqLen, inputSize) {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer constructor." << endl;
+RNNLSTMLayer::RNNLSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLayer(numNeuron, maxSeqLen, inputSize) {
+	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "RNNLSTMLayer constructor." << endl;
 
 	// resize all vectors
 	resize(m_maxSeqLen);
@@ -24,27 +24,27 @@ LSTMLayer::LSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLay
 	}
 	m_derivBuf = new float[m_numNeuron];
 
-	// compute m_nParamSize
-	m_nParamSize = 0;
+	// compute m_paramSize
+	m_paramSize = 0;
 
-	m_nParamSize += m_numNeuron * m_inputSize;	// W_i_x : [m_numNeuron x m_inputSize]
-	m_nParamSize += m_numNeuron * m_numNeuron;	// W_i_h : [m_numNeuron x m_numNeuron]
-	m_nParamSize += m_numNeuron;				// W_i_c : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron * m_inputSize;	// W_i_x : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_i_h : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron;				// W_i_c : [m_numNeuron x 1]
 
-	m_nParamSize += m_numNeuron * m_inputSize;	// W_f_x : [m_numNeuron x m_inputSize]
-	m_nParamSize += m_numNeuron * m_numNeuron;	// W_f_c : [m_numNeuron x m_numNeuron]
-	m_nParamSize += m_numNeuron;				// W_f_c : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron * m_inputSize;	// W_f_x : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_f_c : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron;				// W_f_c : [m_numNeuron x 1]
 
-	m_nParamSize += m_numNeuron * m_inputSize;	// W_c_x : [m_numNeuron x m_inputSize]
-	m_nParamSize += m_numNeuron * m_numNeuron;	// W_c_h : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron * m_inputSize;	// W_c_x : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_c_h : [m_numNeuron x m_numNeuron]
 
-	m_nParamSize += m_numNeuron * m_inputSize;	// W_o_x : [m_numNeuron x m_inputSize]
-	m_nParamSize += m_numNeuron * m_numNeuron;	// W_o_h : [m_numNeuron x m_numNeuron]
-	m_nParamSize += m_numNeuron;				// W_o_c : [m_numNeuron x 1]	
+	m_paramSize += m_numNeuron * m_inputSize;	// W_o_x : [m_numNeuron x m_inputSize]
+	m_paramSize += m_numNeuron * m_numNeuron;	// W_o_h : [m_numNeuron x m_numNeuron]
+	m_paramSize += m_numNeuron;				// W_o_c : [m_numNeuron x 1]	
 }
 
-LSTMLayer::~LSTMLayer() {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer deconstructor." << endl;
+RNNLSTMLayer::~RNNLSTMLayer() {
+	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "RNNLSTMLayer deconstructor." << endl;
 
 	for (int seqIdx=0; seqIdx<m_maxSeqLen+2; ++seqIdx) {
 		releaseMem(seqIdx);
@@ -58,15 +58,15 @@ LSTMLayer::~LSTMLayer() {
 	if (m_derivBuf != NULL) {delete [] m_derivBuf;}
 }
 
-void LSTMLayer::initParams(float *params) {
+void RNNLSTMLayer::initParams(float *params) {
 	float multiplier = 0.08; // follow sequence to sequence translation
-	for (int i=0; i<m_nParamSize; i++) {
+	for (int i=0; i<m_paramSize; i++) {
 		params[i] = multiplier * SYM_UNIFORM_RAND;
 		// params[i] = 0.0006;
 	}
 }
 
-void LSTMLayer::resize(int newSeqLen) {
+void RNNLSTMLayer::resize(int newSeqLen) {
 	// three gate units
 	m_inGateActs.resize(newSeqLen+2);
 	m_forgetGateActs.resize(newSeqLen+2);
@@ -87,7 +87,7 @@ void LSTMLayer::resize(int newSeqLen) {
 	m_outGateDelta.resize(newSeqLen+2);
 }
 
-void LSTMLayer::allocateMem(int seqIdx) {
+void RNNLSTMLayer::allocateMem(int seqIdx) {
 	// three gate units
 	m_inGateActs[seqIdx] = new float [m_numNeuron];
 	m_forgetGateActs[seqIdx] = new float [m_numNeuron];
@@ -108,7 +108,7 @@ void LSTMLayer::allocateMem(int seqIdx) {
 	m_outGateDelta[seqIdx] = new float [m_numNeuron];
 }
 
-void LSTMLayer::releaseMem(int seqIdx) {
+void RNNLSTMLayer::releaseMem(int seqIdx) {
 	// three gate units
 	if (m_inGateActs[seqIdx] != NULL) {delete [] m_inGateActs[seqIdx];}
 	if (m_forgetGateActs[seqIdx] != NULL) {delete [] m_forgetGateActs[seqIdx];}
@@ -129,8 +129,8 @@ void LSTMLayer::releaseMem(int seqIdx) {
 	if (m_outGateDelta[seqIdx] != NULL) {delete [] m_outGateDelta[seqIdx];}
 }
 
-void LSTMLayer::reshape(int newSeqLen) {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "reshape LSTMLayer from" << m_maxSeqLen << " to " << newSeqLen << endl;
+void RNNLSTMLayer::reshape(int newSeqLen) {
+	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "reshape RNNLSTMLayer from" << m_maxSeqLen << " to " << newSeqLen << endl;
 	// release mem if needed
 	if (newSeqLen < m_maxSeqLen) {
 		for (int seqIdx=newSeqLen+2; seqIdx<m_maxSeqLen+2; ++seqIdx) {
@@ -152,10 +152,10 @@ void LSTMLayer::reshape(int newSeqLen) {
 	RecurrentLayer::reshape(newSeqLen);
 }
 
-void LSTMLayer::resetStates(int inputSeqLen) {
+void RNNLSTMLayer::resetStates(int inputSeqLen) {
 	/* all states and activations are initialised to zero at t = 0 */
 	/* all delta and error terms are zero at t = T + 1 */
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "LSTMLayer resetStates" << endl;
+	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "RNNLSTMLayer resetStates" << endl;
 
 	#pragma omp parallel for
 	for (int seqIdx=0; seqIdx<inputSeqLen+2; ++seqIdx) {
@@ -183,7 +183,7 @@ void LSTMLayer::resetStates(int inputSeqLen) {
 	RecurrentLayer::resetStates(inputSeqLen);
 }
 
-void LSTMLayer::computeGatesActs(int seqIdx) {
+void RNNLSTMLayer::computeGatesActs(int seqIdx) {
 
 	int maxThreads = omp_get_max_threads();
 	int blockSize;
@@ -228,7 +228,7 @@ void LSTMLayer::computeGatesActs(int seqIdx) {
 	}
 }
 
-void LSTMLayer::feedForward(int inputSeqLen) {
+void RNNLSTMLayer::feedForward(int inputSeqLen) {
 
 	double startTime = CycleTimer::currentSeconds();
 	// parafor each time step from T to 1
@@ -247,7 +247,7 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
 	}
 	double endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedForward paralleled time: " << endTime - startTime << endl;
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "RNNLSTMLayer feedForward paralleled time: " << endTime - startTime << endl;
 
 	startTime = CycleTimer::currentSeconds();
 	// for each time step from 1 to T
@@ -288,10 +288,10 @@ void LSTMLayer::feedForward(int inputSeqLen) {
 		elem_mul(m_outputActs[seqIdx], m_outGateActs[seqIdx], m_preOutGateActs[seqIdx], m_numNeuron);
 	}
 	endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedForward sequential time: " << endTime - startTime << endl;	
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "RNNLSTMLayer feedForward sequential time: " << endTime - startTime << endl;	
 }
 
-void LSTMLayer::computeOutputErrs (int seqIdx) {
+void RNNLSTMLayer::computeOutputErrs (int seqIdx) {
 	#pragma omp parallel for
 	for (int idx=0; idx<4; ++idx) {
 		memset(m_neuronSizeBuf[idx], 0x00, sizeof(float) * m_numNeuron);
@@ -365,7 +365,7 @@ void LSTMLayer::computeOutputErrs (int seqIdx) {
 	#endif
 }
 
-void LSTMLayer::feedbackSequential (int seqIdx) {
+void RNNLSTMLayer::feedbackSequential (int seqIdx) {
 	int blockSize = 16;
 	#pragma omp parallel for
 	for (int i=0; i<m_numNeuron; i+=blockSize) {
@@ -402,7 +402,7 @@ void LSTMLayer::feedbackSequential (int seqIdx) {
 	}
 }
 
-void LSTMLayer::feedBackward(int inputSeqLen) {
+void RNNLSTMLayer::feedBackward(int inputSeqLen) {
 
 	double startTime = CycleTimer::currentSeconds();
 	// sequential for each time step from T to 1
@@ -416,7 +416,7 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		// trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
 		// trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
 		double seqEndTime = CycleTimer::currentSeconds();
-		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward computeOutputErrs time: " << seqEndTime - seqBegTime << endl;
+		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "RNNLSTMLayer feedBackward computeOutputErrs time: " << seqEndTime - seqBegTime << endl;
 
 		seqBegTime = CycleTimer::currentSeconds();
 		// feedbackSequential (seqIdx);		
@@ -450,11 +450,11 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 		sigm_deriv(m_derivBuf, m_inGateActs[seqIdx], m_numNeuron);
 		elem_mul_triple(m_inGateDelta[seqIdx], m_cellStateErrs[seqIdx], m_preGateStates[seqIdx], m_derivBuf, m_numNeuron);
 		seqEndTime = CycleTimer::currentSeconds();
-		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward feedbackSequential time: " << seqEndTime - seqBegTime << endl;		
+		DLOG_EVERY_N(WARNING, 1) << "[" << google::COUNTER << "]" << "RNNLSTMLayer feedBackward feedbackSequential time: " << seqEndTime - seqBegTime << endl;		
 	}
 
 	double endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward sequential time: " << endTime - startTime << endl;
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "RNNLSTMLayer feedBackward sequential time: " << endTime - startTime << endl;
 
 	startTime = CycleTimer::currentSeconds();
 	// omp parafor each time step from T to 1
@@ -485,10 +485,10 @@ void LSTMLayer::feedBackward(int inputSeqLen) {
 	}	
 
 	endTime = CycleTimer::currentSeconds();
-	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "LSTMLayer feedBackward paralleled time: " << endTime - startTime << endl;	
+	DLOG_EVERY_N(INFO, 1) << "[" << google::COUNTER << "]" << "RNNLSTMLayer feedBackward paralleled time: " << endTime - startTime << endl;	
 }
 
-void LSTMLayer::bindWeights(float *params, float *grad) {
+void RNNLSTMLayer::bindWeights(float *params, float *grad) {
 	// weights
 	float *paramCursor = params;
 	

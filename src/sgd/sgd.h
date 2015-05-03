@@ -22,7 +22,7 @@ public:
 protected:
     /* data */
     int m_useMomentum;
-    int m_nParamSize;    
+    int m_paramSize;    
     float m_learningRate;
     float m_momentumFactor;
 
@@ -34,7 +34,7 @@ protected:
     //TODO void truncate (float);
     void printInfo (float *buffer) {
         float sum = 0.f;
-        for (int i=0; i<m_nParamSize; ++i) {
+        for (int i=0; i<m_paramSize; ++i) {
             sum += buffer[i];
         }
         printf("sum: %f\n", sum);

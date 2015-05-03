@@ -10,13 +10,13 @@ using namespace std;
 adagrad::adagrad (boost::property_tree::ptree *confReader, string section, int paramSize) : sgdBase(confReader, section, paramSize) {
 	m_learningRate = confReader->get<float>(section + "learning_rate");
 
-	m_histSquareGrad = new float [m_nParamSize];
-	for (int i=0; i<m_nParamSize; i++) {
+	m_histSquareGrad = new float [m_paramSize];
+	for (int i=0; i<m_paramSize; i++) {
 		m_histSquareGrad[i] = 0.1f;
 	}
 
-	m_residual = m_nParamSize % SIMD_WIDTH;
-	m_stopSIMD = m_nParamSize - m_residual;
+	m_residual = m_paramSize % SIMD_WIDTH;
+	m_stopSIMD = m_paramSize - m_residual;
 
 }
 
@@ -31,7 +31,7 @@ void adagrad::updateParams (float *params, float *grad, int rank) {
 
 	if (!SIMD) {
 		#pragma omp parallel for
-		for (int i=0; i<m_nParamSize; i++) {
+		for (int i=0; i<m_paramSize; i++) {
 			m_histSquareGrad[i] += grad[i] * grad[i];
 			m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
 			params[i] += m_velocity[i];
@@ -61,7 +61,7 @@ void adagrad::updateParams (float *params, float *grad, int rank) {
 			_mm256_storeu_ps(m_histSquareGrad + i, vec_hist);
 		}
 
-		for (int i=m_stopSIMD; i<m_nParamSize; i++) {
+		for (int i=m_stopSIMD; i<m_paramSize; i++) {
 			m_histSquareGrad[i] += grad[i] * grad[i];
 			m_velocity[i] = m_momentumFactor * m_velocity[i] - m_learningRate * grad[i] / sqrt(m_histSquareGrad[i]);
 			params[i] += m_velocity[i];

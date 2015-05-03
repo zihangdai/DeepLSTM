@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 
     RNNTranslator *translator = new RNNTranslator(confReader, section);
 
-    int paramSize = translator->m_nParamSize;
+    int paramSize = translator->m_paramSize;
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];
     float *grad = new float[paramSize];

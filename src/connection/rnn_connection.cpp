@@ -1,12 +1,12 @@
-#include "connection.h"
+#include "rnn_connection.h"
 
 using namespace std;
 
 // #define DEBUG_CONNECTION
 
-RecConnection::RecConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) {
+RecurrentConnection::RecurrentConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) {
 	#ifdef DEBUG_CONNECTION
-	printf("RecConnection constructor (%d, %d).\n", preLayer->m_numNeuron, postLayer->m_numNeuron);
+	printf("RecurrentConnection constructor (%d, %d).\n", preLayer->m_numNeuron, postLayer->m_numNeuron);
 	#endif
 	m_preLayer = preLayer;
 	m_postLayer = postLayer;
@@ -16,25 +16,25 @@ RecConnection::RecConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer
 * Recurrent Full-Connection
 ****************************************************************/
 
-FullConnection::FullConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) : RecConnection(preLayer, postLayer) {	
+RNNFullConnection::RNNFullConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) : RecurrentConnection(preLayer, postLayer) {	
 	// weights
-	m_nParamSize = m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
+	m_paramSize = m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
 	// bias
-	m_nParamSize += m_postLayer->m_numNeuron;
+	m_paramSize += m_postLayer->m_numNeuron;
 	#ifdef DEBUG_CONNECTION
-	printf("FullConnection constructor %d.\n", m_nParamSize);
+	printf("RNNFullConnection constructor %d.\n", m_paramSize);
 	#endif
 }
 
-void FullConnection::initParams(float *params) {	
+void RNNFullConnection::initParams(float *params) {	
 	float multiplier = 0.08;
-	for (int i=0; i<m_nParamSize; ++i) {
+	for (int i=0; i<m_paramSize; ++i) {
 		params[i] = multiplier * SYM_UNIFORM_RAND;
 		// params[i] = 0.0003;
 	}
 }
 
-void FullConnection::bindWeights(float *params, float *grad) {
+void RNNFullConnection::bindWeights(float *params, float *grad) {
 	float *paramsCursor = params;
 	float *gradCursor = grad;
 	// weights
@@ -47,7 +47,7 @@ void FullConnection::bindWeights(float *params, float *grad) {
 	m_gradBias = gradCursor;
 }
 
-void FullConnection::feedForward(int inputSeqLen) {
+void RNNFullConnection::feedForward(int inputSeqLen) {
 	int preNumNeuron = m_preLayer->m_numNeuron;
 	int postNumNeuron = m_postLayer->m_numNeuron;	
 	double startTime = CycleTimer::currentSeconds();
@@ -61,11 +61,11 @@ void FullConnection::feedForward(int inputSeqLen) {
 	}
 	double endTime = CycleTimer::currentSeconds();
 	#ifdef TIME_SPEED
-	printf("FullConnection feedForward time: %f\n", endTime - startTime);
+	printf("RNNFullConnection feedForward time: %f\n", endTime - startTime);
 	#endif
 }
 
-void FullConnection::feedBackward(int inputSeqLen) {
+void RNNFullConnection::feedBackward(int inputSeqLen) {
 	int preNumNeuron = m_preLayer->m_numNeuron;
 	int postNumNeuron = m_postLayer->m_numNeuron;
 	double startTime = CycleTimer::currentSeconds();
@@ -80,7 +80,7 @@ void FullConnection::feedBackward(int inputSeqLen) {
 	}
 	double endTime = CycleTimer::currentSeconds();
 	#ifdef TIME_SPEED
-	printf("FullConnection feedBackward time: %f\n", endTime - startTime);
+	printf("RNNFullConnection feedBackward time: %f\n", endTime - startTime);
 	#endif
 }
 
@@ -89,14 +89,14 @@ void FullConnection::feedBackward(int inputSeqLen) {
 * Recurrent LSTM-Connection
 ****************************************************************/
 
-LSTMConnection::LSTMConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) : RecConnection(preLayer, postLayer) {
+RNNLSTMConnection::RNNLSTMConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) : RecurrentConnection(preLayer, postLayer) {
 	#ifdef DEBUG_CONNECTION
-	printf("LSTMConnection constructor.\n");
+	printf("RNNLSTMConnection constructor.\n");
 	#endif
-	m_nParamSize = 0;
+	m_paramSize = 0;
 }
 
-void LSTMConnection::feedForward(int inputSeqLen) {
+void RNNLSTMConnection::feedForward(int inputSeqLen) {
 	// independent loop -> use OpenMP potentially
 	int inputSize = m_preLayer->m_numNeuron;
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
@@ -106,7 +106,7 @@ void LSTMConnection::feedForward(int inputSeqLen) {
 	}
 }
 
-void LSTMConnection::feedBackward(int inputSeqLen) {
+void RNNLSTMConnection::feedBackward(int inputSeqLen) {
 	// independent loop -> use OpenMP potentially
 	int errorSize = m_preLayer->m_numNeuron;
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {

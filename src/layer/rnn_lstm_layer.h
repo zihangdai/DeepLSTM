@@ -1,15 +1,15 @@
-#ifndef __LSTM_LAYER_H__
-#define __LSTM_LAYER_H__
+#ifndef __RNN_LSTM_LAYER_H__
+#define __RNN_LSTM_LAYER_H__
 
-#include "layer.h"
+#include "rnn_layer.h"
 
 using namespace std;
 
-class LSTMLayer: public RecurrentLayer
+class RNNLSTMLayer: public RecurrentLayer
 {
 public:
-	LSTMLayer(int numNeuron, int maxSeqLen, int inputSize);
-	~LSTMLayer();
+	RNNLSTMLayer(int numNeuron, int maxSeqLen, int inputSize);
+	~RNNLSTMLayer();
 
 	/* data */	
 

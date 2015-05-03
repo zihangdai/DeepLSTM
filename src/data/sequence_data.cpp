@@ -1,6 +1,4 @@
 #include "sequence_data.h"
-#include <iostream>
-#include <fstream>
 
 using namespace std;
 
@@ -19,39 +17,39 @@ SequenceData::SequenceData(boost::property_tree::ptree *confReader, string secti
 	m_input = new float[m_numSample * m_inputSeqLen * m_inputDim];
 	m_output = new float[m_numSample * m_outputSeqLen * m_outputDim];
 
-    ifstream inputfile (inputFile.c_str(), ios::in|ios::binary);
-    if (inputfile.is_open()) {
-        inputfile.seekg (0, ios::end);
-        int size = inputfile.tellg();
-        if (size != sizeof(float) * m_numSample * m_inputSeqLen * m_inputDim) {
-            printf("Wrong memory size for sequence input\n");
-            inputfile.close();
-            exit(1);
-        }
-        inputfile.seekg (0, ios::beg);
-        inputfile.read ((char *)m_input, size);
-        inputfile.close();
-    } else {
-        printf("Failed to open inputfile\n");
-        exit(1);
-    }
+	ifstream inputfile (inputFile.c_str(), ios::in|ios::binary);
+	if (inputfile.is_open()) {
+		inputfile.seekg (0, ios::end);
+		int size = inputfile.tellg();
+		if (size != sizeof(float) * m_numSample * m_inputSeqLen * m_inputDim) {
+			printf("Wrong memory size for sequence input\n");
+			inputfile.close();
+			exit(1);
+		}
+		inputfile.seekg (0, ios::beg);
+		inputfile.read ((char *)m_input, size);
+		inputfile.close();
+	} else {
+		printf("Failed to open inputfile\n");
+		exit(1);
+	}
 
-    ifstream outputfile (outputFile.c_str(), ios::in|ios::binary);
-    if (outputfile.is_open()) {
-        outputfile.seekg (0, ios::end);
-        int size = outputfile.tellg();
-        if (size != sizeof(float) * m_numSample * m_outputSeqLen * m_outputDim) {
-            printf("Wrong memory size for sequence output\n");
-            outputfile.close();
-            exit(1);
-        }
-        outputfile.seekg (0, ios::beg);
-        outputfile.read ((char *)m_output, size);
-        outputfile.close();
-    } else {
-        printf("Failed to open outputfile\n");
-        exit(1);
-    }
+	ifstream outputfile (outputFile.c_str(), ios::in|ios::binary);
+	if (outputfile.is_open()) {
+		outputfile.seekg (0, ios::end);
+		int size = outputfile.tellg();
+		if (size != sizeof(float) * m_numSample * m_outputSeqLen * m_outputDim) {
+			printf("Wrong memory size for sequence output\n");
+			outputfile.close();
+			exit(1);
+		}
+		outputfile.seekg (0, ios::beg);
+		outputfile.read ((char *)m_output, size);
+		outputfile.close();
+	} else {
+		printf("Failed to open outputfile\n");
+		exit(1);
+	}
 }
 
 SequenceData::~SequenceData() {
@@ -72,7 +70,7 @@ int SequenceData::getLabelSize() {
 
 void SequenceData::getDataBatch(float* label, float* data, int* indices, int num) {
 	for (int i=0; i<num; ++i) {
-		int index = indices[i];		
+		int index = indices[i];
 		memcpy(data + i * m_inputSeqLen * m_inputDim, 
 			m_input + index * m_inputSeqLen * m_inputDim, 
 			sizeof(float) * m_inputSeqLen * m_inputDim);

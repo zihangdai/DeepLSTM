@@ -70,9 +70,16 @@ void tanh_deriv (float *deriv_res, float *tanh_res, int dim) {
 }
 
 void softmax (float *result, float *input, int dim) {
+	float maxInput = input[0];
+	for (int i=1; i<dim; i++) {
+		if (maxInput < input[i]) {
+			maxInput = input[i];
+		}
+	}
+
 	float sum = 0.f;
 	for (int i=0; i<dim; i++) {
-		result[i] = exp(input[i]);
+		result[i] = exp(input[i] - maxInput);
 		sum += result[i];
 	}
 	for (int i=0; i<dim; i++) {

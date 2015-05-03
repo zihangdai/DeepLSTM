@@ -1,20 +1,20 @@
-#ifndef __INPUT_LAYER_H__
-#define __INPUT_LAYER_H__
+#ifndef __RNN_INPUT_LAYER_H__
+#define __RNN_INPUT_LAYER_H__
 
-#include "layer.h"
+#include "rnn_layer.h"
 
 /****************************************************************
 * Input Layer
 ****************************************************************/
-class InputLayer : public RecurrentLayer
+class RNNInputLayer : public RecurrentLayer
 {
 public:
-	InputLayer(int numNeuron, int maxSeqLen) : RecurrentLayer(numNeuron, maxSeqLen, numNeuron) {
+	RNNInputLayer(int numNeuron, int maxSeqLen) : RecurrentLayer(numNeuron, maxSeqLen, numNeuron) {
 		#ifdef DEBUG_LAYER
-		printf("InputLayer constructor.\n");
+		printf("RNNInputLayer constructor.\n");
 		#endif
 	};
-	~InputLayer() {};
+	~RNNInputLayer() {};
 
 	/* data */
 	void feedForward(int inputSeqLen);

@@ -1,4 +1,4 @@
-#include "layer.h"
+#include "rnn_layer.h"
 
 using namespace std;
 
@@ -20,7 +20,7 @@ RecurrentLayer::RecurrentLayer (int numNeuron, int maxSeqLen, int inputSize) {
 		allocateMem(seqIdx);
 	}
 
-	m_nParamSize = 0;
+	m_paramSize = 0;
 }
 
 RecurrentLayer::~RecurrentLayer () {

@@ -1,6 +1,0 @@
-default:
-	g++-mp-4.7 -O3 -DMKL_ILP64 -m64 -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -fopenmp main.cpp lstm_rnn.cpp ../layer/layer.cpp ../layer/lstm_layer.cpp ../layer/softmax_layer.cpp ../config/chameleon.cpp ../config/configfile.cpp ../config/confreader.cpp ../helper/*.cpp ../connection/connection.cpp -I../config -I../layer -I../helper -I../connection -I../config -I../openblas/include -L../openblas/lib -I/opt/intel/composerxe/mkl/include -L/opt/intel/composerxe/mkl/lib
-
-
-#g++-mp-4.7 -O3 -DMKL_ILP64 -m64 -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -fopenmp main.cpp lstm_rnn.cpp ../layer/layer.cpp ../layer/lstm_layer.cpp ../layer/softmax_layer.cpp ../config/chameleon.cpp ../config/configfile.cpp ../config/confreader.cpp ../helper/*.cpp ../connection/connection.cpp -I../config -I../layer -I../helper -I../connection -I../config -I../openblas/include -L../openblas/lib -I/opt/intel/composerxe/mkl/include -L/opt/intel/composerxe/mkl/lib
-#g++-mp-4.7 -O3 -m64 -lopenblas -lpthread -lm -fopenmp main.cpp lstm_rnn.cpp ../layer/layer.cpp ../layer/lstm_layer.cpp ../layer/softmax_layer.cpp ../config/chameleon.cpp ../config/configfile.cpp ../config/confreader.cpp ../helper/*.cpp ../connection/connection.cpp -I../config -I../layer -I../helper -I../connection -I../config -I../openblas/include -L../openblas/lib

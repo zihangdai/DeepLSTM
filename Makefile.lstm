@@ -7,7 +7,7 @@ LIBDIR=lib
 CXX=g++
 
 # compile flags
-CXXFLAGS+=-O3 -m64 -mavx -fopenmp#Wa,-q
+CXXFLAGS+=-O3 -m64 -mavx -fopenmp
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
@@ -16,7 +16,7 @@ INCFLAGS+=-I$(LIBDIR)/glog/include
 INCFLAGS+=-I$(HOME)/tool/openmpi/include
 
 # link flags
-LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -lglog  #-lmpi -lmpi_cxx
+LDFLAGS+=-lgfortran -lpthread -lopenblas -lm -lglog 
 LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 
@@ -42,7 +42,7 @@ SRCS=\
 	$(SRCDIR)/layer/softmax_layer.cpp \
 	$(SRCDIR)/layer/mse_layer.cpp \
 	$(SRCDIR)/connection/connection.cpp \
-	$(SRCDIR)/network/lstm_rnn.cpp
+	$(SRCDIR)/network/rnn_lstm.cpp
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)
