@@ -55,6 +55,8 @@ int main(int argc, char const *argv[]) {
 	RecurrentForwardNN *rnnfnn = new RecurrentForwardNN(confReader, section);
 
 	int paramSize = rnnfnn->m_paramSize;
+    printf("paramSize: %d\n", paramSize);
+    
 	float *params = new float[paramSize];
 	float *grad   = new float[paramSize];
 	

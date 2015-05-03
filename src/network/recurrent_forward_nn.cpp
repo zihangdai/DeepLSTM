@@ -57,13 +57,15 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 			softmax(m_outputBuf, m_outputBuf, m_targetSize);
 		}
 
+		memset(m_outputDelta, 0x00, sizeof(float) * m_targetSize);
+		elem_sub(m_outputDelta, m_outputBuf[seqIdx], sampleTarget, m_targetSize);
+		
 		// compute error
 		float maxProb = 0.f;
 		int corrIdx = -1, predIdx = -1;
-		for (int i=0; i<m_targetSize; ++i) {
-			m_outputDelta[i] = m_outputBuf[i] - sampleTarget[i];
+		for (int i=0; i<m_targetSize; ++i) {			
 			if (m_taskType == "classification") {
-				error += sampleTarget[i] * log(m_outputBuf[i]);
+				error += sampleTarget[i] * log(m_outputBuf[i]);				
 				if (sampleTarget[i] == 1) {
 					corrIdx = i;
 				}
@@ -95,6 +97,11 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 	float normFactor = 1.f / (float) minibatchSize;
 	for (int dim=0; dim<m_paramSize; ++dim) {
 		grad[dim] *= normFactor;
+		if (grad[dim] < -1.f) {
+			grad[dim] = -1.f;
+		} else if (grad[dim] > 1.f) {
+			grad[dim] = 1.f;
+		}
 	}
 	error *= normFactor;
 
