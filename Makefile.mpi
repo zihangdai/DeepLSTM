@@ -13,17 +13,18 @@ ifeq ($(UNAME), Linux)
 	CXXFLAGS+=-mavx
 endif
 
-
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
 INCFLAGS+=-I$(LIBDIR)/openblas/include
 INCFLAGS+=-I$(LIBDIR)/glog/include
 INCFLAGS+=-I$(HOME)/tool/openmpi/include
+INCFLAGS+=-I$(HOME)/tool/openblas/openblas/include
 
 # link flags
 LDFLAGS+=-lmpi -lmpi_cxx -lgfortran -lpthread -lopenblas -lglog
 LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
+LDFLAGS+=-L$(HOME)/tool/openblas/openblas/lib
 
 # vpath
 VPATH = $(SRCDIR) \

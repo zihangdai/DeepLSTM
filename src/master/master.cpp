@@ -1,41 +1,41 @@
 #include "master.h"
 #include "rnn_translator.h"
 
-// sgdBase * initSgdSolver (boost::property_tree::ptree *confReader, string section, int paramSize) {
-// 	int solverType = confReader->get<int>(section+"solver_type");
-// 	sgdBase *sgdSolver;
-// 	switch (solverType) {
-// 		// sgdBasic
-// 		case 0: {
-// 			printf("Init basic sgd solver.\n");
-// 			sgdSolver = new sgdBasic(confReader, section, paramSize);
-// 			break;
-// 		}
-// 		// adagrad
-// 		case 1: {
-// 			printf("Init adagrad solver.\n");
-// 			sgdSolver = new adagrad(confReader, section, paramSize);
-// 			break;
-// 		}
-// 		// adadelta
-// 		case 2: {
-// 			sgdSolver = new adadelta(confReader, section, paramSize);
-// 			printf("Init adadelta solver.\n");
-// 			break;
-// 		}
-// 		// rmsprop
-// 		case 3: {
-// 			sgdSolver = new rmsprop(confReader, section, paramSize);
-// 			printf("Init rmsprop solver.\n");
-// 			break;
-// 		}
-// 		default: {
-// 			printf("Error solver type.\n");
-// 			exit(-1);
-// 		}
-// 	}
-// 	return sgdSolver;
-// }
+sgdBase * initSgdSolver (boost::property_tree::ptree *confReader, string section, int paramSize) {
+	int solverType = confReader->get<int>(section+"solver_type");
+	sgdBase *sgdSolver;
+	switch (solverType) {
+		// sgdBasic
+		case 0: {
+			printf("Init basic sgd solver.\n");
+			sgdSolver = new sgdBasic(confReader, section, paramSize);
+			break;
+		}
+		// adagrad
+		case 1: {
+			printf("Init adagrad solver.\n");
+			sgdSolver = new adagrad(confReader, section, paramSize);
+			break;
+		}
+		// adadelta
+		case 2: {
+			sgdSolver = new adadelta(confReader, section, paramSize);
+			printf("Init adadelta solver.\n");
+			break;
+		}
+		// rmsprop
+		case 3: {
+			sgdSolver = new rmsprop(confReader, section, paramSize);
+			printf("Init rmsprop solver.\n");
+			break;
+		}
+		default: {
+			printf("Error solver type.\n");
+			exit(-1);
+		}
+	}
+	return sgdSolver;
+}
 
 void masterFunc () {
 	/****************************************************************
