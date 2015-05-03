@@ -91,8 +91,16 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 		sampleTarget += m_targetSize;
 	}
 
+	// normalization by number of input sequences and clip gradients to [-1, 1]
+	float normFactor = 1.f / (float) minibatchSize;
+	for (int dim=0; dim<m_paramSize; ++dim) {
+		grad[dim] *= normFactor;
+	}
+	error *= normFactor;
+
 	printf("Correct rate: %d/%d=%f\n", int(corrCount), minibatchSize, corrCount / float(minibatchSize));
 
+	return error;
 }
 	
 void RecurrentForwardNN::initParams (float *params) {

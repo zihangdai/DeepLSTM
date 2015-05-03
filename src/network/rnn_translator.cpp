@@ -178,7 +178,7 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			grad[dim] = 1.f;
 		}
 	}
-	error *= normFactor;	
+	error *= normFactor;
 
 	return error;
 }

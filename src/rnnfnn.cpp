@@ -64,6 +64,8 @@ int main(int argc, char const *argv[]) {
 	omp_set_num_threads(max_openmp_threads);
 	openblas_set_num_threads(1);
 
+    printf("openmp threads: %d, %d\n", omp_get_max_threads(), max_openmp_threads);
+
 	// Step 2: Initialize SGD Solver
 	section = "SGD.";
 	sgdBase *sgdSolver = initSgdSolver(confReader, section, paramSize);
