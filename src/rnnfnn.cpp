@@ -78,6 +78,7 @@ int main(int argc, char const *argv[]) {
 	int numSample = dataset->getNumberOfData();
 	int dataSize  = dataset->getDataSize();
 	int labelSize = dataset->getLabelSize();
+    printf("Finish load data\n");
 
 	float *data  = new float[batchSize * dataSize];
 	float *label = new float[batchSize * labelSize];
