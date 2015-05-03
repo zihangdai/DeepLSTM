@@ -36,12 +36,12 @@ Mnist::Mnist(boost::property_tree::ptree *confReader, string section) {
             dataFile.read((char *)(&temp8), sizeof(char));
             temp = temp8;
             m_input[i * m_inputDim + j] = float(temp) / 255.f;
-            printf("%f\t", m_input[i * m_inputDim + j]);
+            // printf("%f\t", m_input[i * m_inputDim + j]);
         }
         labelFile.read((char *)(&temp8), sizeof(char));
         temp = temp8;
         m_output[i * m_outputDim + temp] = 1;
-        printf("\n%d\n", temp);
+        // printf("\n%d\n", temp);
     }
 
     dataFile.close();

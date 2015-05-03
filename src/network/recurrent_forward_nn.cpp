@@ -15,8 +15,8 @@ RecurrentForwardNN::RecurrentForwardNN(boost::property_tree::ptree *confReader, 
 	m_rnn = new RNNLSTM(confReader, "RNN.");
 
 	m_paramSize = m_rnn->m_paramSize; // m_rnn
-	m_paramSize += m_targetSize * m_rnn->m_outputSize; // m_W
-	m_paramSize += m_targetSize; // m_bias
+	// m_paramSize += m_targetSize * m_rnn->m_outputSize; // m_W
+	// m_paramSize += m_targetSize; // m_bias
 
 }
 
@@ -141,14 +141,14 @@ void RecurrentForwardNN::bindWeights(float *params, float *grad) {
 	paramsCursor += m_rnn->m_paramSize;
 	gradCursor += m_rnn->m_paramSize;
 
-	// Weights
-	m_W = paramsCursor;
-	m_gradW = gradCursor;
+	// // Weights
+	// m_W = paramsCursor;
+	// m_gradW = gradCursor;
 
-	paramsCursor += m_targetSize * m_rnn->m_outputSize;
-	gradCursor += m_targetSize * m_rnn->m_outputSize;
+	// paramsCursor += m_targetSize * m_rnn->m_outputSize;
+	// gradCursor += m_targetSize * m_rnn->m_outputSize;
 
-	// bias
-	m_bias = paramsCursor;
-	m_gradBias = gradCursor;
+	// // bias
+	// m_bias = paramsCursor;
+	// m_gradBias = gradCursor;
 }
