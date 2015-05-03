@@ -133,14 +133,14 @@ void RecurrentForwardNN::bindWeights(float *params, float *grad) {
 	paramsCursor += m_rnn->m_paramSize;
 	gradCursor += m_rnn->m_paramSize;
 
-	// // Weights
-	// m_W = paramsCursor;
-	// m_gradW = gradCursor;
+	// Weights
+	m_W = paramsCursor;
+	m_gradW = gradCursor;
 
-	// paramsCursor += m_targetSize * m_rnn->m_outputSize;
-	// gradCursor += m_targetSize * m_rnn->m_outputSize;
+	paramsCursor += m_targetSize * m_rnn->m_outputSize;
+	gradCursor += m_targetSize * m_rnn->m_outputSize;
 
-	// // bias
-	// m_bias = paramsCursor;
-	// m_gradBias = gradCursor;
+	// bias
+	m_bias = paramsCursor;
+	m_gradBias = gradCursor;
 }
