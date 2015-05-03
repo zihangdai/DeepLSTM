@@ -67,10 +67,10 @@ OBJS=$(SRCS:%.cpp=%.o)
 # .PHONY: 
 
 # all comes first in the file, so it is the default 
-all : RNNTranslator_MPI
+all : RNNTranslatorMPI
 
 # compile main program parallelSGD from all objs 
-RNNTranslator: $(OBJS)
+RNNTranslatorMPI: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) $(LDFLAGS) $^ -o $@
 
 # order-only prerequisites for OBJDIR
@@ -84,4 +84,4 @@ $(OBJDIR):
 
 # clean
 clean:
-	rm -rf $(OBJS) RNNTranslator_MPI
+	rm -rf $(OBJS) RNNTranslatorMPI

@@ -29,18 +29,18 @@ RNNLSTMLayer::RNNLSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : Recurr
 
 	m_paramSize += m_numNeuron * m_inputSize;	// W_i_x : [m_numNeuron x m_inputSize]
 	m_paramSize += m_numNeuron * m_numNeuron;	// W_i_h : [m_numNeuron x m_numNeuron]
-	m_paramSize += m_numNeuron;				// W_i_c : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron;					// W_i_c : [m_numNeuron x 1]
 
 	m_paramSize += m_numNeuron * m_inputSize;	// W_f_x : [m_numNeuron x m_inputSize]
 	m_paramSize += m_numNeuron * m_numNeuron;	// W_f_c : [m_numNeuron x m_numNeuron]
-	m_paramSize += m_numNeuron;				// W_f_c : [m_numNeuron x 1]
+	m_paramSize += m_numNeuron;					// W_f_c : [m_numNeuron x 1]
 
 	m_paramSize += m_numNeuron * m_inputSize;	// W_c_x : [m_numNeuron x m_inputSize]
 	m_paramSize += m_numNeuron * m_numNeuron;	// W_c_h : [m_numNeuron x m_numNeuron]
 
 	m_paramSize += m_numNeuron * m_inputSize;	// W_o_x : [m_numNeuron x m_inputSize]
 	m_paramSize += m_numNeuron * m_numNeuron;	// W_o_h : [m_numNeuron x m_numNeuron]
-	m_paramSize += m_numNeuron;				// W_o_c : [m_numNeuron x 1]	
+	m_paramSize += m_numNeuron;					// W_o_c : [m_numNeuron x 1]	
 }
 
 RNNLSTMLayer::~RNNLSTMLayer() {

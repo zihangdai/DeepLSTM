@@ -18,7 +18,7 @@
 #include <boost/property_tree/ini_parser.hpp>
 
 #include <omp.h>
-// #include <mpi.h>
+#include <mpi.h>
 
 #include <glog/logging.h>
 

@@ -19,7 +19,6 @@ public:
 
 	virtual void getDataBatch(float* label, float* data, int* indices, int num) {};
 
-protected:
 	int m_numSample;
 
 	float *m_input;
