@@ -57,6 +57,7 @@ SRCS=\
 	$(SRCDIR)/network/rnn_translator.cpp \
 	$(SRCDIR)/master/master.cpp \
 	$(SRCDIR)/slave/slave.cpp \
+	$(SRCDIR)/data/mnist.cpp \
 	$(SRCDIR)/data/sequence_data.cpp
 
 # obj files using patsubst matching
