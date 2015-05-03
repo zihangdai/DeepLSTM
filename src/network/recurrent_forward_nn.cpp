@@ -58,7 +58,7 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 		}
 
 		memset(m_outputDelta, 0x00, sizeof(float) * m_targetSize);
-		elem_sub(m_outputDelta, m_outputBuf[seqIdx], sampleTarget, m_targetSize);
+		elem_sub(m_outputDelta, m_outputBuf, sampleTarget, m_targetSize);
 		
 		// compute error
 		float maxProb = 0.f;
