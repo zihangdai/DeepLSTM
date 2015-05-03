@@ -169,7 +169,8 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 	}
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
-	float normFactor = 1.f / (float) minibatchSize;
+	float normFactor = 1.f / (float) minibatchSize;	
+	#pragma omp parallel for
 	for (int dim=0; dim<m_paramSize; ++dim) {
 		grad[dim] *= normFactor;
 		if (grad[dim] < -1.f) {

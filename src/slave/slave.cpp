@@ -41,13 +41,12 @@ void slaveFunc(){
 	int batchSize = confReader->get<int>(section + "training_batch_size");
 
 	// step 1: Init Translator and allocate related memorys
+	openblas_set_num_threads(1);
 	section = "Translator.";
 	RNNTranslator *translator = new RNNTranslator(confReader, section);
 	
 	int max_openmp_threads = confReader->get<int>(section + "max_threads");
-	omp_set_num_threads(max_openmp_threads);
-	openblas_set_num_threads(1);
-	
+	omp_set_num_threads(max_openmp_threads);	
 
 	int paramSize;
 	MPI_Bcast(&paramSize, 1, MPI_INT, ROOT, MPI_COMM_WORLD);

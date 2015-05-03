@@ -5,7 +5,7 @@ LIBDIR=lib
 UNAME=$(shell uname)
 
 # compiler
-CXX=mpic++
+CXX=g++
 
 # compile flags
 CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q
@@ -16,12 +16,13 @@ endif
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
+INCFLAGS+=-I/usr/local/include
 INCFLAGS+=-I$(LIBDIR)/openblas/include
 INCFLAGS+=-I$(LIBDIR)/glog/include
 INCFLAGS+=-I$(HOME)/tool/openmpi/include
 
 # link flags
-LDFLAGS+=-lmpi -lmpi_cxx -lgfortran -lpthread -lopenblas -lglog
+LDFLAGS+=-lgfortran -lpthread -lopenblas -lglog -lmpi -lmpi_cxx
 LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 
@@ -33,13 +34,11 @@ VPATH = $(SRCDIR) \
 	$(SRCDIR)/layer \
 	$(SRCDIR)/connection \
 	$(SRCDIR)/network \
-	$(SRCDIR)/master \
-	$(SRCDIR)/slave \
 	$(SRCDIR)/data \
 
 # src files
 SRCS=\
-	$(SRCDIR)/mpi_translator.cpp \
+	$(SRCDIR)/rnnfnn.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \
@@ -53,10 +52,9 @@ SRCS=\
 	$(SRCDIR)/layer/rnn_mse_layer.cpp \
 	$(SRCDIR)/connection/rnn_connection.cpp \
 	$(SRCDIR)/network/rnn_lstm.cpp \
-	$(SRCDIR)/network/rnn_translator.cpp \
-	$(SRCDIR)/master/master.cpp \
-	$(SRCDIR)/slave/slave.cpp \
-	$(SRCDIR)/data/sequence_data.cpp
+	$(SRCDIR)/network/recurrent_forward_nn.cpp \
+	$(SRCDIR)/data/sequence_data.cpp \
+	$(SRCDIR)/data/mnist.cpp
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)
@@ -65,10 +63,10 @@ OBJS=$(SRCS:%.cpp=%.o)
 # .PHONY: 
 
 # all comes first in the file, so it is the default 
-all : RNNTranslator
+all : RNNFNN
 
 # compile main program parallelSGD from all objs 
-RNNTranslator: $(OBJS)
+RNNFNN: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) $(LDFLAGS) $^ -o $@
 
 # order-only prerequisites for OBJDIR
@@ -82,4 +80,4 @@ $(OBJDIR):
 
 # clean
 clean:
-	rm -rf $(OBJS) RNNTranslator
+	rm -rf $(OBJS) RNNFNN

@@ -53,10 +53,10 @@ void masterFunc () {
 	int nSendMax = confReader->get<int>(section + "max_iteration_number");
 
 	// Step 1.2 Initialize model
+	openblas_set_num_threads(1);
 	section = "Translator.";
 	int max_openmp_threads = confReader->get<int>(section + "max_threads");
-	omp_set_num_threads(max_openmp_threads);
-	openblas_set_num_threads(1);
+	omp_set_num_threads(max_openmp_threads);	
 	RNNTranslator *translator = new RNNTranslator(confReader, section);
 
 	int paramSize = translator->m_paramSize;
