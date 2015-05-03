@@ -15,8 +15,8 @@ RecurrentForwardNN::RecurrentForwardNN(boost::property_tree::ptree *confReader, 
 	m_rnn = new RNNLSTM(confReader, "RNN.");
 
 	m_paramSize = m_rnn->m_paramSize; // m_rnn
-	// m_paramSize += m_targetSize * m_rnn->m_outputSize; // m_W
-	// m_paramSize += m_targetSize; // m_bias
+	m_paramSize += m_targetSize * m_rnn->m_outputSize; // m_W
+	m_paramSize += m_targetSize; // m_bias
 
 }
 
@@ -51,51 +51,43 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 		}
 		m_rnn->feedForward(m_rnn->m_maxSeqLen);
 		
-		// dot(m_outputBuf, m_W, m_targetSize, m_rnn->m_outputSize, rnnOutputLayer->m_outputActs[m_rnn->m_maxSeqLen], m_rnn->m_outputSize, 1);
-		// elem_accum(m_outputBuf, m_bias, m_targetSize);
-		// if (m_taskType == "classification") {
-		// 	softmax(m_outputBuf, m_outputBuf, m_targetSize);
-		// }
+		dot(m_outputBuf, m_W, m_targetSize, m_rnn->m_outputSize, rnnOutputLayer->m_outputActs[m_rnn->m_maxSeqLen], m_rnn->m_outputSize, 1);
+		elem_accum(m_outputBuf, m_bias, m_targetSize);
+		if (m_taskType == "classification") {
+			softmax(m_outputBuf, m_outputBuf, m_targetSize);
+		}
 
-		// memset(m_outputDelta, 0x00, sizeof(float) * m_targetSize);
-		// elem_sub(m_outputDelta, m_outputBuf, sampleTarget, m_targetSize);
+		memset(m_outputDelta, 0x00, sizeof(float) * m_targetSize);
+		elem_sub(m_outputDelta, m_outputBuf, sampleTarget, m_targetSize);
 		
-		// // compute error
-		// float maxProb = 0.f;
-		// int corrIdx = -1, predIdx = -1;
-		// for (int i=0; i<m_targetSize; ++i) {			
-		// 	if (m_taskType == "classification") {
-		// 		error += sampleTarget[i] * log(m_outputBuf[i]);				
-		// 		if (sampleTarget[i] == 1) {
-		// 			corrIdx = i;
-		// 		}
-		// 		if (maxProb < m_outputBuf[i]) {
-		// 			maxProb = m_outputBuf[i];
-		// 			predIdx = i;
-		// 		}
-		// 	} else if (m_taskType == "regression") {
-		// 		error += m_outputDelta[i] * m_outputDelta[i];
-		// 	}
-		// }
-		// if (predIdx == corrIdx) {
-		// 	corrCount ++;
-		// }
-
-		// // backward pass
-		// outer(m_gradW, m_outputDelta, m_targetSize, rnnOutputLayer->m_outputActs[m_rnn->m_maxSeqLen], m_rnn->m_outputSize);
-		// elem_accum(m_gradBias, m_outputDelta, m_targetSize);
-
-		// trans_dot(rnnOutputLayer->m_outputErrs[m_rnn->m_maxSeqLen], m_W, m_targetSize, m_rnn->m_outputSize, m_outputDelta, m_targetSize, 1);
-
-		for (int seqIdx=1; seqIdx<=m_rnn->m_maxSeqLen; ++seqIdx) {
-			memcpy(rnnOutputLayer->m_outputErrs[seqIdx], sampleTarget, sizeof(float)*m_targetSize);
+		// compute error
+		float maxProb = 0.f;
+		int corrIdx = -1, predIdx = -1;
+		for (int i=0; i<m_targetSize; ++i) {
+			if (m_taskType == "classification") {
+				error += sampleTarget[i] * log(m_outputBuf[i]);
+				if (sampleTarget[i] == 1) {
+					corrIdx = i;
+				}
+				if (maxProb < m_outputBuf[i]) {
+					maxProb = m_outputBuf[i];
+					predIdx = i;
+				}
+			} else if (m_taskType == "regression") {
+				error += m_outputDelta[i] * m_outputDelta[i];
+			}
+		}
+		if (predIdx == corrIdx) {
+			corrCount ++;
 		}
 
-		for (int seqIdx=1; seqIdx<=m_rnn->m_maxSeqLen; ++seqIdx) {
-			for (int i=0; i<m_rnn->m_outputSize; ++i) {				
-				error += sampleTarget[i] * log(rnnOutputLayer->m_outputActs[seqIdx][i]);
-			}			
-		}
+		// backward pass
+		// compute grad
+		outer(m_gradW, m_outputDelta, m_targetSize, rnnOutputLayer->m_outputActs[m_rnn->m_maxSeqLen], m_rnn->m_outputSize);
+		elem_accum(m_gradBias, m_outputDelta, m_targetSize);
+
+		// backprop delta
+		trans_dot(rnnOutputLayer->m_outputErrs[m_rnn->m_maxSeqLen], m_W, m_targetSize, m_rnn->m_outputSize, m_outputDelta, m_targetSize, 1);
 		m_rnn->feedBackward(m_rnn->m_maxSeqLen);
 
 		// move cursor to new position
