@@ -8,9 +8,9 @@ int main(int argc, char ** argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
 	if (worldRank == ROOT) {
-		masterFunc();
+		masterFunc(argc, argv);
 	} else {
-		slaveFunc();
+		slaveFunc(argc, argv);
 	}
 
 	MPI_Finalize();

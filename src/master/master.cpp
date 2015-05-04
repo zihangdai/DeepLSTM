@@ -37,7 +37,7 @@ sgdBase * initSgdSolver (boost::property_tree::ptree *confReader, string section
 	return sgdSolver;
 }
 
-void masterFunc () {
+void masterFunc (int argc, char ** argv) {
 	/****************************************************************
 	* Step 1: Setup and Initialization
 	* Load conf, init model, allocate mem, init params, init solver
@@ -45,8 +45,13 @@ void masterFunc () {
 	****************************************************************/
 
 	// Step 1.1: Load configuration
+	if (argc < 2) {
+		printf("argc %d\n", argc);
+		exit(1);
+	}
+	string dirPath = argv[1];
 	boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
-	boost::property_tree::ini_parser::read_ini("mpi_translator.conf", *confReader);
+	boost::property_tree::ini_parser::read_ini(dirPath+"mpi_translator.conf", *confReader);
 	
 	string section = "Master.";
 	int validBatchSize = confReader->get<int>(section + "validation_batch_size");

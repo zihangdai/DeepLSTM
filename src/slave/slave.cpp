@@ -27,7 +27,13 @@ DataFactory* initDataFactory(boost::property_tree::ptree *confReader, string sec
 
 
 
-void slaveFunc(){ 
+void slaveFunc(int argc, char ** argv){ 
+	if (argc < 2) {
+		printf("argc %d\n", argc);
+		exit(1);
+	}
+	string dirPath = argv[1];
+
 	// MPI Setup
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -35,7 +41,7 @@ void slaveFunc(){
 	
 	// step 0: Init conf and read basic slave conf
 	boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
-	boost::property_tree::ini_parser::read_ini("mpi_translator.conf", *confReader);
+	boost::property_tree::ini_parser::read_ini(dirPath+"mpi_translator.conf", *confReader);
 	
 	string section = "Slave.";
 	int batchSize = confReader->get<int>(section + "training_batch_size");

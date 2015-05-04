@@ -6,6 +6,6 @@
 
 using namespace std;
 
-void masterFunc ();
+void masterFunc (int argc, char ** argv);
 
 #endif
