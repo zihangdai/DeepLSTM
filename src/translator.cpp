@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     string dataFilename = confReader->get<string>(section + "data_filename");
     string targetFilename = confReader->get<string>(section + "target_filename");
 
-    ifstream datafile (dataFilename, ios::in|ios::binary);
+    ifstream datafile (dataFilename.c_str(), ios::in|ios::binary);
     if (datafile.is_open()) {
         datafile.seekg (0, ios::end);
         int size = datafile.tellg();
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    ifstream targetfile (targetFilename, ios::in|ios::binary);
+    ifstream targetfile (targetFilename.c_str(), ios::in|ios::binary);
     if (targetfile.is_open()) {
         targetfile.seekg (0, ios::end);
         int size = targetfile.tellg();
