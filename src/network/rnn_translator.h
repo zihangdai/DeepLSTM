@@ -14,10 +14,7 @@ public:
 
 	/* data */
 	int m_paramSize;
-	int m_reverseEncoder;
-
-	float *m_encodingW;
-	float *m_gradEncodingW;
+	int m_reverseEncoder;	
 
 	RNNLSTM *m_encoder;
 	RNNLSTM *m_decoder;	

@@ -33,7 +33,6 @@ int main(int argc, char* argv[]) {
 
     // init sgd optimizer 
     sgdBase *optimizer = new adagrad(confReader, section, paramSize);
-    // sgdBase *optimizer = new adadelta(confReader, paramSize);
 
     int dataSeqLen = confReader->get<int>(section + "data_sequence_length");
     int targetSeqLen = confReader->get<int>(section + "target_sequence_length");
@@ -44,7 +43,10 @@ int main(int argc, char* argv[]) {
     float *data = new float[dimIn * dataSeqLen * sampleNum];
     float *target = new float[dimOut * targetSeqLen * sampleNum];
 
-    ifstream datafile ("data.bin", ios::in|ios::binary);
+    string dataFilename = confReader->get<string>(section + "data_filename");
+    string targetFilename = confReader->get<string>(section + "target_filename");
+
+    ifstream datafile (dataFilename, ios::in|ios::binary);
     if (datafile.is_open()) {
         datafile.seekg (0, ios::end);
         int size = datafile.tellg();
@@ -61,7 +63,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    ifstream targetfile ("target.bin", ios::in|ios::binary);
+    ifstream targetfile (targetFilename, ios::in|ios::binary);
     if (targetfile.is_open()) {
         targetfile.seekg (0, ios::end);
         int size = targetfile.tellg();
@@ -77,17 +79,6 @@ int main(int argc, char* argv[]) {
         printf("Failed to open targetfile\n");
         exit(1);
     }
-
-    // for (int i=0; i<dataSeqLen; ++i) {
-    //     for (int j=0; j<dimIn; ++j) {
-    //         data[i*dimIn+j] = i;
-    //     }
-    // }
-    // for (int i=0; i<targetSeqLen; ++i) {
-    //     for (int j=0; j<dimOut; ++j) {
-    //         target[i*dimOut+j] = 2 * i;
-    //     }
-    // }
     
     int *indices = new int[sampleNum];
     for (int i=0; i<sampleNum; ++i) {
