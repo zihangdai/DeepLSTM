@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
         indices[i] = i;
     }
 
-    // double startTime = CycleTimer::currentSeconds();
+    double startTime = CycleTimer::currentSeconds();
     int maxiter = confReader->get<int>(section + "max_iteration");
     int iter = 0, index;
     while (iter < maxiter) {
@@ -106,8 +106,18 @@ int main(int argc, char* argv[]) {
             iter ++;
         }
     }
-    // double endTime = CycleTimer::currentSeconds();
-    // printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);
+    double endTime = CycleTimer::currentSeconds();
+    printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);
+
+    string saveFilename = confReader->get<string>(section + "save_filename");
+    ofstream savefile (saveFilename.c_str(), ios::out|ios::binary);
+    if (savefile.is_open()) {
+        savefile.write ((char *)params, sizeof(float) * paramSize);
+        savefile.close();
+    } else {
+        printf("Failed to open savefile\n");
+        exit(1);
+    }
     
     return 0;
 }
