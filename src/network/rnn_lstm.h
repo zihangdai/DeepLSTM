@@ -12,6 +12,7 @@ public:
 	~RNNLSTM();
 
 	/* data */
+	string m_taskType;
 
 	/* method */
 	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);

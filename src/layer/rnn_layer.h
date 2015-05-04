@@ -1,5 +1,5 @@
-#ifndef __LAYER_H__
-#define __LAYER_H__
+#ifndef __RNN_LAYER_H__
+#define __RNN_LAYER_H__
 
 #include <vector>
 
@@ -56,29 +56,6 @@ private:
 	void resize (int newSeqLen);
 	void releaseMem (int seqIdx);
 	void allocateMem (int seqIdx);
-};
-
-/****************************************************************
-* Forward Layer
-****************************************************************/
-class ForwardLayer
-{
-public:
-	ForwardLayer() {};
-	virtual ~ForwardLayer() {};
-
-	/* data */
-	int m_numNeuron;
-
-	float *m_inputActs;
-	float *m_outputActs;
-
-	float *m_inputErrs;
-	float *m_outputErrs;
-	
-	/* method */
-	void virtual feedForward() {};
-	void virtual feedBackward() {};
 };
 
 #endif

@@ -20,7 +20,7 @@ sgdBase::~sgdBase() {
 }
 
 sgdBasic::sgdBasic (boost::property_tree::ptree *confReader, string section, int paramSize) : sgdBase(confReader, section, paramSize) {
-	m_learningRate = confReader->get<float>(section + "learning rate");
+	m_learningRate = confReader->get<float>(section + "learning_rate");
 }
 
 sgdBasic::~sgdBasic () {
