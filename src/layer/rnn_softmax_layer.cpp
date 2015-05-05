@@ -20,4 +20,8 @@ void RNNSoftmaxLayer::forwardStep(int seqIdx) {
 
 void RNNSoftmaxLayer::backwardStep(int seqIdx) {
 	elem_sub(m_inputErrs[seqIdx], m_outputActs[seqIdx], m_outputErrs[seqIdx], m_numNeuron);
+	// for (int i=0; i<m_numNeuron; ++i) {
+	// 	printf("%f=%f-%f\t", m_inputErrs[seqIdx][i], m_outputActs[seqIdx][i], m_outputErrs[seqIdx][i]);
+	// }
+	// printf("\n");
 }

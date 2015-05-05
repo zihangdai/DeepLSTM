@@ -49,14 +49,14 @@ void trans_dot (float *result, float *A, int dim1_A, int dim2_A, float *B, int d
 	}
 }
 
-void elem_mul (float *result, float *a, float *b, int dim) {
-	#ifdef __linux
+void elem_mul (float *result, float *a, float *b, int dim) {	
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i * b_i
 			result[i] += a[i] * b[i];
 		}
 	} else {
+		#ifdef __linux
 		int residual = dim % SIMD_WIDTH;
 		int stopSIMD = dim - residual;
 
@@ -74,18 +74,18 @@ void elem_mul (float *result, float *a, float *b, int dim) {
 		for (int i=stopSIMD; i<dim; ++i) {
 			result[i] += a[i] * b[i];
 		}
-	}
-	#endif
+		#endif
+	}	
 }
 
-void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
-	#ifdef __linux
+void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {	
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i * b_i * c_i
 			result[i] += a[i] * b[i] * c[i];
 		}
 	} else {
+		#ifdef __linux
 		int residual = dim % SIMD_WIDTH;
 		int stopSIMD = dim - residual;
 
@@ -105,18 +105,18 @@ void elem_mul_triple (float *result, float *a, float *b, float *c, int dim) {
 		for (int i=stopSIMD; i<dim; ++i) {
 			result[i] += a[i] * b[i] * c[i];
 		}
-	}
-	#endif
+		#endif
+	}	
 }
 
-void elem_sub (float *result, float *a, float *b, int dim) {
-	#ifdef __linux
+void elem_sub (float *result, float *a, float *b, int dim) {	
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i - b_i
 			result[i] += a[i] - b[i];
 		}
-	} else {		
+	} else {
+		#ifdef __linux
 		int residual = dim % SIMD_WIDTH;
 		int stopSIMD = dim - residual;
 		
@@ -134,18 +134,18 @@ void elem_sub (float *result, float *a, float *b, int dim) {
 		for (int i=stopSIMD; i<dim; ++i) {
 			result[i] += a[i] - b[i];
 		}
-	}
-	#endif
+		#endif
+	}	
 }
 
-void elem_accum (float *result, float *a, int dim) {
-	#ifdef __linux
+void elem_accum (float *result, float *a, int dim) {	
 	if (!SIMD) {
 		for (int i=0; i<dim; ++i) {
 			// R_i += a_i
 			result[i] += a[i];
 		}
 	} else {
+		#ifdef __linux
 		int residual = dim % SIMD_WIDTH;
 		int stopSIMD = dim - residual;
 
@@ -161,8 +161,8 @@ void elem_accum (float *result, float *a, int dim) {
 		for (int i=stopSIMD; i<dim; ++i) {
 			result[i] += a[i];
 		}
-	}
-	#endif
+		#endif
+	}	
 }
 
 void dot_threads (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B) {

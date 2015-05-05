@@ -55,10 +55,11 @@ int main(int argc, char const *argv[]) {
 	RecurrentForwardNN *rnnfnn = new RecurrentForwardNN(confReader, section);
 
 	int paramSize = rnnfnn->m_paramSize;
-    printf("paramSize: %d\n", paramSize);
+    printf("paramSize: %d\n", paramSize);    
     
 	float *params = new float[paramSize];
 	float *grad   = new float[paramSize];
+    rnnfnn->initParams(params);
 	
     openblas_set_num_threads(1);
 	int batchSize = confReader->get<int>(section + "training_batch_size");

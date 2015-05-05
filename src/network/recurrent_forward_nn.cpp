@@ -9,21 +9,19 @@ RecurrentForwardNN::RecurrentForwardNN(boost::property_tree::ptree *confReader, 
 	m_dataSize = confReader->get<int>(section + "data_size");
 	m_targetSize = confReader->get<int>(section + "target_size");
 
-	m_outputBuf = new float[m_targetSize];
-	m_outputDelta = new float[m_targetSize];
-
 	m_rnn = new RNNLSTM(confReader, "RNN.");
+	m_outputLayer = new RNNSoftmaxLayer(m_targetSize, 1);
+	m_interConnect = new RNNFullConnection(m_rnn->m_vecLayers[m_rnn->m_numLayer-1], m_outputLayer);
 
-	m_paramSize = m_rnn->m_paramSize; // m_rnn
-	m_paramSize += m_targetSize * m_rnn->m_outputSize; // m_W
-	m_paramSize += m_targetSize; // m_bias
-
+	m_paramSize = m_rnn->m_paramSize; 				// m_rnn
+	m_paramSize += m_outputLayer->m_paramSize;	// m_outputLayer
+	m_paramSize += m_interConnect->m_paramSize;		// m_interConnect 	
 }
 
 RecurrentForwardNN::~RecurrentForwardNN() {
-	if (m_outputBuf != NULL) delete [] m_outputBuf;
-	if (m_outputDelta != NULL) delete [] m_outputDelta;
 	if (m_rnn != NULL) delete m_rnn;
+	if (m_outputLayer != NULL) delete [] m_outputLayer;
+	if (m_interConnect != NULL) delete [] m_interConnect;
 }
 
 
@@ -44,52 +42,49 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
 		// reset state
 		m_rnn->resetStates(m_rnn->m_maxSeqLen);
-		memset(m_outputBuf, 0x00, sizeof(float)*m_targetSize);
-
-		// forward pass
-		for (int seqIdx=1; seqIdx<=m_rnn->m_maxSeqLen; ++seqIdx) {
-			memcpy(rnnInputLayer->m_inputActs[seqIdx], sampleData, sizeof(float)*m_dataSize);
-		}
+		m_outputLayer->resetStates(1);		
+		
+		// ********* forward pass ********* //
+		// step 1: set input 
+		m_rnn->setInput(sampleData, 1, 1);
+		// step 2: rnn feed forward
 		m_rnn->feedForward(m_rnn->m_maxSeqLen);
-		
-		dot(m_outputBuf, m_W, m_targetSize, m_rnn->m_outputSize, rnnOutputLayer->m_outputActs[m_rnn->m_maxSeqLen], m_rnn->m_outputSize, 1);
-		elem_accum(m_outputBuf, m_bias, m_targetSize);
-		if (m_taskType == "classification") {
-			softmax(m_outputBuf, m_outputBuf, m_targetSize);
-		}
+		// step 3: inter connection
+		m_interConnect->forwardStep(m_rnn->m_maxSeqLen, 1);
+		// step 4: output layer
+		m_outputLayer->forwardStep(1);
 
-		memset(m_outputDelta, 0x00, sizeof(float) * m_targetSize);
-		elem_sub(m_outputDelta, m_outputBuf, sampleTarget, m_targetSize);
+		// printf("m_outputLayer->m_outputActs[1]:\n");
+		// for (int i=0; i<m_targetSize; ++i) {
+		// 	printf("%f\t", m_outputLayer->m_outputActs[1][i]);
+		// }
+		// printf("\n");
 		
-		// compute error
-		float maxProb = 0.f;
-		int corrIdx = -1, predIdx = -1;
-		for (int i=0; i<m_targetSize; ++i) {
-			if (m_taskType == "classification") {
-				error += sampleTarget[i] * log(m_outputBuf[i]);
-				if (sampleTarget[i] == 1) {
-					corrIdx = i;
-				}
-				if (maxProb < m_outputBuf[i]) {
-					maxProb = m_outputBuf[i];
-					predIdx = i;
-				}
-			} else if (m_taskType == "regression") {
-				error += m_outputDelta[i] * m_outputDelta[i];
-			}
-		}
+		// backward pass
+		memcpy(m_outputLayer->m_outputErrs[1], sampleTarget, sizeof(float)*m_targetSize);
+		
+		// compute error		
+		int corrIdx = argmax(sampleTarget, m_targetSize);
+		int predIdx = argmax(m_outputLayer->m_outputActs[1], m_targetSize);
+		// printf("%d vs %d\n", corrIdx, predIdx);
+
 		if (predIdx == corrIdx) {
 			corrCount ++;
 		}
+		error += log(m_outputLayer->m_outputActs[1][corrIdx]);
 
-		// backward pass
-		// compute grad
-		outer(m_gradW, m_outputDelta, m_targetSize, rnnOutputLayer->m_outputActs[m_rnn->m_maxSeqLen], m_rnn->m_outputSize);
-		elem_accum(m_gradBias, m_outputDelta, m_targetSize);
-
-		// backprop delta
-		trans_dot(rnnOutputLayer->m_outputErrs[m_rnn->m_maxSeqLen], m_W, m_targetSize, m_rnn->m_outputSize, m_outputDelta, m_targetSize, 1);
+		// ********* backward pass ********* //
+		// step 1: output layer
+		m_outputLayer->backwardStep(1);
+		// step 2: inter connection
+		// for (int i=0; i<m_targetSize; ++i) {
+		// 	printf("%f\t", m_rnn->m_vecLayers[m_rnn->m_numLayer-1]->m_outputActs[m_rnn->m_maxSeqLen][i]);
+		// }
+		// printf("\n");
+		m_interConnect->backwardStep(m_rnn->m_maxSeqLen, 1);
+		// step 3: rnn feed forward
 		m_rnn->feedBackward(m_rnn->m_maxSeqLen);
+
 
 		// move cursor to new position
 		sampleData += m_dataSize;
@@ -100,12 +95,15 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 	float normFactor = 1.f / (float) minibatchSize;
 	for (int dim=0; dim<m_paramSize; ++dim) {
 		grad[dim] *= normFactor;
+		// if (dim < 20)
+		// 	printf("grad[%d]:%f\t", dim, grad[dim]);
 		if (grad[dim] < -1.f) {
 			grad[dim] = -1.f;
 		} else if (grad[dim] > 1.f) {
 			grad[dim] = 1.f;
 		}
 	}
+	// printf("\n");
 	error *= normFactor;
 
 	printf("Correct rate: %d/%d=%f\n", int(corrCount), minibatchSize, corrCount / float(minibatchSize));
@@ -114,15 +112,17 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 }
 	
 void RecurrentForwardNN::initParams (float *params) {
+	// m_rnn
 	float *paramsCursor = params;
+	m_rnn->initParams(paramsCursor);	
 
-	m_rnn->initParams(paramsCursor);
+	// m_outputLayer
 	paramsCursor += m_rnn->m_paramSize;
-
-	float multiplier = 0.08;
-	for (int i=0; i<m_targetSize * (m_rnn->m_outputSize+1); ++i) {
-		paramsCursor[i] = multiplier * SYM_UNIFORM_RAND;
-	}
+	m_outputLayer->initParams(paramsCursor);
+	
+	// m_interConnect
+	paramsCursor += m_outputLayer->m_paramSize;
+	m_interConnect->initParams(paramsCursor);
 }
 
 void RecurrentForwardNN::bindWeights(float *params) {
@@ -130,13 +130,13 @@ void RecurrentForwardNN::bindWeights(float *params) {
 	float *paramsCursor = params;
 	m_rnn->bindWeights(paramsCursor);
 	
-	// Weights
+	// m_outputLayer
 	paramsCursor += m_rnn->m_paramSize;
-	m_W = paramsCursor;
+	m_outputLayer->bindWeights(paramsCursor);
 	
-	// bias
-	paramsCursor += m_targetSize * m_rnn->m_outputSize;
-	m_bias = paramsCursor;
+	// m_interConnect
+	paramsCursor += m_outputLayer->m_paramSize;
+	m_interConnect->bindWeights(paramsCursor);
 }
 
 void RecurrentForwardNN::bindGrads(float *grad) {
@@ -144,11 +144,11 @@ void RecurrentForwardNN::bindGrads(float *grad) {
 	float *gradCursor = grad;
 	m_rnn->bindGrads(gradCursor);
 
-	// gradWeights
+	// grad m_outputLayer
 	gradCursor += m_rnn->m_paramSize;
-	m_gradW = gradCursor;
-
-	// gradBias
-	gradCursor += m_targetSize * m_rnn->m_outputSize;
-	m_gradBias = gradCursor;
+	m_outputLayer->bindGrads(gradCursor);
+	
+	// grad m_interConnect
+	gradCursor += m_outputLayer->m_paramSize;
+	m_interConnect->bindGrads(gradCursor);
 }

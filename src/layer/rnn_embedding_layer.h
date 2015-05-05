@@ -5,23 +5,27 @@
 
 using namespace std;
 
-class EmbeddingLayer: public RecurrentLayer
+class RNNEmbeddingLayer: public RecurrentLayer
 {
 public:
-	EmbeddingLayer(int numNeuron, int maxSeqLen, int inputSize);
-	~EmbeddingLayer();
+	RNNEmbeddingLayer(int numNeuron, int maxSeqLen, int inputSize, int vocSize);
+	~RNNEmbeddingLayer();
 
 	/* data */	
+	int m_vocSize;
 
 	// embedding matrix
-	float *embedMat;
+	float *m_embedMat;
+	float *m_gradEmbedMat;
 
 	/* method */
 	void initParams(float *params);
 
 	void feedForward(int inputSeqLen);
 	void feedBackward(int inputSeqLen);
-	void resetStates(int inputSeqLen);
+
+	void forwardStep(int seqIdx);
+	void backwardStep(int seqIdx);
 
 	void bindWeights(float *params);
 	void bindGrads(float *grad);

@@ -9,13 +9,13 @@ void sigm (float *sigm_res, float *input, int dim) {
 	}
 }
 
-void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
-	#ifdef __linux
+void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {	
 	if (!SIMD) {
 		for (int i=0; i<dim; i++) {
 			deriv_res[i] = sigm_res[i] * (1 - sigm_res[i]);
 		} 
 	} else {
+		#ifdef __linux
 		int residual = dim % SIMD_WIDTH;
 		int stopSIMD = dim - residual;
 
@@ -32,8 +32,8 @@ void sigm_deriv (float *deriv_res, float *sigm_res, int dim) {
 		for (int i=stopSIMD; i<dim; ++i) {
 			deriv_res[i] = sigm_res[i] * (1 - sigm_res[i]);
 		}
-	}
-	#endif
+		#endif
+	}	
 }
 
 void tanh (float *tanh_res, float *input, int dim) {	
@@ -42,13 +42,13 @@ void tanh (float *tanh_res, float *input, int dim) {
 	}	
 }
 
-void tanh_deriv (float *deriv_res, float *tanh_res, int dim) {
-	#ifdef __linux
+void tanh_deriv (float *deriv_res, float *tanh_res, int dim) {	
 	if (!SIMD) {
 		for (int i=0; i<dim; i++) {
 			deriv_res[i] = 1 - tanh_res[i] * tanh_res[i];
 		}
 	} else {
+		#ifdef __linux
 		int residual = dim % SIMD_WIDTH;
 		int stopSIMD = dim - residual;
 
@@ -65,8 +65,8 @@ void tanh_deriv (float *deriv_res, float *tanh_res, int dim) {
 		for (int i=stopSIMD; i<dim; ++i) {
 			deriv_res[i] = 1 - tanh_res[i] * tanh_res[i];
 		}
-	}
-	#endif
+		#endif
+	}	
 }
 
 void softmax (float *result, float *input, int dim) {
@@ -83,7 +83,9 @@ void softmax (float *result, float *input, int dim) {
 		sum += result[i];
 	}
 	for (int i=0; i<dim; i++) {
+		// printf("%f/%f=", result[i], sum);
 		result[i] /= sum;
+		// printf("%f\t", result[i]);
 	}
 }
 

@@ -19,12 +19,10 @@ public:
 
 	/* data */
 	RNNLSTM *m_rnn;
-	// ForwardNN   *m_fnn; //TODO	
+	
+	RNNFullConnection *m_interConnect;
 
-	float *m_W;
-	float *m_gradW;
-	float *m_bias;
-	float *m_gradBias;	
+	RecurrentLayer *m_outputLayer;
 
 	int m_paramSize;
 	
@@ -32,9 +30,6 @@ public:
 	int m_targetSize;
 
 	string m_taskType;
-
-	float *m_outputBuf;
-	float *m_outputDelta;
 
 	/* method */
 	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);

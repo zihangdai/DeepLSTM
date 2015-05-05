@@ -66,7 +66,7 @@ void FNNFullConnection::feedBackward() {
 	// m_preLayer->m_outputErrs
 	trans_dot(m_preLayer->m_outputErrs[seqIdx], m_weights, postNumNeuron, preNumNeuron, m_postLayer->m_inputErrs[seqIdx], postNumNeuron, 1);
 	// m_gradWeights
-	outer(m_gradWeights, m_postLayer->m_inputErrs[seqIdx], postNumNeuron, m_preLayer->m_outputActs[seqIdx], preNumNeuron);
+	outer(m_gradWeights, m_postLayer->m_inputErrs[seqIdx], postNumNeuron, m_preLayer->m_outputActs[seqIdx], preNumNeuron);	
 	// m_gradBias
 	elem_accum(m_gradBias, m_postLayer->m_inputErrs[seqIdx], postNumNeuron);
 }
