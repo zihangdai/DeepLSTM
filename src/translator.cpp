@@ -39,9 +39,13 @@ int main(int argc, char* argv[]) {
     int dimIn = confReader->get<int>(section + "data_size");
     int dimOut = confReader->get<int>(section + "target_size");
     int sampleNum = confReader->get<int>(section + "sample_num");
+    int batchSize = confReader->get<int>(section + "batch_size");
 
     float *data = new float[dimIn * dataSeqLen * sampleNum];
     float *target = new float[dimOut * targetSeqLen * sampleNum];
+
+    float *dataBatch = new float[dimIn * dataSeqLen * batchSize];
+    float *targetBatch = new float[dimOut * targetSeqLen * batchSize];
 
     string dataFilename = confReader->get<string>(section + "data_filename");
     string targetFilename = confReader->get<string>(section + "target_filename");
@@ -83,28 +87,40 @@ int main(int argc, char* argv[]) {
     int *indices = new int[sampleNum];
     for (int i=0; i<sampleNum; ++i) {
         indices[i] = i;
-    }
+    }    
+    random_shuffle(indices, indices+sampleNum);
+    int index = 0;
 
     double startTime = CycleTimer::currentSeconds();
     int maxiter = confReader->get<int>(section + "max_iteration");
-    int iter = 0, index;
+    int iter = 0;
     while (iter < maxiter) {
-        random_shuffle(indices, indices+sampleNum);
-        for (int i=0; i<sampleNum; ++i) {
-            index = indices[i];
-            double gradBegTime = CycleTimer::currentSeconds();
-            float error = translator->computeGrad(grad, params, data + index * dimIn * dataSeqLen, target + index * dimOut * targetSeqLen, 1);
-            double gradEndTime = CycleTimer::currentSeconds();
-            cout << "translator computeGrad time: " << gradBegTime - gradEndTime << endl;
-
-            double optBegTime = CycleTimer::currentSeconds();
-            optimizer->updateParams(params, grad);
-            double optEndTime = CycleTimer::currentSeconds();
-            cout << "optimizer updateParams time: " << optBegTime - optEndTime << endl; 
-
-            cout << "Iteration: " << iter << ", Error: " << error << endl;
-            iter ++;
+        if (index + batchSize >= sampleNum) {
+            random_shuffle(indices, indices+sampleNum);
+            index = 0;
         }
+        for (int i=0; i<batchSize; ++i) {
+            memcpy(dataBatch + i * dimIn * dataSeqLen, 
+                data + indices[index] * dimIn * dataSeqLen, 
+                sizeof(float) * dimIn * dataSeqLen);
+            memcpy(targetBatch + i * dimOut * targetSeqLen, 
+                target + indices[index] * dimOut * targetSeqLen, 
+                sizeof(float) * dimOut * targetSeqLen);
+            index ++;
+        }
+        
+        double gradBegTime = CycleTimer::currentSeconds();
+        float error = translator->computeGrad(grad, params, dataBatch, targetBatch, batchSize);
+        double gradEndTime = CycleTimer::currentSeconds();
+        cout << "translator computeGrad time: " << gradBegTime - gradEndTime << endl;
+
+        double optBegTime = CycleTimer::currentSeconds();
+        optimizer->updateParams(params, grad);
+        double optEndTime = CycleTimer::currentSeconds();
+        cout << "optimizer updateParams time: " << optBegTime - optEndTime << endl; 
+
+        cout << "Iteration: " << iter << ", Error: " << error << endl;
+        iter ++;
     }
     double endTime = CycleTimer::currentSeconds();
     printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);
@@ -133,6 +149,14 @@ int main(int argc, char* argv[]) {
         printf("Failed to open savefile\n");
         exit(1);
     }
+
+    delete [] data;
+    delete [] target;
+
+    delete [] dataBatch;
+    delete [] targetBatch;
     
+    delete [] indices;
+
     return 0;
 }
