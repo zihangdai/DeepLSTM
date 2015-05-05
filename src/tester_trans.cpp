@@ -27,11 +27,6 @@ int main(int argc, char* argv[]) {
     int paramSize = translator->m_paramSize;
     printf("paramSize:%d\n", paramSize);
     float *params = new float[paramSize];
-    float *grad = new float[paramSize];
-    translator->initParams(params);
-
-    // init sgd optimizer 
-    sgdBase *optimizer = new adagrad(confReader, section, paramSize);
 
     int dataSeqLen = confReader->get<int>(section + "data_sequence_length");
     int targetSeqLen = confReader->get<int>(section + "target_sequence_length");
@@ -41,10 +36,7 @@ int main(int argc, char* argv[]) {
     int batchSize = confReader->get<int>(section + "batch_size");
 
     float *data = new float[dimIn * dataSeqLen * sampleNum];
-    float *target = new float[dimOut * targetSeqLen * sampleNum];
-
-    float *dataBatch = new float[dimIn * dataSeqLen * batchSize];
-    float *targetBatch = new float[dimOut * targetSeqLen * batchSize];
+    float *target = new float[dimOut * targetSeqLen * sampleNum];    
 
     string dataFilename = confReader->get<string>(section + "data_filename");
     string targetFilename = confReader->get<string>(section + "target_filename");
@@ -82,52 +74,21 @@ int main(int argc, char* argv[]) {
         printf("Failed to open targetfile\n");
         exit(1);
     }
-    
-    int *indices = new int[sampleNum];
-    for (int i=0; i<sampleNum; ++i) {
-        indices[i] = i;
-    }    
-    random_shuffle(indices, indices+sampleNum);
-    int index = 0;
 
-    double startTime = CycleTimer::currentSeconds();
-    int maxiter = confReader->get<int>(section + "max_iteration");
-    int iter = 0;
-    while (iter < maxiter) {
-        if (index + batchSize >= sampleNum) {
-            random_shuffle(indices, indices+sampleNum);
-            index = 0;
-        }
-        for (int i=0; i<batchSize; ++i) {
-            memcpy(dataBatch + i * dimIn * dataSeqLen, 
-                data + indices[index] * dimIn * dataSeqLen, 
-                sizeof(float) * dimIn * dataSeqLen);
-            memcpy(targetBatch + i * dimOut * targetSeqLen, 
-                target + indices[index] * dimOut * targetSeqLen, 
-                sizeof(float) * dimOut * targetSeqLen);
-            index ++;
-        }
-        
-        double gradBegTime = CycleTimer::currentSeconds();
-        float error = translator->computeGrad(grad, params, dataBatch, targetBatch, batchSize);
-        double gradEndTime = CycleTimer::currentSeconds();
-        cout << "translator computeGrad time: " << gradBegTime - gradEndTime << endl;
-
-        double optBegTime = CycleTimer::currentSeconds();
-        optimizer->updateParams(params, grad);
-        double optEndTime = CycleTimer::currentSeconds();
-        cout << "optimizer updateParams time: " << optBegTime - optEndTime << endl; 
-
-        cout << "Iteration: " << iter << ", Error: " << error << endl;
-        iter ++;
+    string saveFilename = confReader->get<string>(section + "save_filename");
+    ifstream savefile (saveFilename.c_str(), ios::out|ios::binary);
+    if (savefile.is_open()) {
+        savefile.read ((char *)params, sizeof(float) * paramSize);
+        savefile.close();
+    } else {
+        printf("Failed to open savefile\n");
+        exit(1);
     }
-    double endTime = CycleTimer::currentSeconds();
-    printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);
 
     float *input = new float [dataSeqLen];
     float *predict = new float [dataSeqLen];
     for (int i=0; i<dataSeqLen; ++i) {
-        input[i] = (float) rand() / (float) (RAND_MAX);        
+        input[i] = (float) rand() / (float) (RAND_MAX);
     }
     
     translator->translate(params, input, predict, 1);
@@ -139,23 +100,10 @@ int main(int argc, char* argv[]) {
     }
     printf("\n");
 
-    string saveFilename = confReader->get<string>(section + "save_filename");
-    ofstream savefile (saveFilename.c_str(), ios::out|ios::binary);
-    if (savefile.is_open()) {
-        savefile.write ((char *)params, sizeof(float) * paramSize);
-        savefile.close();
-    } else {
-        printf("Failed to open savefile\n");
-        exit(1);
-    }
+    delete [] params;
 
     delete [] data;
-    delete [] target;
-
-    delete [] dataBatch;
-    delete [] targetBatch;
-    
-    delete [] indices;
+    delete [] target;    
 
     return 0;
 }
