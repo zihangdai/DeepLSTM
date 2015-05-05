@@ -36,12 +36,10 @@ Mnist::Mnist(boost::property_tree::ptree *confReader, string section) {
             dataFile.read((char *)(&temp8), sizeof(char));
             temp = temp8;
             m_input[i * m_inputDim + j] = float(temp) / 255.f;
-            // printf("%f\t", m_input[i * m_inputDim + j]);
         }
         labelFile.read((char *)(&temp8), sizeof(char));
         temp = temp8;
         m_output[i * m_outputDim + temp] = 1;
-        // printf("\n%d\n", temp);
     }
 
     dataFile.close();
@@ -66,7 +64,7 @@ int Mnist::getLabelSize() {
 }
 
 void Mnist::getDataBatch(float* label, float* data, int* indices, int num) {
-    for (int i=0; i<num; i++) {     
+    for (int i=0; i<num; i++) {
         int index = indices[i];
         memcpy(data + i * m_inputDim, m_input + index * m_inputDim, sizeof(float) * m_inputDim);
         memcpy(label + i * m_outputDim, m_output + index * m_outputDim, sizeof(float) * m_outputDim);

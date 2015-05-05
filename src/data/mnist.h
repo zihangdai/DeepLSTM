@@ -9,17 +9,18 @@ using namespace std;
 class Mnist : public DataFactory {
 
 public:
-    Mnist(boost::property_tree::ptree *confReader, string section);
-    ~Mnist();
+	Mnist(boost::property_tree::ptree *confReader, string section);
+	~Mnist();
 
-    int m_inputDim;
-    int m_outputDim;
+	int m_inputDim;
+	int m_outputDim;
 
-    int getNumberOfData();
-    int getDataSize();
-    int getLabelSize();
+	int getNumberOfData();
+	int getDataSize();
+	int getLabelSize();
 
-    void getDataBatch(float* label, float* data, int* indices, int num);
+	void getDataBatch(float* label, float* data, int* indices, int num);
+	
 };
 
 #endif

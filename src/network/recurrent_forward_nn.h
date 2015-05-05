@@ -32,6 +32,7 @@ public:
 	string m_taskType;
 
 	/* method */
+	float predict (float *params, float *data, float *target, int batchSize);
 	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);
 	
 	void initParams (float *params);

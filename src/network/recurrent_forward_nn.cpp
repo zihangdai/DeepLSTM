@@ -24,28 +24,22 @@ RecurrentForwardNN::~RecurrentForwardNN() {
 	if (m_interConnect != NULL) delete [] m_interConnect;
 }
 
-
-float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, float *target, int minibatchSize) {
+float RecurrentForwardNN::predict (float *params, float *data, float *target, int batchSize) {
 	float error = 0.f;
 	float corrCount = 0.f;
 	
-	memset(grad, 0x00, sizeof(float)*m_paramSize);
 	bindWeights(params);
-	bindGrads(grad);
 
 	float *sampleData = data;
 	float *sampleTarget = target;
-
-	RecurrentLayer *rnnInputLayer  = m_rnn->m_vecLayers[0];
-	RecurrentLayer *rnnOutputLayer = m_rnn->m_vecLayers[m_rnn->m_numLayer-1];
 	
-	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
-		// reset state
+	for (int dataIdx=0; dataIdx<batchSize; ++dataIdx) {
+		// ********* reset state ********* //
 		m_rnn->resetStates(m_rnn->m_maxSeqLen);
-		m_outputLayer->resetStates(1);		
+		m_outputLayer->resetStates(1);
 		
 		// ********* forward pass ********* //
-		// step 1: set input 
+		// step 1: set input
 		for (int i=1; i<=m_rnn->m_maxSeqLen; ++i) {
 			m_rnn->setInput(sampleData, i, i);
 		}
@@ -54,15 +48,56 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 		// step 3: inter connection
 		m_interConnect->forwardStep(m_rnn->m_maxSeqLen, 1);
 		// step 4: output layer
-		m_outputLayer->forwardStep(1);		
-		
-		// backward pass
+		m_outputLayer->forwardStep(1);
+
+		// ********* compute error ********* //
 		memcpy(m_outputLayer->m_outputErrs[1], sampleTarget, sizeof(float)*m_targetSize);
-		
-		// compute error		
 		int corrIdx = argmax(sampleTarget, m_targetSize);
 		int predIdx = argmax(m_outputLayer->m_outputActs[1], m_targetSize);
-		// printf("%d vs %d\n", corrIdx, predIdx);
+
+		if (predIdx == corrIdx) {
+			corrCount ++;
+		}
+		error += log(m_outputLayer->m_outputActs[1][corrIdx]);
+	}
+
+	printf("Avg Correct Rate: %d/%d=%f\n", int(corrCount), batchSize, corrCount / float(batchSize));
+
+	return error;
+}
+
+float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, float *target, int minibatchSize) {
+	float error = 0.f;
+	float corrCount = 0.f;
+
+	memset(grad, 0x00, sizeof(float)*m_paramSize);
+	bindWeights(params);
+	bindGrads(grad);
+
+	float *sampleData = data;
+	float *sampleTarget = target;
+
+	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
+		// ********* reset state ********* //
+		m_rnn->resetStates(m_rnn->m_maxSeqLen);
+		m_outputLayer->resetStates(1);
+		
+		// ********* forward pass ********* //
+		// step 1: set input
+		for (int i=1; i<=m_rnn->m_maxSeqLen; ++i) {
+			m_rnn->setInput(sampleData, i, i);
+		}
+		// step 2: rnn feed forward
+		m_rnn->feedForward(m_rnn->m_maxSeqLen);
+		// step 3: inter connection
+		m_interConnect->forwardStep(m_rnn->m_maxSeqLen, 1);
+		// step 4: output layer
+		m_outputLayer->forwardStep(1);
+
+		// ********* compute error ********* //
+		memcpy(m_outputLayer->m_outputErrs[1], sampleTarget, sizeof(float)*m_targetSize);
+		int corrIdx = argmax(sampleTarget, m_targetSize);
+		int predIdx = argmax(m_outputLayer->m_outputActs[1], m_targetSize);
 
 		if (predIdx == corrIdx) {
 			corrCount ++;
@@ -72,7 +107,7 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 		// ********* backward pass ********* //
 		// step 1: output layer
 		m_outputLayer->backwardStep(1);
-		// step 2: inter connection		
+		// step 2: inter connection
 		m_interConnect->backwardStep(m_rnn->m_maxSeqLen, 1);
 		// step 3: rnn feed forward
 		m_rnn->feedBackward(m_rnn->m_maxSeqLen);
@@ -85,7 +120,7 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
 	float normFactor = 1.f / (float) minibatchSize;
 	for (int dim=0; dim<m_paramSize; ++dim) {
-		grad[dim] *= normFactor;		
+		grad[dim] *= normFactor;
 		if (grad[dim] < -1.f) {
 			grad[dim] = -1.f;
 		} else if (grad[dim] > 1.f) {
@@ -94,7 +129,7 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 	}
 	error *= normFactor;
 
-	printf("Correct rate: %d/%d=%f\n", int(corrCount), minibatchSize, corrCount / float(minibatchSize));
+	printf("Avg Correct Rate: %d/%d=%f\n", int(corrCount), minibatchSize, corrCount / float(minibatchSize));
 
 	return error;
 }

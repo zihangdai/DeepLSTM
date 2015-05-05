@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
     delete [] params;
 
     delete [] data;
-    delete [] target;    
+    delete [] target;
 
     return 0;
 }

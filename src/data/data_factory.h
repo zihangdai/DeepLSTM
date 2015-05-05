@@ -18,6 +18,11 @@ public:
 	virtual int getLabelSize() {return 0;};
 
 	virtual void getDataBatch(float* label, float* data, int* indices, int num) {};
+	
+	void getAllData(float* label, float* data) {
+		data = m_input;
+		label = m_output;
+	};
 
 	int m_numSample;
 
