@@ -112,15 +112,15 @@ int main(int argc, char* argv[]) {
     float *input = new float [dataSeqLen];
     float *predict = new float [dataSeqLen];
     for (int i=0; i<dataSeqLen; ++i) {
-        input[i] = (float) rand() / (float) (RAND_MAX);
-        printf("%f\t", input[i]);
+        input[i] = (float) rand() / (float) (RAND_MAX);        
     }
-    printf("\n");
     
     translator->translate(params, input, predict, 1);
-    
+
+    sort(input, input+dataSeqLen);
+
     for (int i=0; i<dataSeqLen; ++i) {
-        printf("%f\t", predict[i]);
+        printf("%f,%f\t", input[i], predict[i]);
     }
     printf("\n");
 
