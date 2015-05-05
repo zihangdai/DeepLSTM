@@ -121,5 +121,30 @@ int main(int argc, char const *argv[]) {
         iter ++;
     }
 
+    // step 5: save trained weights
+    string saveFilename = confReader->get<string>(section + "save_filename");
+    ofstream savefile (saveFilename.c_str(), ios::out|ios::binary);
+    if (savefile.is_open()) {
+        savefile.write ((char *)params, sizeof(float) * paramSize);
+        savefile.close();
+    } else {
+        printf("Failed to open savefile\n");
+        exit(1);
+    }
+
+    // step 6: delete allocated memory
+    delete [] params;
+    delete [] grad;
+
+    delete [] data;
+    delete [] label;
+
+    delete [] indices;
+
+    delete confReader;
+    delete rnnfnn;
+    delete sgdSolver;
+    delete dataset;
+
 	return 0;
 }

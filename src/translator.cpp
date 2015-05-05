@@ -1,5 +1,3 @@
-// #define NDEBUG
-
 #include <time.h>
 #include "rnn_translator.h"
 #include "sgd.h"
