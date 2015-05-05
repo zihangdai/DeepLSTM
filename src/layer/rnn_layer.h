@@ -47,7 +47,8 @@ public:
 	void virtual forwardStep(int seqIdx) {};
 	void virtual backwardStep(int seqIdx) {};
 
-	void virtual bindWeights(float *params, float *grad) {};
+	void virtual bindWeights(float *params) {};
+	void virtual bindGrads(float *grad) {};
 
 	void virtual resetStates(int inputSeqLen);
 	void virtual reshape(int newSeqLen);	

@@ -25,6 +25,8 @@ void tanh_deriv (float *result, float *input, int dim);
 
 void softmax (float *result, float *input, int dim);
 
+int argmax (float *input, int dim);
+
 /****************************************************************
 * Multi-thread version controled by OpenMP
 ****************************************************************/

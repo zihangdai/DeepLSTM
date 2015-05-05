@@ -2,7 +2,7 @@
 #include <iostream>
 #include "rnn_translator.h"
 
-// #define DEBUG_RNN_TRANSLATOR 1
+// #define DEBUG_RNN_TRANSLATOR
 
 using namespace std;
 
@@ -16,11 +16,7 @@ RNNTranslator::RNNTranslator(boost::property_tree::ptree *confReader, string sec
 	// compute paramSize
 	m_paramSize = 0;
 	m_paramSize += m_encoder->m_paramSize;
-	m_paramSize += m_decoder->m_paramSize;	
-
-	#ifdef DEBUG_RNN_TRANSLATOR
-	printf("RNNTranslator constructor finished.\n");
-	#endif
+	m_paramSize += m_decoder->m_paramSize;
 }
 
 RNNTranslator::~RNNTranslator() {
@@ -42,30 +38,37 @@ void RNNTranslator::initParams (float *params) {
 	m_decoder->initParams(paramsCursor);
 }
 
-void RNNTranslator::bindWeights(float *params, float *grad) {
-	float *paramsCursor = params;
-	float *gradCursor = grad;
-	
-	m_encoder->bindWeights(paramsCursor, gradCursor);
+void RNNTranslator::bindWeights(float *params) {
+	float *paramsCursor = params;	
+	m_encoder->bindWeights(paramsCursor);
 	
 	paramsCursor += m_encoder->m_paramSize;
-	gradCursor += m_encoder->m_paramSize;
-
-	m_decoder->bindWeights(paramsCursor, gradCursor);
+	m_decoder->bindWeights(paramsCursor);
 }
 
-float RNNTranslator::computeGrad (float *grad, float *params, float *data, float *target, int minibatchSize) {
-	int maxThreads = omp_get_max_threads();
-	float error = 0.f;
+void RNNTranslator::bindGrads(float *grad) {
+	float *gradCursor = grad;	
+	m_encoder->bindGrads(gradCursor);
 	
-	memset(grad, 0x00, sizeof(float)*m_paramSize);
-	bindWeights(params, grad);
+	gradCursor += m_encoder->m_paramSize;
+	m_decoder->bindGrads(gradCursor);
+}
 
-	float *sampleData = data;
-	float *sampleTarget = target;
+float RNNTranslator::translate (float *params, float *input, float *predict, int batchSize) {
+	float error = 0.f;
+	bindWeights(params);
+
+	float *sampleInput = input;
+	float *samplePredict = predict;
+
+	RecurrentLayer *enInputLayer  = m_encoder->m_vecLayers[0];
+	RecurrentLayer *enOutputLayer = m_encoder->m_vecLayers[m_encoder->m_numLayer-1];
+
+	RecurrentLayer *deInputLayer  = m_decoder->m_vecLayers[0];
+	RecurrentLayer *deOutputLayer = m_decoder->m_vecLayers[m_decoder->m_numLayer-1];
 
 	/*** feed forward and feed backward ***/
-	for (int dataIdx=0; dataIdx<minibatchSize; ++dataIdx) {
+	for (int sampleIdx=0; sampleIdx<batchSize; ++sampleIdx) {
 		// TODO
 		int encoderSeqLen = m_encoder->m_maxSeqLen;
 		int decoderSeqLen = m_decoder->m_maxSeqLen;
@@ -78,25 +81,19 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		*                      Feed Forward Phase                       *
 		****************************************************************/
 		// ********* encoder *********
-		float *dataCursor = sampleData;		
-		RecurrentLayer *enInputLayer  = m_encoder->m_vecLayers[0];
-		RecurrentLayer *enOutputLayer = m_encoder->m_vecLayers[m_encoder->m_numLayer-1];
-		// bind input sequence to m_inputActs of the input layer of the encoder
+		
+		// step 1: bind input sequence to m_inputActs of the input layer of the encoder
 		if (m_reverseEncoder) {
-			for (int seqIdx=encoderSeqLen; seqIdx>=1; --seqIdx) {
-				memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_inputSize);
-				dataCursor += m_encoder->m_inputSize;
-			}
-		} else {			
-			for (int seqIdx=1; seqIdx<=encoderSeqLen; ++seqIdx) {
-				memcpy(enInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_encoder->m_inputSize);
-				dataCursor += m_encoder->m_inputSize;
-			}
+			m_encoder->setInput(sampleInput, encoderSeqLen, 1, -1);
+		} else {
+			m_encoder->setInput(sampleInput, 1, encoderSeqLen);
 		}
+		
+		// step 2: encoder feedforward
 		m_encoder->feedForward(encoderSeqLen);
 
 		// ********* decoder *********
-		// set the internal states of the decoder at t' = 0 to the internal states of encoder at t = T
+		// step 1: set the internal states of the decoder at t' = 0 to the internal states of encoder at t = T
 		#pragma omp parallel for
 		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
 			RNNLSTMLayer *enLayer = dynamic_cast<RNNLSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
@@ -104,26 +101,103 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			memcpy(deLayer->m_states[0], enLayer->m_states[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(deLayer->m_outputActs[0], enLayer->m_outputActs[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
 		}
-		// set the input for the decoder
-		float *targetCursor = sampleTarget;
-		RecurrentLayer *deInputLayer  = m_decoder->m_vecLayers[0];
-		RecurrentLayer *deOutputLayer = m_decoder->m_vecLayers[m_decoder->m_numLayer-1];
-		// for seqIdx = 1, the input will be empty, which is similar to the END-OF-SENTENCE input in Ilya's work
-		// for seqIdx = 2 to decoderSeqLen, bind input sequence to m_inputActs of the input layer of the decoder
-		// note at time step t, the input vector should be the target vector at time step t-1
+		
+		// step 2: predict
+		// for seqIdx = 1
+		m_decoder->forwardStep(1);
+		// for seqIdx = 2 to T'		
 		for (int seqIdx=2; seqIdx<=decoderSeqLen; ++seqIdx) {
+			// set input for t = seqIdx
 			if (m_decoder->m_taskType == "classification") {
-				for (int classIdx=0; classIdx<m_decoder->m_outputSize; classIdx++) {
-					if ( abs(targetCursor[classIdx] - 1.f) < 1e-6 ) {
-						memcpy(deInputLayer->m_inputActs[seqIdx], sampleData+m_decoder->m_inputSize*classIdx, sizeof(float)*m_decoder->m_inputSize);
-					}
-				}
+				int predictClass = argmax(deOutputLayer->m_outputActs[seqIdx-1], m_decoder->m_outputSize);
+				m_decoder->setInput(sampleInput+m_decoder->m_inputSize*predictClass, seqIdx, seqIdx);
 			} else if (m_decoder->m_taskType == "regression") {
-				memcpy(deInputLayer->m_inputActs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_inputSize);
+				m_decoder->setInput(deOutputLayer->m_outputActs[seqIdx-1], seqIdx, seqIdx);
 			}
-			targetCursor += m_decoder->m_outputSize;
+			// forward step for t = seqIdx
+			m_decoder->forwardStep(seqIdx);
 		}				
-		// decoder feedforward based on internal states at t' = 0 and input sequence from t' = 1 to T'
+		
+		/****************************************************************
+		*                      Get Predicted Values                     *
+		****************************************************************/
+		m_decoder->getPredict(samplePredict, decoderSeqLen);
+				
+		sampleInput   += encoderSeqLen * m_encoder->m_inputSize;
+		samplePredict += decoderSeqLen * m_decoder->m_outputSize;
+	}
+
+	return error;
+}
+
+float RNNTranslator::computeGrad (float *grad, float *params, float *input, float *target, int minibatchSize) {
+	
+	float error = 0.f;
+	memset(grad, 0x00, sizeof(float)*m_paramSize);
+	
+	bindWeights(params);
+	bindGrads(grad);
+
+	float *sampleInput = input;
+	float *sampleTarget = target;
+
+	RecurrentLayer *enInputLayer  = m_encoder->m_vecLayers[0];
+	RecurrentLayer *enOutputLayer = m_encoder->m_vecLayers[m_encoder->m_numLayer-1];
+
+	RecurrentLayer *deInputLayer  = m_decoder->m_vecLayers[0];
+	RecurrentLayer *deOutputLayer = m_decoder->m_vecLayers[m_decoder->m_numLayer-1];
+
+	/*** feed forward and feed backward ***/
+	for (int sampleIdx=0; sampleIdx<minibatchSize; ++sampleIdx) {
+		// TODO
+		int encoderSeqLen = m_encoder->m_maxSeqLen;
+		int decoderSeqLen = m_decoder->m_maxSeqLen;
+
+		/* reset internal states of LSTM layers */
+		m_encoder->resetStates(encoderSeqLen);
+		m_decoder->resetStates(decoderSeqLen);
+		
+		/****************************************************************
+		*                      Feed Forward Phase                       *
+		****************************************************************/
+		// ********* encoder *********
+		
+		// step 1: bind input sequence to m_inputActs of the input layer of the encoder
+		if (m_reverseEncoder) {
+			m_encoder->setInput(sampleInput, encoderSeqLen, 1, -1);
+		} else {
+			m_encoder->setInput(sampleInput, 1, encoderSeqLen);
+		}
+		
+		// step 2: encoder feedforward
+		m_encoder->feedForward(encoderSeqLen);
+
+		// ********* decoder *********
+		// step 1: set the internal states of the decoder at t' = 0 to the internal states of encoder at t = T
+		#pragma omp parallel for
+		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
+			RNNLSTMLayer *enLayer = dynamic_cast<RNNLSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
+			RNNLSTMLayer *deLayer = dynamic_cast<RNNLSTMLayer*>(m_decoder->m_vecLayers[layerIdx]);
+			memcpy(deLayer->m_states[0], enLayer->m_states[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
+			memcpy(deLayer->m_outputActs[0], enLayer->m_outputActs[encoderSeqLen], sizeof(float) * deLayer->m_numNeuron);
+		}
+		
+		// step 2: set the input for the decoder
+		// for seqIdx = 1, the input will be empty, which is similar to the END-OF-SENTENCE in Ilya's work
+		// for seqIdx = 2 to T', bind input sequence to m_inputActs of the input layer of the decoder
+		// note at time step t, the input vector should be the target vector at time step t-1
+		if (m_decoder->m_taskType == "classification") {
+			#pragma omp parallel for
+			for (int seqIdx=2; seqIdx<=decoderSeqLen; ++seqIdx) {
+				float *targetCursor = sampleTarget + (seqIdx-2) * m_decoder->m_outputSize;
+				int targetClass = argmax (targetCursor, m_decoder->m_outputSize);
+				m_decoder->setInput(sampleInput+m_decoder->m_inputSize*targetClass, seqIdx, seqIdx);
+			}
+		} else if (m_decoder->m_taskType == "regression") {
+			m_decoder->setInput(sampleTarget, 2, decoderSeqLen);
+		}
+		
+		// step 3: decoder feedforward
 		m_decoder->feedForward(decoderSeqLen);
 		
 		/****************************************************************
@@ -135,17 +209,15 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 		*                      Feed Backword Phase                      *
 		****************************************************************/
 		// ********* decoder *********
-		targetCursor = sampleTarget; // reset the target cursor to sample target
-		// bind target sequence to m_outputErrs of the output layer of the decoder
-		for (int seqIdx=1; seqIdx<=decoderSeqLen; ++seqIdx) {			
-			memcpy(deOutputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_decoder->m_outputSize);			
-			targetCursor += m_decoder->m_outputSize;
-		}
-		// decoder feed backward based on taget sequence from t' = 1 to T'
+		
+		// step 1: bind target sequence to m_outputErrs of the output layer of the decoder
+		m_decoder->setTarget(sampleTarget, 1, decoderSeqLen);
+		
+		// step 2: decoder feed backward
 		m_decoder->feedBackward(decoderSeqLen);
 
 		// ********* encoder *********
-		// set the internal deltas of the encoder at t = T+1 to the internal deltas of encoder at t' = 1
+		// step 1: set the internal deltas of the encoder at t = T+1 to the internal deltas of encoder at t' = 1
 		#pragma omp parallel for
 		for (int layerIdx=1; layerIdx<m_encoder->m_numLayer; layerIdx++) {
 			RNNLSTMLayer *enLayer = dynamic_cast<RNNLSTMLayer*>(m_encoder->m_vecLayers[layerIdx]);
@@ -156,11 +228,14 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *data, float
 			memcpy(enLayer->m_preGateStateDelta[encoderSeqLen+1], deLayer->m_preGateStateDelta[1], sizeof(float) * deLayer->m_numNeuron);
 			memcpy(enLayer->m_forgetGateActs[encoderSeqLen+1], deLayer->m_forgetGateActs[1], sizeof(float) * deLayer->m_numNeuron);
 		}
-		// encoder feed backward based on deltas at t = T+1
+		
+		// step 2: encoder feed backward based on deltas at t = T+1
 		m_encoder->feedBackward(encoderSeqLen);
 
-		// move cursor to new position
-		sampleData += encoderSeqLen * m_encoder->m_inputSize;
+		/****************************************************************
+		*                   move cursor to new position                 *
+		****************************************************************/
+		sampleInput += encoderSeqLen * m_encoder->m_inputSize;
 		sampleTarget += decoderSeqLen * m_decoder->m_outputSize;
 	}
 

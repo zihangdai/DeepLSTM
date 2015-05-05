@@ -16,6 +16,9 @@ public:
 	/* method */
 	void feedForward(int inputSeqLen);
 	void feedBackward(int inputSeqLen);
+
+	void forwardStep(int seqIdx);
+	void backwardStep(int seqIdx);
 };
 
 #endif

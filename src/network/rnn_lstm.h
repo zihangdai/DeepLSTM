@@ -19,13 +19,22 @@ public:
 	void initParams (float *params);
 
 	float computeError(float *sampleTarget, int inputSeqLen);
+	void getPredict(float *samplePredict, int inputSeqLen);
 
 	void feedBackward(int inputSeqLen);
 	void feedForward(int inputSeqLen);
 
-	void bindWeights(float *params, float *grad);
-	void resetStates(int inputSeqLen);
-	
+	void forwardStep(int seqIdx);
+	void backwardStep(int seqIdx);
+
+	void setInput(float *input, int begIdx, int endIdx, int stride=1);
+	void setTarget(float *target, int begIdx, int endIdx, int stride=1);
+
+	void bindWeights(float *params);
+	void bindGrads(float *grad);
+
+	void resetStates(int inputSeqLen);		
+
 private:
 	RecurrentLayer *initLayer (int layerIdx);
 	RecurrentConnection *initConnection(int connIdx);	

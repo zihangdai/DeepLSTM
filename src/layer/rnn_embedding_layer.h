@@ -23,7 +23,9 @@ public:
 	void feedBackward(int inputSeqLen);
 	void resetStates(int inputSeqLen);
 
-	void bindWeights(float *params, float *grad);
+	void bindWeights(float *params);
+	void bindGrads(float *grad);
+	
 };
 
 #endif

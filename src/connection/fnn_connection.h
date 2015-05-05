@@ -35,7 +35,8 @@ public:
 	void virtual feedBackward() {};
 
 	void virtual initParams(float *params) {};
-	void virtual bindWeights(float *params, float *grad) {};
+	void virtual bindWeights(float *params) {};
+	void virtual bindGrads(float *grad) {};
 };
 
 /****************************************************************
@@ -55,7 +56,9 @@ public:
 	void feedBackward();
 
 	void initParams(float *params);
-	void bindWeights(float *params, float *grad);
+
+	void bindWeights(float *params);
+	void bindGrads(float *grad);
 };
 
 #endif

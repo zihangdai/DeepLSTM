@@ -41,7 +41,8 @@ public:
 	
 	void initParams (float *params);
 
-	void bindWeights(float *params, float *grad);
+	void bindWeights(float *params);
+	void bindGrads(float *grad);
 };
 
 

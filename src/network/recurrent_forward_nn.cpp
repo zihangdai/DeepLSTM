@@ -32,7 +32,8 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 	float corrCount = 0.f;
 	
 	memset(grad, 0x00, sizeof(float)*m_paramSize);
-	bindWeights(params, grad);
+	bindWeights(params);
+	bindGrads(grad);
 
 	float *sampleData = data;
 	float *sampleTarget = target;
@@ -124,23 +125,30 @@ void RecurrentForwardNN::initParams (float *params) {
 	}
 }
 
-void RecurrentForwardNN::bindWeights(float *params, float *grad) {
-	float *paramsCursor = params;
-	float *gradCursor = grad;
-	
+void RecurrentForwardNN::bindWeights(float *params) {
 	// m_rnn
-	m_rnn->bindWeights(paramsCursor, gradCursor);
-	paramsCursor += m_rnn->m_paramSize;
-	gradCursor += m_rnn->m_paramSize;
-
+	float *paramsCursor = params;
+	m_rnn->bindWeights(paramsCursor);
+	
 	// Weights
+	paramsCursor += m_rnn->m_paramSize;
 	m_W = paramsCursor;
+	
+	// bias
+	paramsCursor += m_targetSize * m_rnn->m_outputSize;
+	m_bias = paramsCursor;
+}
+
+void RecurrentForwardNN::bindGrads(float *grad) {
+	// grad m_rnn
+	float *gradCursor = grad;
+	m_rnn->bindGrads(gradCursor);
+
+	// gradWeights
+	gradCursor += m_rnn->m_paramSize;
 	m_gradW = gradCursor;
 
-	paramsCursor += m_targetSize * m_rnn->m_outputSize;
+	// gradBias
 	gradCursor += m_targetSize * m_rnn->m_outputSize;
-
-	// bias
-	m_bias = paramsCursor;
 	m_gradBias = gradCursor;
 }

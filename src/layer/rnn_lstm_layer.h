@@ -77,10 +77,15 @@ public:
 
 	void feedForward(int inputSeqLen);
 	void feedBackward(int inputSeqLen);
-	void resetStates(int inputSeqLen);
+
+	void forwardStep(int seqIdx);
+	void backwardStep(int seqIdx);
+	
+	void bindWeights(float *params);
+	void bindGrads(float *grad);
 
 	void reshape(int newSeqLen);
-	void bindWeights(float *params, float *grad);
+	void resetStates(int inputSeqLen);
 
 private:
 	/* method */

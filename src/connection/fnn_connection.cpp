@@ -31,16 +31,23 @@ void FNNFullConnection::initParams(float *params) {
 	}
 }
 
-void FNNFullConnection::bindWeights(float *params, float *grad) {
-	float *paramsCursor = params;
-	float *gradCursor = grad;
+void FNNFullConnection::bindWeights(float *params) {
 	// weights
+	float *paramsCursor = params;	
 	m_weights = paramsCursor;
-	m_gradWeights = gradCursor;
-	paramsCursor += m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
-	gradCursor += m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
+	
 	// bias
+	paramsCursor += m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;		
 	m_bias = paramsCursor;
+}
+
+void FNNFullConnection::bindGrads(float *grad) {
+	// weights
+	float *gradCursor = grad;	
+	m_gradWeights = gradCursor;
+		
+	// bias
+	gradCursor += m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
 	m_gradBias = gradCursor;
 }
 

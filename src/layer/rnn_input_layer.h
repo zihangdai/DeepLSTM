@@ -9,16 +9,15 @@
 class RNNInputLayer : public RecurrentLayer
 {
 public:
-	RNNInputLayer(int numNeuron, int maxSeqLen) : RecurrentLayer(numNeuron, maxSeqLen, numNeuron) {
-		#ifdef DEBUG_LAYER
-		printf("RNNInputLayer constructor.\n");
-		#endif
-	};
+	RNNInputLayer(int numNeuron, int maxSeqLen) : RecurrentLayer(numNeuron, maxSeqLen, numNeuron) {};
 	~RNNInputLayer() {};
 
 	/* data */
 	void feedForward(int inputSeqLen);
-	void feedBackward(int inputSeqLen);
+	// void feedBackward(int inputSeqLen);
+
+	void forwardStep(int seqIdx);
+	// void backwardStep(int seqIdx);
 };
 
 #endif

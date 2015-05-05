@@ -33,8 +33,16 @@ public:
 	void virtual feedForward(int inputSeqLen) {};
 	void virtual feedBackward(int inputSeqLen) {};
 
+	void virtual forwardStep(int seqIdx) {};
+	void virtual backwardStep(int seqIdx) {};
+
+	void virtual forwardStep(int preIdx, int postIdx) {};
+	void virtual backwardStep(int preIdx, int postIdx) {};
+
 	void virtual initParams(float *params) {};
-	void virtual bindWeights(float *params, float *grad) {};
+
+	void virtual bindWeights(float *params) {};
+	void virtual bindGrads(float *grad) {};
 };
 
 /****************************************************************
@@ -53,8 +61,16 @@ public:
 	void feedForward(int inputSeqLen);
 	void feedBackward(int inputSeqLen);
 
+	void forwardStep(int seqIdx);
+	void backwardStep(int seqIdx);
+
+	void forwardStep(int preIdx, int postIdx);
+	void backwardStep(int preIdx, int postIdx);
+
 	void initParams(float *params);
-	void bindWeights(float *params, float *grad);
+
+	void bindWeights(float *params);
+	void bindGrads(float *grad);
 };
 
 /****************************************************************
@@ -73,12 +89,11 @@ public:
 	void feedForward(int inputSeqLen);
 	void feedBackward(int inputSeqLen);
 
-	void virtual initParams(float *params) {};
-	void virtual bindWeights(float *params, float *grad) {};
-};
+	void forwardStep(int seqIdx);
+	void backwardStep(int seqIdx);
 
-/****************************************************************
-* Forward Connection
-****************************************************************/
+	void forwardStep(int preIdx, int postIdx);
+	void backwardStep(int preIdx, int postIdx);	
+};
 
 #endif

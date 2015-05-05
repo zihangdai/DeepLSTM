@@ -145,6 +145,44 @@ void RNNLSTM::feedBackward(int inputSeqLen) {
 	}
 }
 
+void RNNLSTM::forwardStep(int seqIdx) {
+	/* forwardStep through connections and layers */
+	m_vecLayers[0]->forwardStep(seqIdx);
+	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
+		m_vecConnections[connIdx]->forwardStep(seqIdx);
+		m_vecLayers[connIdx+1]->forwardStep(seqIdx);
+	}
+}
+
+void RNNLSTM::backwardStep(int seqIdx) {
+	/* backwardStep through connections and layers */
+	m_vecLayers[m_numLayer-1]->backwardStep(seqIdx);
+	for (int connIdx=m_numLayer-2; connIdx>=0; --connIdx) {
+		m_vecConnections[connIdx]->backwardStep(seqIdx);
+		m_vecLayers[connIdx]->backwardStep(seqIdx);
+	}
+}
+
+void RNNLSTM::setInput(float *input, int begIdx, int endIdx, int stride) {
+	float *inputCursor = input;
+	// bind input sequence to m_inputActs of the input layer
+	RecurrentLayer *RNNInputLayer = m_vecLayers[0];
+	for (int seqIdx=begIdx; seqIdx<=endIdx; seqIdx+=stride) {
+		memcpy(RNNInputLayer->m_inputActs[seqIdx], inputCursor, sizeof(float)*m_inputSize);
+		inputCursor += m_inputSize;
+	}
+}
+
+void RNNLSTM::setTarget(float *target, int begIdx, int endIdx, int stride) {
+	float *targetCursor = target;
+	// bind target sequence to m_outputErrs of the output layer
+	RecurrentLayer *outputLayer = m_vecLayers[m_numLayer-1];
+	for (int seqIdx=begIdx; seqIdx<=endIdx; seqIdx+=stride) {
+		memcpy(outputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_outputSize);
+		targetCursor += m_outputSize;
+	}
+}
+
 float RNNLSTM::computeError(float *sampleTarget, int inputSeqLen) {
 	float sampleError = 0.f;
 	float *targetCursor = sampleTarget;
@@ -163,11 +201,20 @@ float RNNLSTM::computeError(float *sampleTarget, int inputSeqLen) {
 	return sampleError;
 }
 
+void RNNLSTM::getPredict(float *samplePredict, int inputSeqLen) {
+	float *predictCursor = samplePredict;
+	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
+		memcpy(predictCursor, m_vecLayers[m_numLayer-1]->m_outputActs[seqIdx], sizeof(float) * m_outputSize);
+		predictCursor += m_outputSize;
+	}
+}
+
 float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *target, int minibatchSize) {
 	float error = 0.f;
 	
 	memset(grad, 0x00, sizeof(float)*m_paramSize);
-	bindWeights(params, grad);
+	bindWeights(params);
+	bindGrads(grad);
 	
 	float *sampleData = data;
 	float *sampleTarget = target;
@@ -181,13 +228,8 @@ float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *targe
 		resetStates(inputSeqLen); // this is subject to change
 		
 		/* feedforward */
-		float *dataCursor = sampleData;
-		// bind input sequence to m_inputActs of the input layer 
-		RecurrentLayer *RNNInputLayer = m_vecLayers[0];
-		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-			memcpy(RNNInputLayer->m_inputActs[seqIdx], dataCursor, sizeof(float)*m_inputSize);
-			dataCursor += m_inputSize;
-		}
+		// set input
+		setInput(sampleData, 1, inputSeqLen);
 		// feedForward through connections and layers
 		feedForward(inputSeqLen);
 
@@ -195,13 +237,8 @@ float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *targe
 		error += computeError(sampleTarget, inputSeqLen);
 
 		/* feedbackword */
-		float *targetCursor = sampleTarget;
-		// bind target sequence to m_outputErrs of the output layer
-		RecurrentLayer *outputLayer = m_vecLayers[m_numLayer-1];
-		for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
-			memcpy(outputLayer->m_outputErrs[seqIdx], targetCursor, sizeof(float)*m_outputSize);
-			targetCursor += m_outputSize;
-		}
+		// set target
+		setTarget(sampleTarget, 1, inputSeqLen);
 		// feedback through connections and layers
 		feedBackward(inputSeqLen);
 
@@ -210,16 +247,17 @@ float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *targe
 	}
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
-	// float normFactor = 1.f / (float) minibatchSize;
-	// for (int dim=0; dim<m_paramSize; ++dim) {
-	// 	grad[dim] *= normFactor;
-	// 	if (grad[dim] < -1.f) {
-	// 		grad[dim] = -1.f;
-	// 	} else if (grad[dim] > 1.f) {
-	// 		grad[dim] = 1.f;
-	// 	}
-	// }
-	// error *= normFactor;
+	float normFactor = 1.f / (float) minibatchSize;
+	#pragma omp parallel for
+	for (int dim=0; dim<m_paramSize; ++dim) {
+		grad[dim] *= normFactor;
+		if (grad[dim] < -1.f) {
+			grad[dim] = -1.f;
+		} else if (grad[dim] > 1.f) {
+			grad[dim] = 1.f;
+		}
+	}
+	error *= normFactor;
 
 	return error;
 }
@@ -231,20 +269,33 @@ void RNNLSTM::resetStates(int inputSeqLen) {
 }
 
 // Sequential Part
-void RNNLSTM::bindWeights(float *params, float *grad) {
+void RNNLSTM::bindWeights(float *params) {
 	// define cursors
 	float *paramsCursor = params;
+	// layer part
+	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
+		m_vecLayers[layerIdx]->bindWeights(paramsCursor);
+		paramsCursor += m_vecLayers[layerIdx]->m_paramSize;		
+	}
+	// connection part
+	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
+		m_vecConnections[connIdx]->bindWeights(paramsCursor);
+		paramsCursor += m_vecConnections[connIdx]->m_paramSize;
+	}
+}
+
+// Sequential Part
+void RNNLSTM::bindGrads(float *grad) {
+	// define cursors
 	float *gradCursor = grad;
 	// layer part
 	for (int layerIdx=0; layerIdx<m_numLayer; ++layerIdx) {
-		m_vecLayers[layerIdx]->bindWeights(paramsCursor, gradCursor);
-		paramsCursor += m_vecLayers[layerIdx]->m_paramSize;
+		m_vecLayers[layerIdx]->bindGrads(gradCursor);
 		gradCursor += m_vecLayers[layerIdx]->m_paramSize;
 	}
 	// connection part
 	for (int connIdx=0; connIdx<m_numLayer-1; ++connIdx) {
-		m_vecConnections[connIdx]->bindWeights(paramsCursor, gradCursor);
-		paramsCursor += m_vecConnections[connIdx]->m_paramSize;
+		m_vecConnections[connIdx]->bindGrads(gradCursor);
 		gradCursor += m_vecConnections[connIdx]->m_paramSize;
 	}
 }

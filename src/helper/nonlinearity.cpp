@@ -87,6 +87,18 @@ void softmax (float *result, float *input, int dim) {
 	}
 }
 
+int argmax (float *input, int dim) {
+	int maxIdx = 0;
+	float maxVal = input[0];
+	for (int idx=1; idx<dim; idx++) {
+		if ( input[idx] > maxVal ) {
+			maxIdx = idx;
+			maxVal = input[idx];
+		}
+	}
+	return maxIdx;
+}
+
 /****************************************************************
 * Multi-thread version controled by OpenMP
 ****************************************************************/

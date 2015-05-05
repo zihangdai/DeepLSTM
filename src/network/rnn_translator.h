@@ -14,17 +14,21 @@ public:
 
 	/* data */
 	int m_paramSize;
-	int m_reverseEncoder;	
+	int m_reverseEncoder;
 
 	RNNLSTM *m_encoder;
-	RNNLSTM *m_decoder;	
+	RNNLSTM *m_decoder;
 
 	/* method */
-	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);
 	void initParams (float *params);
 
+	float computeGrad (float *grad, float *params, float *input, float *label, int minibatchSize);
+
+	float translate (float *params, float *input, float *predict, int batchSize);
+
 private:
-	void bindWeights(float *params, float *grad);	
+	void bindWeights(float *params);
+	void bindGrads(float *grad);
 };
 
 #endif

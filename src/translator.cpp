@@ -109,6 +109,21 @@ int main(int argc, char* argv[]) {
     double endTime = CycleTimer::currentSeconds();
     printf("Time for %d iterations with %d threads: %f\n", maxiter, max_openmp_threads, endTime - startTime);
 
+    float *input = new float [dataSeqLen];
+    float *predict = new float [dataSeqLen];
+    for (int i=0; i<dataSeqLen; ++i) {
+        input[i] = (float) rand() / (float) (RAND_MAX);
+        printf("%f\t", input[i]);
+    }
+    printf("\n");
+    
+    translator->translate(params, input, predict, 1);
+    
+    for (int i=0; i<dataSeqLen; ++i) {
+        printf("%f\t", predict[i]);
+    }
+    printf("\n");
+
     string saveFilename = confReader->get<string>(section + "save_filename");
     ofstream savefile (saveFilename.c_str(), ios::out|ios::binary);
     if (savefile.is_open()) {

@@ -5,7 +5,7 @@ LIBDIR=lib
 UNAME=$(shell uname)
 
 # compiler
-CXX=mpic++
+CXX=g++
 
 # compile flags
 CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q
@@ -21,7 +21,7 @@ INCFLAGS+=-I$(HOME)/tool/openmpi/include
 INCFLAGS+=-I$(HOME)/tool/openblas/openblas/include
 
 # link flags
-LDFLAGS+=-lmpi -lmpi_cxx -lgfortran -lpthread -lopenblas -lglog
+LDFLAGS+=-lgfortran -lpthread -lopenblas -lglog
 LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
 LDFLAGS+=-L$(HOME)/tool/openmpi/lib
 LDFLAGS+=-L$(HOME)/tool/openblas/openblas/lib
@@ -33,7 +33,7 @@ VPATH = $(SRCDIR) \
 	$(SRCDIR)/sgd \
 	$(SRCDIR)/layer \
 	$(SRCDIR)/connection \
-	$(SRCDIR)/network \	
+	$(SRCDIR)/network
 
 # src files
 SRCS=\
