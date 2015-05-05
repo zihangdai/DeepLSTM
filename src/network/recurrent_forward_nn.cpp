@@ -13,9 +13,9 @@ RecurrentForwardNN::RecurrentForwardNN(boost::property_tree::ptree *confReader, 
 	m_outputLayer = new RNNSoftmaxLayer(m_targetSize, 1);
 	m_interConnect = new RNNFullConnection(m_rnn->m_vecLayers[m_rnn->m_numLayer-1], m_outputLayer);
 
-	m_paramSize = m_rnn->m_paramSize; 				// m_rnn
+	m_paramSize = m_rnn->m_paramSize; 			// m_rnn
 	m_paramSize += m_outputLayer->m_paramSize;	// m_outputLayer
-	m_paramSize += m_interConnect->m_paramSize;		// m_interConnect 	
+	m_paramSize += m_interConnect->m_paramSize;	// m_interConnect 	
 }
 
 RecurrentForwardNN::~RecurrentForwardNN() {
@@ -46,19 +46,15 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 		
 		// ********* forward pass ********* //
 		// step 1: set input 
-		m_rnn->setInput(sampleData, 1, 1);
+		for (int i=1; i<=m_rnn->m_maxSeqLen; ++i) {
+			m_rnn->setInput(sampleData, i, i);
+		}
 		// step 2: rnn feed forward
 		m_rnn->feedForward(m_rnn->m_maxSeqLen);
 		// step 3: inter connection
 		m_interConnect->forwardStep(m_rnn->m_maxSeqLen, 1);
 		// step 4: output layer
-		m_outputLayer->forwardStep(1);
-
-		// printf("m_outputLayer->m_outputActs[1]:\n");
-		// for (int i=0; i<m_targetSize; ++i) {
-		// 	printf("%f\t", m_outputLayer->m_outputActs[1][i]);
-		// }
-		// printf("\n");
+		m_outputLayer->forwardStep(1);		
 		
 		// backward pass
 		memcpy(m_outputLayer->m_outputErrs[1], sampleTarget, sizeof(float)*m_targetSize);
@@ -76,15 +72,10 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 		// ********* backward pass ********* //
 		// step 1: output layer
 		m_outputLayer->backwardStep(1);
-		// step 2: inter connection
-		// for (int i=0; i<m_targetSize; ++i) {
-		// 	printf("%f\t", m_rnn->m_vecLayers[m_rnn->m_numLayer-1]->m_outputActs[m_rnn->m_maxSeqLen][i]);
-		// }
-		// printf("\n");
+		// step 2: inter connection		
 		m_interConnect->backwardStep(m_rnn->m_maxSeqLen, 1);
 		// step 3: rnn feed forward
 		m_rnn->feedBackward(m_rnn->m_maxSeqLen);
-
 
 		// move cursor to new position
 		sampleData += m_dataSize;
@@ -94,16 +85,13 @@ float RecurrentForwardNN::computeGrad (float *grad, float *params, float *data, 
 	// normalization by number of input sequences and clip gradients to [-1, 1]
 	float normFactor = 1.f / (float) minibatchSize;
 	for (int dim=0; dim<m_paramSize; ++dim) {
-		grad[dim] *= normFactor;
-		// if (dim < 20)
-		// 	printf("grad[%d]:%f\t", dim, grad[dim]);
+		grad[dim] *= normFactor;		
 		if (grad[dim] < -1.f) {
 			grad[dim] = -1.f;
 		} else if (grad[dim] > 1.f) {
 			grad[dim] = 1.f;
 		}
 	}
-	// printf("\n");
 	error *= normFactor;
 
 	printf("Correct rate: %d/%d=%f\n", int(corrCount), minibatchSize, corrCount / float(minibatchSize));
