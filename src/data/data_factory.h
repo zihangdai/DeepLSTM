@@ -19,10 +19,7 @@ public:
 
 	virtual void getDataBatch(float* label, float* data, int* indices, int num) {};
 	
-	void getAllData(float* label, float* data) {
-		data = m_input;
-		label = m_output;
-	};
+	virtual void getAllData(float* label, float* data);
 
 	int m_numSample;
 

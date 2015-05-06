@@ -16,35 +16,37 @@ int main(int argc, char const *argv[]) {
 	RecurrentForwardNN *rnnfnn = new RecurrentForwardNN(confReader, section);
 
 	int paramSize = rnnfnn->m_paramSize;
-	
+    
 	float *params = new float[paramSize];
-	string saveFilename = confReader->get<string>(section + "save_filename");
-	ifstream savefile (saveFilename.c_str(), ios::out|ios::binary);
-	if (savefile.is_open()) {
-		savefile.read ((char *)params, sizeof(float) * paramSize);
-		savefile.close();
-	} else {
-		printf("Failed to open savefile\n");
-		exit(1);
-	}
+    string saveFilename = confReader->get<string>(section + "save_filename");
+    ifstream savefile (saveFilename.c_str(), ios::out|ios::binary);
+    if (savefile.is_open()) {
+        savefile.read ((char *)params, sizeof(float) * paramSize);
+        savefile.close();
+    } else {
+        printf("Failed to open savefile\n");
+        exit(1);
+    }
 
 	// step 2: Init Test Data and allocate related memorys
 	section = "TestData.";
 	DataFactory *dataset = new Mnist(confReader, section);
 	int numSample = dataset->getNumberOfData();
 
-	// step 3: testing
-	float *data, *label;
+	float *data  = new float[numSample * dataSize];
+	float *label = new float[numSample * labelSize];
+
+	// step 4: testing    
 	dataset->getAllData(label, data);
-	float error = rnnfnn->computeGrad(grad, params, data, label, numSample);
-	cout << "Test Error: " << error << endl;
+    float error = rnnfnn->predict(params, data, label, numSample);
+    cout << "Test Error: " << error << endl;
 
-	// step 4: delete allocated memory
-	delete [] params;
+    // step 6: delete allocated memory
+    delete [] params;
 
-	delete confReader;
-	delete rnnfnn;
-	delete dataset;
+    delete confReader;
+    delete rnnfnn;
+    delete dataset;
 
 	return 0;
 }
