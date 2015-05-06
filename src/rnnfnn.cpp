@@ -148,9 +148,5 @@ int main(int argc, char const *argv[]) {
 
 	delete [] indices;
 
-	delete rnnfnn;
-	delete sgdSolver;
-	delete dataset;
-
 	return 0;
 }
