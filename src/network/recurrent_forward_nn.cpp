@@ -57,7 +57,10 @@ float RecurrentForwardNN::predict (float *params, float *data, float *target, in
 
 		if (predIdx == corrIdx) {
 			corrCount ++;
+		} else {
+			printf("Data[%d]: pred %d, corr %d\n", predIdx, corrIdx);
 		}
+
 		error += log(m_outputLayer->m_outputActs[1][corrIdx]);
 
 		// move cursor to new position
