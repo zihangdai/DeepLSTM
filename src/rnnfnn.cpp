@@ -7,39 +7,39 @@
 using namespace std;
 
 sgdBase * initSgdSolver (boost::property_tree::ptree *confReader, string section, int paramSize) {
-    int solverType = confReader->get<int>(section+"solver_type");
-    sgdBase *sgdSolver;
-    switch (solverType) {
-        // sgdBasic
-        case 0: {
-            printf("Init basic sgd solver.\n");
-            sgdSolver = new sgdBasic(confReader, section, paramSize);
-            break;
-        }
-        // adagrad
-        case 1: {
-            printf("Init adagrad solver.\n");
-            sgdSolver = new adagrad(confReader, section, paramSize);
-            break;
-        }
-        // adadelta
-        case 2: {
-            sgdSolver = new adadelta(confReader, section, paramSize);
-            printf("Init adadelta solver.\n");
-            break;
-        }
-        // rmsprop
-        case 3: {
-            sgdSolver = new rmsprop(confReader, section, paramSize);
-            printf("Init rmsprop solver.\n");
-            break;
-        }
-        default: {
-            printf("Error solver type.\n");
-            exit(-1);
-        }
-    }
-    return sgdSolver;
+	int solverType = confReader->get<int>(section+"solver_type");
+	sgdBase *sgdSolver;
+	switch (solverType) {
+		// sgdBasic
+		case 0: {
+			printf("Init basic sgd solver.\n");
+			sgdSolver = new sgdBasic(confReader, section, paramSize);
+			break;
+		}
+		// adagrad
+		case 1: {
+			printf("Init adagrad solver.\n");
+			sgdSolver = new adagrad(confReader, section, paramSize);
+			break;
+		}
+		// adadelta
+		case 2: {
+			sgdSolver = new adadelta(confReader, section, paramSize);
+			printf("Init adadelta solver.\n");
+			break;
+		}
+		// rmsprop
+		case 3: {
+			sgdSolver = new rmsprop(confReader, section, paramSize);
+			printf("Init rmsprop solver.\n");
+			break;
+		}
+		default: {
+			printf("Error solver type.\n");
+			exit(-1);
+		}
+	}
+	return sgdSolver;
 }
 
 int main(int argc, char const *argv[]) {
@@ -55,31 +55,31 @@ int main(int argc, char const *argv[]) {
 	RecurrentForwardNN *rnnfnn = new RecurrentForwardNN(confReader, section);
 
 	int paramSize = rnnfnn->m_paramSize;
-    printf("paramSize: %d\n", paramSize);    
-    
+	printf("paramSize: %d\n", paramSize);
+	
 	float *params = new float[paramSize];
 	float *grad   = new float[paramSize];
-    rnnfnn->initParams(params);
+	rnnfnn->initParams(params);
 	
-    openblas_set_num_threads(1);
+	openblas_set_num_threads(1);
 	int batchSize = confReader->get<int>(section + "training_batch_size");
 	int maxiter = confReader->get<int>(section + "max_iteration");
 	int max_openmp_threads = confReader->get<int>(section + "max_threads");
-	omp_set_num_threads(max_openmp_threads);	
+	omp_set_num_threads(max_openmp_threads);
 
-    printf("openmp threads: %d, %d\n", omp_get_max_threads(), max_openmp_threads);
+	printf("openmp threads: %d, %d\n", omp_get_max_threads(), max_openmp_threads);
 
 	// Step 2: Initialize SGD Solver
 	section = "SGD.";
 	sgdBase *sgdSolver = initSgdSolver(confReader, section, paramSize);
 
-	// step 3: Init Data and allocate related memorys
+	// step 3: Init Training Data and allocate related memorys
 	section = "Data.";
 	DataFactory *dataset = new Mnist(confReader, section);
 	int numSample = dataset->getNumberOfData();
 	int dataSize  = dataset->getDataSize();
 	int labelSize = dataset->getLabelSize();
-    printf("Finish load data\n");
+	printf("Finish load data\n");
 
 	float *data  = new float[batchSize * dataSize];
 	float *label = new float[batchSize * labelSize];
@@ -91,11 +91,17 @@ int main(int argc, char const *argv[]) {
 	}
 	std::random_shuffle(indices, indices + numSample);
 
-	// step 4: training
-    int iter = 0, index = 0;
-    while (iter < maxiter) {
-    	// get minibatch data
-    	if (index + batchSize >= numSample){
+	// step 4: Init validation Data
+    section = "ValidData.";
+    DataFactory *validDataset = new Mnist(confReader, section);
+
+    // step 5: training
+	int iter = 0, index = 0, epoch = 0;
+	while (iter < maxiter) {
+		// get minibatch data
+		if (index + batchSize >= numSample){
+            printf("Cross Validation After Epoch %d\n", epoch++);
+            rnnfnn->predict(validDataset->m_input, validDataset->m_output, validDataset->m_numSample);
 			std::random_shuffle(indices, indices + numSample);
 			index = 0;
 		}
@@ -104,48 +110,47 @@ int main(int argc, char const *argv[]) {
 			index++;
 		}
 		dataset->getDataBatch(label, data, pickIndices, batchSize);
-        
-        // compute grad
-        double gradBegTime = CycleTimer::currentSeconds();
-        float error = rnnfnn->computeGrad(grad, params, data, label, batchSize);
-        double gradEndTime = CycleTimer::currentSeconds();
-        cout << "ComputeGrad time: " << gradBegTime - gradEndTime << endl;
+		
+		// compute grad
+		double gradBegTime = CycleTimer::currentSeconds();
+		float error = rnnfnn->computeGrad(grad, params, data, label, batchSize);
+		double gradEndTime = CycleTimer::currentSeconds();
+		cout << "ComputeGrad time: " << gradBegTime - gradEndTime << endl;
 
-        // update params
-        double optBegTime = CycleTimer::currentSeconds();
-        sgdSolver->updateParams(params, grad);
-        double optEndTime = CycleTimer::currentSeconds();
-        cout << "UpdateParams time: " << optBegTime - optEndTime << endl; 
+		// update params
+		double optBegTime = CycleTimer::currentSeconds();
+		sgdSolver->updateParams(params, grad);
+		double optEndTime = CycleTimer::currentSeconds();
+		cout << "UpdateParams time: " << optBegTime - optEndTime << endl; 
 
-        cout << "Iteration: " << iter << ", Error: " << error << endl;
-        iter ++;
-    }
+		cout << "Iteration: " << iter << ", Error: " << error << endl;
+		iter ++;
+	}
 
-    // step 5: save trained weights
-    section = "RNNFNN.";
-    string saveFilename = confReader->get<string>(section + "save_filename");
-    ofstream savefile (saveFilename.c_str(), ios::out|ios::binary);
-    if (savefile.is_open()) {
-        savefile.write ((char *)params, sizeof(float) * paramSize);
-        savefile.close();
-    } else {
-        printf("Failed to open savefile\n");
-        exit(1);
-    }
+	// step 6: save trained weights
+	section = "RNNFNN.";
+	string saveFilename = confReader->get<string>(section + "save_filename");
+	ofstream savefile (saveFilename.c_str(), ios::out|ios::binary);
+	if (savefile.is_open()) {
+		savefile.write ((char *)params, sizeof(float) * paramSize);
+		savefile.close();
+	} else {
+		printf("Failed to open savefile\n");
+		exit(1);
+	}
 
-    // step 6: delete allocated memory
-    delete [] params;
-    delete [] grad;
+	// step 7: delete allocated memory
+	delete [] params;
+	delete [] grad;
 
-    delete [] data;
-    delete [] label;
+	delete [] data;
+	delete [] label;
 
-    delete [] indices;
+	delete [] indices;
 
-    delete confReader;
-    delete rnnfnn;
-    delete sgdSolver;
-    delete dataset;
+	delete rnnfnn;
+	delete sgdSolver;
+	delete dataset;
 
 	return 0;
 }
