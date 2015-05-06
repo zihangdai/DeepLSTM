@@ -59,6 +59,10 @@ float RecurrentForwardNN::predict (float *params, float *data, float *target, in
 			corrCount ++;
 		}
 		error += log(m_outputLayer->m_outputActs[1][corrIdx]);
+
+		// move cursor to new position
+		sampleData += m_dataSize;
+		sampleTarget += m_targetSize;
 	}
 
 	printf("Avg Correct Rate: %d/%d=%f\n", int(corrCount), batchSize, corrCount / float(batchSize));

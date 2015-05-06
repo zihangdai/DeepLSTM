@@ -70,8 +70,3 @@ void Mnist::getDataBatch(float* label, float* data, int* indices, int num) {
         memcpy(label + i * m_outputDim, m_output + index * m_outputDim, sizeof(float) * m_outputDim);
     }
 }
-
-void Mnist::getAllData(float* label, float* data) {
-    memcpy(data, m_input, sizeof(float)*m_inputDim*m_numSample);
-    memcpy(label, m_output, sizeof(float)*m_outputDim*m_numSample);
-}
