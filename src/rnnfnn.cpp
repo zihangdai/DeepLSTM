@@ -122,6 +122,7 @@ int main(int argc, char const *argv[]) {
     }
 
     // step 5: save trained weights
+    section = "RNNFNN.";
     string saveFilename = confReader->get<string>(section + "save_filename");
     ofstream savefile (saveFilename.c_str(), ios::out|ios::binary);
     if (savefile.is_open()) {
