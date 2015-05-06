@@ -99,7 +99,7 @@ int main(int argc, char const *argv[]) {
 	int iter = 0, index = 0, epoch = 0;
 	while (iter < maxiter) {
 		// get minibatch data
-		if (index + batchSize >= numSample){
+		if (index + batchSize > numSample){
             printf("Cross Validation After Epoch %d\n", epoch++);
             rnnfnn->predict(params, validDataset->m_input, validDataset->m_output, validDataset->m_numSample);
 			std::random_shuffle(indices, indices + numSample);
