@@ -225,23 +225,23 @@ float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *targe
 		/* reset internal states of LSTM layers */
 		resetStates(inputSeqLen); // this is subject to change
 		
-		/* feedforward */
-		// set input
+		/* set input */
 		for (int i=1; i<=inputSeqLen; ++i) {
 			setInput(sampleData, i, i);
 		}
-		// feedForward through connections and layers
+
+		/* feedforward */		
 		feedForward(inputSeqLen);
+
+		/* set target */
+		for (int i=1; i<=inputSeqLen; ++i) {
+			setTarget(sampleTarget, i, i);
+		}
 
 		/* compute error */
 		error += computeError(inputSeqLen);
 
-		/* feedbackword */
-		// set target
-		for (int i=1; i<=inputSeqLen; ++i) {
-			setTarget(sampleTarget, i, i);
-		}
-		// feedback through connections and layers
+		/* feedbackword */		
 		feedBackward(inputSeqLen);
 
 		sampleData += m_inputSize;
