@@ -48,7 +48,7 @@ int main(int argc, char const *argv[]) {
 		}
 		case 1: {
 			double begTime = CycleTimer::currentSeconds();
-			printf("Runing Matrix-Vector Multiplication by OpenBlas (%d threads)\n", openblas_get_num_threads());
+			printf("Runing Matrix-Vector Multiplication by OpenBlas (%d threads)\n", omp_get_max_threads());
 			for (int iter = 0; iter < max_iter; ++iter) {
 				cblas_sgemv(CblasRowMajor, CblasNoTrans, m, n, 1.0, A, n, b, 1, 1.0, Ab, 1);
 			}
