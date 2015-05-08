@@ -75,10 +75,10 @@ int main(int argc, char const *argv[]) {
 
 	// step 3: Init Training Data and allocate related memorys
 	section = "Data.";
-	DataFactory *dataset = new Mnist(confReader, section);
-	int numSample = dataset->getNumberOfData();
-	int dataSize  = dataset->getDataSize();
-	int labelSize = dataset->getLabelSize();
+	DataFactory *trainData = new Mnist(confReader, section);
+	int numSample = trainData->getNumberOfData();
+	int dataSize  = trainData->getDataSize();
+	int labelSize = trainData->getLabelSize();
 	printf("Finish load data\n");
 
 	float *data  = new float[batchSize * dataSize];
@@ -93,7 +93,7 @@ int main(int argc, char const *argv[]) {
 
 	// step 4: Init validation Data
     section = "ValidData.";
-    DataFactory *validDataset = new Mnist(confReader, section);
+    DataFactory *validData = new Mnist(confReader, section);
 
     // step 5: training
 	int iter = 0, index = 0, epoch = 0;
@@ -101,7 +101,7 @@ int main(int argc, char const *argv[]) {
 		// get minibatch data
 		if (index + batchSize > numSample){
             printf("Cross Validation After Epoch %d\n", epoch++);
-            rnnfnn->predict(params, validDataset->m_input, validDataset->m_output, validDataset->m_numSample);
+            rnnfnn->predict(params, validData->m_input, validData->m_output, validData->m_numSample);
 			std::random_shuffle(indices, indices + numSample);
 			index = 0;
 		}
@@ -109,7 +109,7 @@ int main(int argc, char const *argv[]) {
 			pickIndices[i] = indices[index];
 			index++;
 		}
-		dataset->getDataBatch(label, data, pickIndices, batchSize);
+		trainData->getDataBatch(label, data, pickIndices, batchSize);
 		
 		// compute grad
 		double gradBegTime = CycleTimer::currentSeconds();
@@ -147,6 +147,13 @@ int main(int argc, char const *argv[]) {
 	delete [] label;
 
 	delete [] indices;
+	delete [] pickIndices;
+
+	delete rnnfnn;
+	delete confReader;
+	delete sgdSolver;
+	delete trainData;
+	delete validData;
 
 	return 0;
 }

@@ -2,12 +2,7 @@
 
 using namespace std;
 
-// #define DEBUG_CONNECTION
-
 RecurrentConnection::RecurrentConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) {
-	#ifdef DEBUG_CONNECTION
-	printf("RecurrentConnection constructor (%d, %d).\n", preLayer->m_numNeuron, postLayer->m_numNeuron);
-	#endif
 	m_preLayer = preLayer;
 	m_postLayer = postLayer;
 }
@@ -21,9 +16,6 @@ RNNFullConnection::RNNFullConnection(RecurrentLayer *preLayer, RecurrentLayer *p
 	m_paramSize = m_postLayer->m_numNeuron * m_preLayer->m_numNeuron;
 	// bias
 	m_paramSize += m_postLayer->m_numNeuron;
-	#ifdef DEBUG_CONNECTION
-	printf("RNNFullConnection constructor %d.\n", m_paramSize);
-	#endif
 }
 
 void RNNFullConnection::initParams(float *params) {	
@@ -135,9 +127,6 @@ void RNNFullConnection::backwardStep(int preIdx, int postIdx) {
 ****************************************************************/
 
 RNNLSTMConnection::RNNLSTMConnection(RecurrentLayer *preLayer, RecurrentLayer *postLayer) : RecurrentConnection(preLayer, postLayer) {
-	#ifdef DEBUG_CONNECTION
-	printf("RNNLSTMConnection constructor.\n");
-	#endif
 	m_paramSize = 0;
 }
 

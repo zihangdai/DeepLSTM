@@ -5,7 +5,7 @@ LIBDIR=lib
 UNAME=$(shell uname)
 
 # compiler
-CXX=g++
+CXX=mpic++
 
 # compile flags
 CXXFLAGS+=-O3 -m64 -fopenmp #Wa,-q

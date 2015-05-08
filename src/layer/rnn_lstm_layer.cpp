@@ -66,7 +66,6 @@ void RNNLSTMLayer::initParams(float *params) {
 	float multiplier = 0.08; // follow sequence to sequence translation
 	for (int i=0; i<m_paramSize; i++) {
 		params[i] = multiplier * SYM_UNIFORM_RAND;
-		// params[i] = 0.01f;
 	}
 }
 

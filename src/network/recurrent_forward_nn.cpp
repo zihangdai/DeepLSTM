@@ -20,8 +20,8 @@ RecurrentForwardNN::RecurrentForwardNN(boost::property_tree::ptree *confReader, 
 
 RecurrentForwardNN::~RecurrentForwardNN() {
 	if (m_rnn != NULL) delete m_rnn;
-	if (m_outputLayer != NULL) delete [] m_outputLayer;
-	if (m_interConnect != NULL) delete [] m_interConnect;
+	if (m_outputLayer != NULL) delete m_outputLayer;
+	if (m_interConnect != NULL) delete m_interConnect;
 }
 
 float RecurrentForwardNN::predict (float *params, float *data, float *target, int batchSize) {
@@ -58,7 +58,7 @@ float RecurrentForwardNN::predict (float *params, float *data, float *target, in
 		if (predIdx == corrIdx) {
 			corrCount ++;
 		} else {
-			printf("Data[%d]: pred %d, corr %d\n", predIdx, corrIdx);
+			printf("Data[%d]: pred %d, corr %d\n", dataIdx, predIdx, corrIdx);
 		}
 
 		error += log(m_outputLayer->m_outputActs[1][corrIdx]);

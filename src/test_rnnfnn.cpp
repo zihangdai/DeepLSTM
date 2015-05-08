@@ -30,14 +30,17 @@ int main(int argc, char const *argv[]) {
 
 	// step 2: Init Test Data and allocate related memorys
 	section = "TestData.";
-	DataFactory *dataset = new Mnist(confReader, section);
+	DataFactory *testData = new Mnist(confReader, section);
 
 	// step 4: testing
-	float error = rnnfnn->predict(params, dataset->m_input, dataset->m_output, dataset->m_numSample);
+	float error = rnnfnn->predict(params, testData->m_input, testData->m_output, testData->m_numSample);
 	cout << "Test Error: " << error << endl;
 
 	// step 6: delete allocated memory
 	delete [] params;
 
+	delete rnnfnn;
+	delete testData;
+	
 	return 0;
 }
