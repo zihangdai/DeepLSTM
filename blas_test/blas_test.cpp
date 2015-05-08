@@ -43,7 +43,7 @@ int main(int argc, char const *argv[]) {
 				}
 			}
 			double endTime = CycleTimer::currentSeconds();
-			printf("%f\n", endTime - begTime);
+			printf("%f\n", (endTime - begTime) / float(max_iter));
 			break;
 		}
 		case 1: {
@@ -53,7 +53,7 @@ int main(int argc, char const *argv[]) {
 				cblas_sgemv(CblasRowMajor, CblasNoTrans, m, n, 1.0, A, n, b, 1, 1.0, Ab, 1);
 			}
 			double endTime = CycleTimer::currentSeconds();
-			printf("%f\n", endTime - begTime);
+			printf("%f\n", (endTime - begTime) / float(max_iter));
 			break;
 		}
 		default:
