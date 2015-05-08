@@ -14,13 +14,12 @@ ifeq ($(UNAME), Linux)
 	CXXFLAGS+=-mavx
 endif
 
-
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
 INCFLAGS+=-I/usr/local/include
 INCFLAGS+=-I$(LIBDIR)/glog/include
 ifeq ($(HOSTNAME), latedays.andrew.cmu.edu)
-	INCFLAGS+=-I$/opt/openmpi/include
+	INCFLAGS+=-I/opt/openmpi/include
 	INCFLAGS+=-I$(HOME)/tool/openblas/openblas/include
 else
 ifneq (,$(findstring andrew.cmu.edu,$(HOSTNAME)))
@@ -53,27 +52,31 @@ endif
 
 # vpath
 VPATH = $(SRCDIR) \
-	$(SRCDIR)/config \
 	$(SRCDIR)/helper \
 	$(SRCDIR)/layer \
 	$(SRCDIR)/connection \
 	$(SRCDIR)/network \
+	$(SRCDIR)/sgd \
+	$(SRCDIR)/data
 
 # src files
 SRCS=\
 	$(SRCDIR)/main.cpp \
-	$(SRCDIR)/config/chameleon.cpp \
-	$(SRCDIR)/config/configfile.cpp \
-	$(SRCDIR)/config/confreader.cpp \
+	$(SRCDIR)/sgd/sgd.cpp \
+	$(SRCDIR)/sgd/adagrad.cpp \
+	$(SRCDIR)/sgd/adadelta.cpp \
+	$(SRCDIR)/sgd/rmsprop.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
-	$(SRCDIR)/layer/layer.cpp \
-	$(SRCDIR)/layer/input_layer.cpp \
-	$(SRCDIR)/layer/lstm_layer.cpp \
-	$(SRCDIR)/layer/softmax_layer.cpp \
-	$(SRCDIR)/layer/mse_layer.cpp \
-	$(SRCDIR)/connection/connection.cpp \
-	$(SRCDIR)/network/rnn_lstm.cpp
+	$(SRCDIR)/layer/rnn_layer.cpp \
+	$(SRCDIR)/layer/rnn_input_layer.cpp \
+	$(SRCDIR)/layer/rnn_lstm_layer.cpp \
+	$(SRCDIR)/layer/rnn_softmax_layer.cpp \
+	$(SRCDIR)/layer/rnn_mse_layer.cpp \
+	$(SRCDIR)/connection/rnn_connection.cpp \
+	$(SRCDIR)/network/rnn_lstm.cpp \
+	$(SRCDIR)/data/sequence_data.cpp \
+	$(SRCDIR)/data/mnist.cpp
 
 # obj files using patsubst matching
 OBJS=$(SRCS:%.cpp=%.o)

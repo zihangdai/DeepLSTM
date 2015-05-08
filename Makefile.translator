@@ -19,7 +19,7 @@ INCFLAGS+=$(foreach d, $(VPATH), -I$d)
 INCFLAGS+=-I/usr/local/include
 INCFLAGS+=-I$(LIBDIR)/glog/include
 ifeq ($(HOSTNAME), latedays.andrew.cmu.edu)
-	INCFLAGS+=-I$/opt/openmpi/include
+	INCFLAGS+=-I/opt/openmpi/include
 	INCFLAGS+=-I$(HOME)/tool/openblas/openblas/include
 else
 ifneq (,$(findstring andrew.cmu.edu,$(HOSTNAME)))

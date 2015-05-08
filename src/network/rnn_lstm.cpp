@@ -229,7 +229,9 @@ float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *targe
 		
 		/* feedforward */
 		// set input
-		setInput(sampleData, 1, inputSeqLen);
+		for (int i=1; i<=inputSeqLen; ++i) {
+			setInput(sampleData, i, i);
+		}
 		// feedForward through connections and layers
 		feedForward(inputSeqLen);
 
@@ -238,12 +240,14 @@ float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *targe
 
 		/* feedbackword */
 		// set target
-		setTarget(sampleTarget, 1, inputSeqLen);
+		for (int i=1; i<=inputSeqLen; ++i) {
+			setTarget(sampleTarget, i, i);
+		}
 		// feedback through connections and layers
 		feedBackward(inputSeqLen);
 
-		sampleData += m_inputSize * inputSeqLen;
-		sampleTarget += m_outputSize * inputSeqLen;
+		sampleData += m_inputSize;
+		sampleTarget += m_outputSize;
 	}
 
 	// normalization by number of input sequences and clip gradients to [-1, 1]

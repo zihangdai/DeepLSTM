@@ -115,13 +115,13 @@ int main(int argc, char const *argv[]) {
 		double gradBegTime = CycleTimer::currentSeconds();
 		float error = rnnfnn->computeGrad(grad, params, data, label, batchSize);
 		double gradEndTime = CycleTimer::currentSeconds();
-		cout << "ComputeGrad time: " << gradBegTime - gradEndTime << endl;
+		cout << "ComputeGrad time: " << gradEndTime - gradBegTime << endl;
 
 		// update params
 		double optBegTime = CycleTimer::currentSeconds();
 		sgdSolver->updateParams(params, grad);
 		double optEndTime = CycleTimer::currentSeconds();
-		cout << "UpdateParams time: " << optBegTime - optEndTime << endl; 
+		cout << "UpdateParams time: " << optEndTime - optBegTime << endl; 
 
 		cout << "Iteration: " << iter << ", Error: " << error << endl;
 		iter ++;

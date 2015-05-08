@@ -2,12 +2,7 @@
 
 using namespace std;
 
-// #define DEBUG_LAYER
-
 RecurrentLayer::RecurrentLayer (int numNeuron, int maxSeqLen, int inputSize) {
-	#ifdef DEBUG_LAYER
-	printf("RecurrentLayer constructor (%d, %d, %d).\n", numNeuron, maxSeqLen, inputSize);
-	#endif
 	m_numNeuron = numNeuron;
 	m_maxSeqLen = maxSeqLen;
 	m_inputSize = inputSize;
@@ -23,10 +18,7 @@ RecurrentLayer::RecurrentLayer (int numNeuron, int maxSeqLen, int inputSize) {
 	m_paramSize = 0;
 }
 
-RecurrentLayer::~RecurrentLayer () {
-	#ifdef DEBUG_LAYER
-	printf("RecurrentLayer deconstructor.\n");
-	#endif
+RecurrentLayer::~RecurrentLayer () {	
 	// release memory for sequence of length T+2 (t=0 & t=T+1 are extra space for neat code)
 	for (int seqIdx=0; seqIdx<m_maxSeqLen+2; ++seqIdx) {
 		releaseMem(seqIdx);
@@ -34,9 +26,7 @@ RecurrentLayer::~RecurrentLayer () {
 }
 
 void RecurrentLayer::resetStates(int inputSeqLen) {
-	#ifdef DEBUG_LAYER
-	printf("RecurrentLayer resetStates.\n");
-	#endif
+	#pragma omp parallel for
 	for (int seqIdx=0; seqIdx<inputSeqLen+2; ++seqIdx) {
 		memset(m_inputActs[seqIdx], 0x00, sizeof(float)*m_inputSize);
 		memset(m_inputErrs[seqIdx], 0x00, sizeof(float)*m_inputSize);
@@ -75,10 +65,6 @@ void RecurrentLayer::releaseMem (int seqIdx) {
 }
 
 void RecurrentLayer::reshape(int newSeqLen) {
-	#ifdef DEBUG_LAYER
-	printf("reshape RecurrentLayer from %d to %d.\n", m_maxSeqLen, newSeqLen);
-	#endif
-
 	// release mem if needed
 	if (newSeqLen < m_maxSeqLen) {
 		for (int seqIdx=newSeqLen+2; seqIdx<m_maxSeqLen+2; ++seqIdx) {

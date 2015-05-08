@@ -3,11 +3,7 @@
 
 using namespace std;
 
-#define DEBUG_LSTM_LAYER 0
-
 RNNLSTMLayer::RNNLSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : RecurrentLayer(numNeuron, maxSeqLen, inputSize) {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "RNNLSTMLayer constructor." << endl;
-
 	// resize all vectors
 	resize(m_maxSeqLen);
 
@@ -48,8 +44,6 @@ RNNLSTMLayer::RNNLSTMLayer(int numNeuron, int maxSeqLen, int inputSize) : Recurr
 }
 
 RNNLSTMLayer::~RNNLSTMLayer() {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "RNNLSTMLayer deconstructor." << endl;
-
 	for (int seqIdx=0; seqIdx<m_maxSeqLen+2; ++seqIdx) {
 		releaseMem(seqIdx);
 	}
@@ -133,7 +127,6 @@ void RNNLSTMLayer::releaseMem(int seqIdx) {
 }
 
 void RNNLSTMLayer::reshape(int newSeqLen) {
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "reshape RNNLSTMLayer from" << m_maxSeqLen << " to " << newSeqLen << endl;
 	// release mem if needed
 	if (newSeqLen < m_maxSeqLen) {
 		for (int seqIdx=newSeqLen+2; seqIdx<m_maxSeqLen+2; ++seqIdx) {
@@ -158,7 +151,6 @@ void RNNLSTMLayer::reshape(int newSeqLen) {
 void RNNLSTMLayer::resetStates(int inputSeqLen) {
 	/* all states and activations are initialised to zero at t = 0 */
 	/* all delta and error terms are zero at t = T + 1 */
-	DLOG_IF(INFO, DEBUG_LSTM_LAYER) << "RNNLSTMLayer resetStates" << endl;
 
 	#pragma omp parallel for
 	for (int seqIdx=0; seqIdx<inputSeqLen+2; ++seqIdx) {
@@ -261,25 +253,25 @@ void RNNLSTMLayer::feedForward(int inputSeqLen) {
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
 		// compute input gate activation
 		// dot(m_inGateActs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
-		dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-		elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
-		elem_accum(m_inGateActs[seqIdx], Bias_i, m_numNeuron);
-		sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
+		// dot(m_inGateActs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+		// elem_mul(m_inGateActs[seqIdx], W_i_c, m_states[seqIdx-1], m_numNeuron);
+		// elem_accum(m_inGateActs[seqIdx], Bias_i, m_numNeuron);
+		// sigm(m_inGateActs[seqIdx], m_inGateActs[seqIdx], m_numNeuron);
 		
 		// compute forget gate activation
 		// dot(m_forgetGateActs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
-		dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-		elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
-		elem_accum(m_forgetGateActs[seqIdx], Bias_f, m_numNeuron);
-		sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
+		// dot(m_forgetGateActs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+		// elem_mul(m_forgetGateActs[seqIdx], W_f_c, m_states[seqIdx-1], m_numNeuron);
+		// elem_accum(m_forgetGateActs[seqIdx], Bias_f, m_numNeuron);
+		// sigm(m_forgetGateActs[seqIdx], m_forgetGateActs[seqIdx], m_numNeuron);
 
 		// compute pre-gate states
 		// dot(m_preGateStates[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);		
-		dot(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-		elem_accum(m_preGateStates[seqIdx], Bias_c, m_numNeuron);		
-		tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
+		// dot(m_preGateStates[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+		// elem_accum(m_preGateStates[seqIdx], Bias_c, m_numNeuron);		
+		// tanh(m_preGateStates[seqIdx], m_preGateStates[seqIdx], m_numNeuron);
 
-		// computeGatesActs(seqIdx);
+		computeGatesActs(seqIdx);
 
 		// compute cell states
 		elem_mul(m_states[seqIdx], m_forgetGateActs[seqIdx], m_states[seqIdx-1], m_numNeuron);
@@ -287,8 +279,8 @@ void RNNLSTMLayer::feedForward(int inputSeqLen) {
 
 		// compute output gate activation
 		// dot(m_outGateActs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_inputActs[seqIdx], m_inputSize, 1);
-		dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
-		elem_accum(m_outGateActs[seqIdx], Bias_o, m_numNeuron);
+		// dot(m_outGateActs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron, 1);
+		// elem_accum(m_outGateActs[seqIdx], Bias_o, m_numNeuron);
 		elem_mul(m_outGateActs[seqIdx], W_o_c, m_states[seqIdx], m_numNeuron);
 		sigm(m_outGateActs[seqIdx], m_outGateActs[seqIdx], m_numNeuron);
 
@@ -399,11 +391,11 @@ void RNNLSTMLayer::feedBackward(int inputSeqLen) {
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
 		// four computations are independent but write to the same memory
 		// output error: m_outputErrs[seqIdx]. all deltas are from Time t=seqIdx+1
-		// computeOutputErrs (seqIdx);
-		trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
-		trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
-		trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
-		trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
+		computeOutputErrs (seqIdx);
+		// trans_dot(m_outputErrs[seqIdx], W_i_h, m_numNeuron, m_numNeuron, m_inGateDelta[seqIdx+1], m_numNeuron, 1);
+		// trans_dot(m_outputErrs[seqIdx], W_f_h, m_numNeuron, m_numNeuron, m_forgetGateDelta[seqIdx+1], m_numNeuron, 1);
+		// trans_dot(m_outputErrs[seqIdx], W_c_h, m_numNeuron, m_numNeuron, m_preGateStateDelta[seqIdx+1], m_numNeuron, 1);
+		// trans_dot(m_outputErrs[seqIdx], W_o_h, m_numNeuron, m_numNeuron, m_outGateDelta[seqIdx+1], m_numNeuron, 1);
 
 		// feedbackSequential (seqIdx);
 		// computations are independent but use the same m_derivBuf
@@ -447,13 +439,13 @@ void RNNLSTMLayer::feedBackward(int inputSeqLen) {
 	for (int seqIdx=inputSeqLen; seqIdx>0; --seqIdx) {
 		// computations are independent but write to the same memory
 		// spatial input error: m_inputErrs[seqIdx]
-		trans_dot(m_inputErrs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inGateDelta[seqIdx], m_numNeuron, 1);		
+		trans_dot(m_inputErrs[seqIdx], W_i_x, m_numNeuron, m_inputSize, m_inGateDelta[seqIdx], m_numNeuron, 1);
 		trans_dot(m_inputErrs[seqIdx], W_f_x, m_numNeuron, m_inputSize, m_forgetGateDelta[seqIdx], m_numNeuron, 1);
 		trans_dot(m_inputErrs[seqIdx], W_c_x, m_numNeuron, m_inputSize, m_preGateStateDelta[seqIdx], m_numNeuron, 1);
-		trans_dot(m_inputErrs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_outGateDelta[seqIdx], m_numNeuron, 1);		
+		trans_dot(m_inputErrs[seqIdx], W_o_x, m_numNeuron, m_inputSize, m_outGateDelta[seqIdx], m_numNeuron, 1);
 
-		// grad
-		outer(gradW_i_x, m_inGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);		
+		// compute grad
+		outer(gradW_i_x, m_inGateDelta[seqIdx], m_numNeuron, m_inputActs[seqIdx], m_inputSize);
 		outer(gradW_i_h, m_inGateDelta[seqIdx], m_numNeuron, m_outputActs[seqIdx-1], m_numNeuron);
 		elem_mul(gradW_i_c, m_inGateDelta[seqIdx], m_states[seqIdx-1], m_numNeuron);
 		elem_accum(gradBias_i, m_inGateDelta[seqIdx], m_numNeuron);

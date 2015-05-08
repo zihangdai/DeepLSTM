@@ -32,6 +32,18 @@ void dot (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B,
 	}
 }
 
+void dot_omp (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B) {	
+	int dim_inner = dim2_A;
+	for (int i=0; i<dim1_A; ++i) {
+		for (int j=0; j<dim2_B; ++j) {
+			for (int k=0; k<dim_inner; ++k) {
+				// R_ij += A_ik * B_kj
+				result[i*dim2_B+j] += A[i*dim2_A+k] * B[k*dim2_B+j];
+			}
+		}
+	}
+}
+
 void trans_dot (float *result, float *A, int dim1_A, int dim2_A, float *B, int dim1_B, int dim2_B) {
 	assert(dim1_A == dim1_B);
 	if (!SIMD) {
