@@ -49,6 +49,7 @@ ifneq (,$(findstring Zander,$(HOSTNAME)))
 	LDFLAGS+=-L$(LIBDIR)/openblas/lib
 endif
 endif
+endif
 
 # vpath
 VPATH = $(SRCDIR) \

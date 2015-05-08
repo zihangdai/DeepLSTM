@@ -3,6 +3,7 @@ OBJDIR=objs
 SRCDIR=src
 LIBDIR=lib
 UNAME=$(shell uname)
+HOSTNAME=$(shell hostname)
 
 # compiler
 CXX=mpic++
@@ -15,16 +16,38 @@ endif
 
 # include flags
 INCFLAGS+=$(foreach d, $(VPATH), -I$d)
-INCFLAGS+=-I$(LIBDIR)/openblas/include
 INCFLAGS+=-I$(LIBDIR)/glog/include
-INCFLAGS+=-I$(HOME)/tool/openmpi/include
-INCFLAGS+=-I$(HOME)/tool/openblas/openblas/include
+ifeq ($(HOSTNAME), latedays.andrew.cmu.edu)
+	INCFLAGS+=-I$/opt/openmpi/include
+	INCFLAGS+=-I$(HOME)/tool/openblas/openblas/include
+else
+ifneq (,$(findstring andrew.cmu.edu,$(HOSTNAME)))
+	INCFLAGS+=-I$(HOME)/tool/openmpi/include
+	INCFLAGS+=-I$(HOME)/tool/openblas/openblas/include
+else
+ifneq (,$(findstring Zander,$(HOSTNAME)))
+	INCFLAGS+=-I$(LIBDIR)/openblas/include
+endif
+endif
+endif
 
 # link flags
 LDFLAGS+=-lmpi -lmpi_cxx -lgfortran -lpthread -lopenblas -lglog
-LDFLAGS+=-L$(LIBDIR) -L$(LIBDIR)/openblas/lib -L$(LIBDIR)/glog/lib
-LDFLAGS+=-L$(HOME)/tool/openmpi/lib
-LDFLAGS+=-L$(HOME)/tool/openblas/openblas/lib
+LDFLAGS+=-L$(LIBDIR)
+LDFLAGS+=-L$(LIBDIR)/glog/lib
+ifeq ($(HOSTNAME), latedays.andrew.cmu.edu)
+	LDFLAGS+=-L/opt/openmpi/lib
+	LDFLAGS+=-L$(HOME)/tool/openblas/openblas/lib
+else
+ifneq (,$(findstring andrew.cmu.edu,$(HOSTNAME)))
+	LDFLAGS+=-L$(HOME)/tool/openmpi/lib
+	LDFLAGS+=-L$(HOME)/tool/openblas/openblas/lib
+else
+ifneq (,$(findstring Zander,$(HOSTNAME)))
+	LDFLAGS+=-L$(LIBDIR)/openblas/lib
+endif
+endif
+endif
 
 # vpath
 VPATH = $(SRCDIR) \
