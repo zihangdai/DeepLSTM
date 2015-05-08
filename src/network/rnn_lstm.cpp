@@ -183,20 +183,18 @@ void RNNLSTM::setTarget(float *target, int begIdx, int endIdx, int stride) {
 	}
 }
 
-float RNNLSTM::computeError(float *sampleTarget, int inputSeqLen) {
-	float sampleError = 0.f;
-	float *targetCursor = sampleTarget;
-	RecurrentLayer *curLayer = m_vecLayers[m_numLayer-1];
+float RNNLSTM::computeError(int inputSeqLen) {
+	float sampleError = 0.f;	
+	RecurrentLayer *outputLayer = m_vecLayers[m_numLayer-1];
 	for (int seqIdx=1; seqIdx<=inputSeqLen; ++seqIdx) {
 		for (int i=0; i<m_outputSize; ++i) {
 			if (m_taskType == "classification") {
-				sampleError += targetCursor[i] * log(curLayer->m_outputActs[seqIdx][i]);
+				sampleError += outputLayer->m_outputErrs[seqIdx][i] * log(outputLayer->m_outputActs[seqIdx][i]);
 			} else if (m_taskType == "regression") {
-				float diff = targetCursor[i] - curLayer->m_outputActs[seqIdx][i];
+				float diff = outputLayer->m_outputErrs[seqIdx][i] - outputLayer->m_outputActs[seqIdx][i];
 				sampleError += diff * diff;
 			}
 		}
-		targetCursor += m_outputSize;
 	}
 	return sampleError;
 }

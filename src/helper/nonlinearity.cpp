@@ -83,9 +83,7 @@ void softmax (float *result, float *input, int dim) {
 		sum += result[i];
 	}
 	for (int i=0; i<dim; i++) {
-		// printf("%f/%f=", result[i], sum);
 		result[i] /= sum;
-		// printf("%f\t", result[i]);
 	}
 }
 
