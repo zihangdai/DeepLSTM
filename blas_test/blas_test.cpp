@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <omp.h>
+#include <algorithm>
 #include "cblas.h"
 #include "cycle_timer.h"
 
@@ -35,7 +36,7 @@ int main(int argc, char const *argv[]) {
 			printf("Runing Matrix-Vector Multiplication by OpenMP (%d threads)\n", omp_get_max_threads());
 			double begTime = CycleTimer::currentSeconds();
 			for (int iter = 0; iter < max_iter; ++iter) {
-			#pragma omp parallel for
+				#pragma omp parallel for
 				for (int i=0; i<m; ++i) {
 					for (int j=0; j<n; ++j) {
 						Ab[i] += A[i*n+j] * b[j];
@@ -51,6 +52,21 @@ int main(int argc, char const *argv[]) {
 			printf("Runing Matrix-Vector Multiplication by OpenBlas (%d threads)\n", omp_get_max_threads());
 			for (int iter = 0; iter < max_iter; ++iter) {
 				cblas_sgemv(CblasRowMajor, CblasNoTrans, m, n, 1.0, A, n, b, 1, 1.0, Ab, 1);
+			}
+			double endTime = CycleTimer::currentSeconds();
+			printf("%f\n", (endTime - begTime) / float(max_iter));
+			break;
+		}
+		case 2: {
+			int block_size = (m + max_num_thread - 1)/ max_num_thread;			
+			double begTime = CycleTimer::currentSeconds();
+			printf("Runing Matrix-Vector Multiplication by OpenMP (%d threads) with OpenBlas\n", omp_get_max_threads());
+			for (int iter = 0; iter < max_iter; ++iter) {
+				#pragma omp parallel for
+				for (int i = 0; i < max_num_thread; ++i) {
+					int actual_size = std::min(block_size, m-i*block_size);
+					cblas_sgemv(CblasRowMajor, CblasNoTrans, actual_size, n, 1.0, A+i*block_size*n, n, b, 1, 1.0, Ab+i*block_size, 1);
+				}
 			}
 			double endTime = CycleTimer::currentSeconds();
 			printf("%f\n", (endTime - begTime) / float(max_iter));
