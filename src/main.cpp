@@ -14,8 +14,7 @@ int main(int argc, char* argv[]) {
     boost::property_tree::ini_parser::read_ini("./config.conf", *confReader);
     
     // step 1: Init Model and allocate related memorys
-    string section = "LSTM.";    
-
+    string section = "LSTM.";
     RecurrentNN *net = new RNNLSTM(confReader, section);
 
     int paramSize = net->m_paramSize;

@@ -3,7 +3,6 @@
 
 #include "common.h"
 
-#include "rnn_translator.h"
 #include "data_factory.h"
 #include "sequence_data.h"
 #include "mnist.h"

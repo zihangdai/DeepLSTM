@@ -1,5 +1,5 @@
 #include "master.h"
-#include "rnn_translator.h"
+#include "rnn_lstm.h"
 
 sgdBase * initSgdSolver (boost::property_tree::ptree *confReader, string section, int paramSize) {
 	int solverType = confReader->get<int>(section+"solver_type");
@@ -51,20 +51,20 @@ void masterFunc (int argc, char ** argv) {
 	}
 	string dirPath = argv[1];
 	boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
-	boost::property_tree::ini_parser::read_ini(dirPath+"mpi_translator.conf", *confReader);
+	boost::property_tree::ini_parser::read_ini(dirPath+"mpi.conf", *confReader);
 	
 	string section = "Master.";
-	int validBatchSize = confReader->get<int>(section + "validation_batch_size");
+	// int validBatchSize = confReader->get<int>(section + "validation_batch_size");
 	int nSendMax = confReader->get<int>(section + "max_iteration_number");
 
 	// Step 1.2 Initialize model
 	openblas_set_num_threads(1);
-	section = "Translator.";
+	section = "LSTM.";
 	int max_openmp_threads = confReader->get<int>(section + "max_threads");
 	omp_set_num_threads(max_openmp_threads);	
-	RNNTranslator *translator = new RNNTranslator(confReader, section);
+	RecurrentNN *rnn = new RNNLSTM(confReader, section);
 
-	int paramSize = translator->m_paramSize;
+	int paramSize = rnn->m_paramSize;
 	printf("paramSize: %d\n", paramSize);
 
 	// Step 1.3: Allocate master memory
@@ -72,7 +72,7 @@ void masterFunc (int argc, char ** argv) {
 	float *grad = new float[paramSize];
 
 	// Step 1.4: Initialize params
-	translator->initParams(params);
+	rnn->initParams(params);
 	
 	// Step 1.5: Initialize SGD Solver
 	section = "SGD.";
@@ -161,9 +161,11 @@ void masterFunc (int argc, char ** argv) {
 		printf("Failed to open savefile\n");
 		exit(1);
 	}
-
-	delete sgdSolver;
-	delete translator;
+	
 	delete [] params;
 	delete [] grad;
+
+	delete confReader;
+	delete sgdSolver;
+	delete rnn;
 }

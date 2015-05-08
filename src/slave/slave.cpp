@@ -1,4 +1,5 @@
 #include "slave.h"
+#include "rnn_lstm.h"
 
 using namespace std;
 
@@ -41,23 +42,23 @@ void slaveFunc(int argc, char ** argv){
 	
 	// step 0: Init conf and read basic slave conf
 	boost::property_tree::ptree *confReader = new boost::property_tree::ptree();
-	boost::property_tree::ini_parser::read_ini(dirPath+"mpi_translator.conf", *confReader);
+	boost::property_tree::ini_parser::read_ini(dirPath+"mpi.conf", *confReader);
 	
 	string section = "Slave.";
 	int batchSize = confReader->get<int>(section + "training_batch_size");
 
-	// step 1: Init Translator and allocate related memorys
+	// step 1: Init model and allocate related memorys
 	openblas_set_num_threads(1);
-	section = "Translator.";
-	RNNTranslator *translator = new RNNTranslator(confReader, section);
-	
+	section = "LSTM.";	
 	int max_openmp_threads = confReader->get<int>(section + "max_threads");
-	omp_set_num_threads(max_openmp_threads);	
+	omp_set_num_threads(max_openmp_threads);
+
+	RecurrentNN *rnn = new RNNLSTM(confReader, section);
 
 	int paramSize;
 	MPI_Bcast(&paramSize, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 
-	float *param = new float[paramSize]; 
+	float *param = new float[paramSize];
 	float *grad  = new float[paramSize];
 
 	// step 2: Init Data and allocate related memorys
@@ -103,7 +104,7 @@ void slaveFunc(int argc, char ** argv){
 
 		/*step 3.4: calculate the grad*/
 		double begTime = CycleTimer::currentSeconds();
-		float error = translator->computeGrad(grad, param, data, label, batchSize);
+		float error = rnn->computeGrad(grad, param, data, label, batchSize);
 		double endTime = CycleTimer::currentSeconds();
 		printf("Slave[%d] finished task %d: error %f, time %f\n", rank, ++taskCount, error, endTime - begTime);
 		
@@ -113,9 +114,14 @@ void slaveFunc(int argc, char ** argv){
 
 	delete [] param;
 	delete [] grad;
+	
 	delete [] label;
 	delete [] data;
+	
 	delete [] indices;
-	delete translator;
+	delete [] pickIndices;
+
+	delete confReader;
+	delete rnn;
 	delete dataset;
 }

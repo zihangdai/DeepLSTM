@@ -59,11 +59,11 @@ VPATH = $(SRCDIR) \
 	$(SRCDIR)/network \
 	$(SRCDIR)/master \
 	$(SRCDIR)/slave \
-	$(SRCDIR)/data \
+	$(SRCDIR)/data
 
 # src files
 SRCS=\
-	$(SRCDIR)/mpi_translator.cpp \
+	$(SRCDIR)/mpi.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \
@@ -90,10 +90,10 @@ OBJS=$(SRCS:%.cpp=%.o)
 # .PHONY: 
 
 # all comes first in the file, so it is the default 
-all : RNNTranslatorMPI
+all : MPI
 
 # compile main program parallelSGD from all objs 
-RNNTranslatorMPI: $(OBJS)
+MPI: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) $(LDFLAGS) $^ -o $@
 
 # order-only prerequisites for OBJDIR
@@ -107,4 +107,4 @@ $(OBJDIR):
 
 # clean
 clean:
-	rm -rf $(OBJS) RNNTranslatorMPI
+	rm -rf $(OBJS) MPI
