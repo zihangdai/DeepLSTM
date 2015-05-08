@@ -18,7 +18,7 @@ public:
 	float computeGrad (float *grad, float *params, float *data, float *label, int minibatchSize);
 	void initParams (float *params);
 
-	float computeError(float *sampleTarget, int inputSeqLen);
+	float computeError(int inputSeqLen);
 	void getPredict(float *samplePredict, int inputSeqLen);
 
 	void feedBackward(int inputSeqLen);

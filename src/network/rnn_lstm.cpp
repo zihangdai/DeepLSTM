@@ -234,7 +234,7 @@ float RNNLSTM::computeGrad(float *grad, float *params, float *data, float *targe
 		feedForward(inputSeqLen);
 
 		/* compute error */
-		error += computeError(sampleTarget, inputSeqLen);
+		error += computeError(inputSeqLen);
 
 		/* feedbackword */
 		// set target

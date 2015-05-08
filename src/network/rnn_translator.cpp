@@ -203,17 +203,18 @@ float RNNTranslator::computeGrad (float *grad, float *params, float *input, floa
 		/****************************************************************
 		*                      Compute Error Phase                      *
 		****************************************************************/
-		error += m_decoder->computeError(sampleTarget, decoderSeqLen);
+		// step 1: bind target sequence to m_outputErrs of the output layer of the decoder
+		m_decoder->setTarget(sampleTarget, 1, decoderSeqLen);
+
+		// step 2: compute error 
+		error += m_decoder->computeError(decoderSeqLen);
 		
 		/****************************************************************
 		*                      Feed Backword Phase                      *
 		****************************************************************/
-		// ********* decoder *********
+		// ********* decoder *********		
 		
-		// step 1: bind target sequence to m_outputErrs of the output layer of the decoder
-		m_decoder->setTarget(sampleTarget, 1, decoderSeqLen);
-		
-		// step 2: decoder feed backward
+		// step 1: decoder feed backward
 		m_decoder->feedBackward(decoderSeqLen);
 
 		// ********* encoder *********
