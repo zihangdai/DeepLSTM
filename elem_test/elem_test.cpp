@@ -1,10 +1,33 @@
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <omp.h>
+#include <immintrin.h>
 #include <algorithm>
 #include "cycle_timer.h"
 
 #define SIMD_WIDTH 8
+
+void elem_mul (float *result, float *a, float *b, int dim) {		
+	#ifdef __linux
+	int residual = dim % SIMD_WIDTH;
+	int stopSIMD = dim - residual;
+
+	__m256 vec_a, vec_b, vec_res;
+	for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
+		vec_a = _mm256_loadu_ps(a + i);
+		vec_b = _mm256_loadu_ps(b + i);
+		vec_res = _mm256_loadu_ps(result + i);
+
+		vec_a = _mm256_mul_ps(vec_a, vec_b);
+		vec_res = _mm256_add_ps(vec_res, vec_a);
+		_mm256_storeu_ps(result + i, vec_res);
+	}
+
+	for (int i=stopSIMD; i<dim; ++i) {
+		result[i] += a[i] * b[i];
+	}
+	#endif
+}
 
 int main(int argc, char const *argv[]) {
 	if (argc < 4) {
@@ -18,16 +41,46 @@ int main(int argc, char const *argv[]) {
 	
 	omp_set_num_threads(max_num_thread);
 
-	int m = 1024;	
-	float *a = new float[m];
+	int m = 1024;
+	float *a0 = new float[m];
 	for (int i = 0; i < m; i++) {
-    	a[i] = rand() / RAND_MAX;
+    	a0[i] = rand() / RAND_MAX;
 	}
-	float *b = new float[m];
+	float *b0 = new float[m];
 	for (int i = 0; i < m; i++) {
-    	b[i] = rand() / RAND_MAX;
+    	b0[i] = rand() / RAND_MAX;
 	}
-	float *ab = new float[m];
+	float *ab0 = new float[m];
+
+	float *a1 = new float[m];
+	for (int i = 0; i < m; i++) {
+    	a1[i] = rand() / RAND_MAX;
+	}
+	float *b1 = new float[m];
+	for (int i = 0; i < m; i++) {
+    	b1[i] = rand() / RAND_MAX;
+	}
+	float *ab1 = new float[m];
+
+	float *a2 = new float[m];
+	for (int i = 0; i < m; i++) {
+    	a2[i] = rand() / RAND_MAX;
+	}
+	float *b2 = new float[m];
+	for (int i = 0; i < m; i++) {
+    	b2[i] = rand() / RAND_MAX;
+	}
+	float *ab2 = new float[m];
+
+	float *a3 = new float[m];
+	for (int i = 0; i < m; i++) {
+    	a3[i] = rand() / RAND_MAX;
+	}
+	float *b3 = new float[m];
+	for (int i = 0; i < m; i++) {
+    	b3[i] = rand() / RAND_MAX;
+	}
+	float *ab3 = new float[m];
 
 	switch (test_method) {
 		case 0: {
@@ -36,7 +89,10 @@ int main(int argc, char const *argv[]) {
 			for (int iter = 0; iter < max_iter; ++iter) {
 				#pragma omp parallel for
 				for (int i=0; i<m; ++i) {					
-					ab[i] += a[i] * b[i];
+					ab0[i] += a0[i] * b0[i];
+					ab1[i] += a1[i] * b1[i];
+					ab2[i] += a2[i] * b2[i];
+					ab3[i] += a3[i] * b3[i];
 				}
 			}
 			double endTime = CycleTimer::currentSeconds();
@@ -47,25 +103,10 @@ int main(int argc, char const *argv[]) {
 			double begTime = CycleTimer::currentSeconds();
 			printf("Runing Matrix-Vector Multiplication by OpenBlas (%d threads)\n", omp_get_max_threads());
 			for (int iter = 0; iter < max_iter; ++iter) {
-				#ifdef __linux
-				int residual = m % SIMD_WIDTH;
-				int stopSIMD = m - residual;
-
-				__m256 vec_a, vec_b, vec_res;
-				for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
-					vec_a = _mm256_loadu_ps(a + i);
-					vec_b = _mm256_loadu_ps(b + i);
-					vec_res = _mm256_loadu_ps(ab + i);
-
-					vec_a = _mm256_mul_ps(vec_a, vec_b);
-					vec_res = _mm256_add_ps(vec_res, vec_a);
-					_mm256_storeu_ps(ab + i, vec_res);
-				}
-
-				for (int i=stopSIMD; i<m; ++i) {
-					ab[i] += a[i] * b[i];
-				}
-				#endif
+				elem_mul(ab0, a0, b0, m);
+				elem_mul(ab1, a1, b1, m);
+				elem_mul(ab2, a2, b2, m);
+				elem_mul(ab3, a3, b3, m);
 			}
 			double endTime = CycleTimer::currentSeconds();
 			printf("%f\n", (endTime - begTime) / float(max_iter));
@@ -80,25 +121,10 @@ int main(int argc, char const *argv[]) {
 				for (int i = 0; i < max_num_thread; ++i) {
 					int start_idx = i*block_size;
 					int actual_size = std::min(block_size, m-start_idx);					
-					#ifdef __linux
-					int residual = actual_size % SIMD_WIDTH;
-					int stopSIMD = actual_size - residual;
-
-					__m256 vec_a, vec_b, vec_res;
-					for (int i=start_idx; i<start_idx+stopSIMD; i+=SIMD_WIDTH) {
-						vec_a = _mm256_loadu_ps(a + i);
-						vec_b = _mm256_loadu_ps(b + i);
-						vec_res = _mm256_loadu_ps(ab + i);
-
-						vec_a = _mm256_mul_ps(vec_a, vec_b);
-						vec_res = _mm256_add_ps(vec_res, vec_a);
-						_mm256_storeu_ps(ab + i, vec_res);
-					}
-
-					for (int i=start_idx+stopSIMD; i<start_idx+actual_size; ++i) {
-						ab[i] += a[i] * b[i];
-					}
-					#endif
+					elem_mul(ab0+start_idx, a0+start_idx, b0+start_idx, actual_size);
+					elem_mul(ab1+start_idx, a1+start_idx, b1+start_idx, actual_size);
+					elem_mul(ab2+start_idx, a2+start_idx, b2+start_idx, actual_size);
+					elem_mul(ab3+start_idx, a3+start_idx, b3+start_idx, actual_size);
 				}
 			}
 			double endTime = CycleTimer::currentSeconds();
@@ -110,9 +136,21 @@ int main(int argc, char const *argv[]) {
 			break;
 	}
 
-	delete [] a;
-	delete [] b;
-	delete [] ab;
+	delete [] a0;
+	delete [] b0;
+	delete [] ab0;
+
+	delete [] a1;
+	delete [] b1;
+	delete [] ab1;
+
+	delete [] a2;
+	delete [] b2;
+	delete [] ab2;
+
+	delete [] a3;
+	delete [] b3;
+	delete [] ab3;
 
 	return 0;
 }
