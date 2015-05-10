@@ -57,13 +57,16 @@ void masterFunc (int argc, char ** argv) {
 	// int validBatchSize = confReader->get<int>(section + "validation_batch_size");
 	int nSendMax = confReader->get<int>(section + "max_iteration_number");
 
-	// Step 1.2 Initialize model
-	openblas_set_num_threads(1);
+	// Step 1.2 Initialize model	
 	section = "LSTM.";
-	int max_openmp_threads = confReader->get<int>(section + "max_threads");
-	omp_set_num_threads(max_openmp_threads);	
-	RecurrentNN *rnn = new RNNLSTM(confReader, section);
 
+	openblas_set_num_threads(1);
+	int max_openmp_threads = confReader->get<int>(section + "max_threads");
+	omp_set_num_threads(max_openmp_threads);
+	omp_set_nested(0);
+    printf("MASTER openmp threads: max threads %d, nested %d\n", omp_get_max_threads(), omp_get_nested());
+	
+	RecurrentNN *rnn = new RNNLSTM(confReader, section);
 	int paramSize = rnn->m_paramSize;
 	printf("paramSize: %d\n", paramSize);
 

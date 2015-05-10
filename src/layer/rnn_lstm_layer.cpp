@@ -181,14 +181,15 @@ void RNNLSTMLayer::resetStates(int inputSeqLen) {
 void RNNLSTMLayer::computeGatesActs(int seqIdx) {
 
 	int maxThreads = omp_get_max_threads();
+	int threadsPerCase = maxThreads / 4;
 	int blockSize;
 	if (maxThreads >= 4) {
-	 	blockSize = (m_numNeuron + (maxThreads / 4) - 1) / (maxThreads / 4);
+	 	blockSize = (m_numNeuron + threadsPerCase - 1) / threadsPerCase;
 	} else {
 		blockSize = m_numNeuron;
 	}
 	#pragma omp parallel for
-	for (int threadIdx=0; threadIdx<max(maxThreads, 4); ++threadIdx) {
+	for (int threadIdx=0; threadIdx<max(threadsPerCase*4, 4); ++threadIdx) {
 		int blockIdx = threadIdx / 4;
 		int startIdx = blockIdx * blockSize;
 		int actualSize = min(blockSize, m_numNeuron-startIdx);
@@ -317,34 +318,42 @@ void RNNLSTMLayer::computeOutputErrs (int seqIdx) {
 			}
 		}
 	}
+	if (!SIMD) {
+		for (int i=0; i<m_numNeuron; ++i) {
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
+		}
+	} else {
+		#ifdef linux
+		int residual = m_numNeuron % SIMD_WIDTH;
+		int stopSIMD = m_numNeuron - residual;
 
-	#ifdef linux
-	int residual = m_numNeuron % SIMD_WIDTH;
-	int stopSIMD = m_numNeuron - residual;
+		#pragma omp parallel for
+		for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
+			__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
+			vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + i);
+			vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
+			vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
+			vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
+			vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + i);
 
-	#pragma omp parallel for
-	for (int i=0; i<stopSIMD; i+=SIMD_WIDTH) {
-		__m256 vec_0, vec_1, vec_2, vec_3, vec_res;
-		vec_0 = _mm256_loadu_ps(m_neuronSizeBuf[0] + i);
-		vec_1 = _mm256_loadu_ps(m_neuronSizeBuf[1] + i);
-		vec_2 = _mm256_loadu_ps(m_neuronSizeBuf[2] + i);
-		vec_3 = _mm256_loadu_ps(m_neuronSizeBuf[3] + i);
-		vec_res = _mm256_loadu_ps(m_outputErrs[seqIdx] + i);
+			vec_res = _mm256_add_ps(vec_res, vec_0);
+			vec_res = _mm256_add_ps(vec_res, vec_1);
+			vec_res = _mm256_add_ps(vec_res, vec_2);
+			vec_res = _mm256_add_ps(vec_res, vec_3);
+			_mm256_storeu_ps(m_outputErrs[seqIdx] + i, vec_res);
+		}
 
-		vec_res = _mm256_add_ps(vec_res, vec_0);
-		vec_res = _mm256_add_ps(vec_res, vec_1);
-		vec_res = _mm256_add_ps(vec_res, vec_2);
-		vec_res = _mm256_add_ps(vec_res, vec_3);
-		_mm256_storeu_ps(m_outputErrs[seqIdx] + i, vec_res);
+		for (int i=stopSIMD; i<m_numNeuron; ++i) {
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
+			m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
+		}
+		#endif
 	}
-
-	for (int i=stopSIMD; i<m_numNeuron; ++i) {
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[0][i];
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[1][i];
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[2][i];
-		m_outputErrs[seqIdx][i] += m_neuronSizeBuf[3][i];
-	}
-	#endif
 }
 
 void RNNLSTMLayer::feedbackSequential (int seqIdx) {
@@ -407,7 +416,6 @@ void RNNLSTMLayer::feedBackward(int inputSeqLen) {
 		// cell state error
 		tanh_deriv(m_derivBuf, m_preOutGateActs[seqIdx], m_numNeuron);
 		elem_mul_triple(m_cellStateErrs[seqIdx], m_outputErrs[seqIdx], m_outGateActs[seqIdx], m_derivBuf, m_numNeuron);
-
 		elem_mul(m_cellStateErrs[seqIdx], m_cellStateErrs[seqIdx+1], m_forgetGateActs[seqIdx+1], m_numNeuron);
 		elem_mul(m_cellStateErrs[seqIdx], W_i_c, m_inGateDelta[seqIdx+1], m_numNeuron);
 		elem_mul(m_cellStateErrs[seqIdx], W_f_c, m_forgetGateDelta[seqIdx+1], m_numNeuron);

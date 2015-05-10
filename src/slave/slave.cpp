@@ -48,13 +48,15 @@ void slaveFunc(int argc, char ** argv){
 	int batchSize = confReader->get<int>(section + "training_batch_size");
 
 	// step 1: Init model and allocate related memorys
+	section = "LSTM.";
+	
 	openblas_set_num_threads(1);
-	section = "LSTM.";	
 	int max_openmp_threads = confReader->get<int>(section + "max_threads");
 	omp_set_num_threads(max_openmp_threads);
+	omp_set_nested(0);
+	printf("SLAVE[%d]: openmp threads: max threads %d, nested %d\n", rank, omp_get_max_threads(), omp_get_nested());	
 
 	RecurrentNN *rnn = new RNNLSTM(confReader, section);
-
 	int paramSize;
 	MPI_Bcast(&paramSize, 1, MPI_INT, ROOT, MPI_COMM_WORLD);
 

@@ -28,6 +28,9 @@ int main(int argc, char* argv[]) {
     int maxiter = confReader->get<int>(section + "max_iteration");
     int max_openmp_threads = confReader->get<int>(section + "max_threads");
     omp_set_num_threads(max_openmp_threads);
+    omp_set_nested(0);
+
+    printf("openmp threads: max threads %d, nested %d\n", omp_get_max_threads(), omp_get_nested());
 
     // Step 2: Initialize SGD Solver
     section = "SGD.";
