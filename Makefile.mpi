@@ -63,7 +63,7 @@ VPATH = $(SRCDIR) \
 
 # src files
 SRCS=\
-	$(SRCDIR)/mpi.cpp \
+	$(SRCDIR)/main_mpi.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \

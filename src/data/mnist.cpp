@@ -10,7 +10,7 @@ Mnist::Mnist(boost::property_tree::ptree *confReader, string section) {
 	m_numSample = confReader->get<int>(section + "mnist_sample_num");  
 
 	m_inputDim = confReader->get<int>(section + "mnist_input_dim");
-	m_outputDim = confReader->get<int>(section + "mnist_output_dim");	
+	m_outputDim = confReader->get<int>(section + "mnist_output_dim");
 
 	m_input = new float[m_numSample * m_inputDim];
 	m_output = new float[m_numSample * m_outputDim];

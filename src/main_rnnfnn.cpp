@@ -1,7 +1,9 @@
 #include "common.h"
 #include "recurrent_forward_nn.h"
 #include "sgd.h"
+#include "sequence_data.h"
 #include "mnist.h"
+#include "cifar.h"
 #include "data_factory.h"
 
 using namespace std;
@@ -42,6 +44,33 @@ sgdBase * initSgdSolver (boost::property_tree::ptree *confReader, string section
 	return sgdSolver;
 }
 
+DataFactory* initDataFactory(boost::property_tree::ptree *confReader, string section) {
+	int dataIndex = confReader->get<int>(section + "data_type");
+	DataFactory* data;
+	switch(dataIndex) {
+		case 0: {
+			printf("Slave Data: Init Sequence Data.\n");
+			data = new SequenceData(confReader, section);
+			break;
+		} 
+		case 1: {
+			printf("Slave Data: Init MNIST Data.\n");
+			data = new Mnist(confReader, section);
+			break;
+		}
+		case 2: {
+			printf("Slave Data: Init CIFAR Data.\n");
+			data = new Cifar(confReader, section);
+			break;
+		}
+		default:  {
+			printf("Error, no Data Index");
+			exit(-1);
+		}
+	}
+	return data;
+}
+
 int main(int argc, char const *argv[]) {
 	
 	srand(time(NULL));
@@ -76,7 +105,7 @@ int main(int argc, char const *argv[]) {
 
 	// step 3: Init Training Data and allocate related memorys
 	section = "Data.";
-	DataFactory *trainData = new Mnist(confReader, section);
+	DataFactory *trainData = initDataFactory(confReader, section);
 	int numSample = trainData->getNumberOfData();
 	int dataSize  = trainData->getDataSize();
 	int labelSize = trainData->getLabelSize();
@@ -94,7 +123,7 @@ int main(int argc, char const *argv[]) {
 
 	// step 4: Init validation Data
     section = "ValidData.";
-    DataFactory *validData = new Mnist(confReader, section);
+    DataFactory *validData = initDataFactory(confReader, section);
 
     // step 5: training
 	int iter = 0, index = 0, epoch = 0;

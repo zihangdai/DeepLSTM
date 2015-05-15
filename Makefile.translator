@@ -61,7 +61,7 @@ VPATH = $(SRCDIR) \
 
 # src files
 SRCS=\
-	$(SRCDIR)/translator.cpp \
+	$(SRCDIR)/main_translator.cpp \
 	$(SRCDIR)/helper/matrix.cpp \
 	$(SRCDIR)/helper/nonlinearity.cpp \
 	$(SRCDIR)/sgd/sgd.cpp \

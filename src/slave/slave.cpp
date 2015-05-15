@@ -3,8 +3,7 @@
 
 using namespace std;
 
-DataFactory* initDataFactory(boost::property_tree::ptree *confReader, string section)
-{
+DataFactory* initDataFactory(boost::property_tree::ptree *confReader, string section) {
 	int dataIndex = confReader->get<int>(section + "data_type");
 	DataFactory* data;
 	switch(dataIndex) {
@@ -18,6 +17,11 @@ DataFactory* initDataFactory(boost::property_tree::ptree *confReader, string sec
 			data = new Mnist(confReader, section);
 			break;
 		}
+		case 2: {
+			printf("Slave Data: Init CIFAR Data.\n");
+			data = new Cifar(confReader, section);
+			break;
+		}
 		default:  {
 			printf("Error, no Data Index");
 			exit(-1);
@@ -25,8 +29,6 @@ DataFactory* initDataFactory(boost::property_tree::ptree *confReader, string sec
 	}
 	return data;
 }
-
-
 
 void slaveFunc(int argc, char ** argv){ 
 	if (argc < 2) {
